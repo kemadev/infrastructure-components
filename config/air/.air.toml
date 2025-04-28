@@ -1,0 +1,14 @@
+[build]
+cmd = "go build -o /usr/local/bin/dev ./cmd/main"
+bin = "/usr/local/bin/dev"
+# Use arguments passed at runtime to the binary
+args_bin = ["${@}"]
+
+# Send interrupt before kill
+send_interrupt = true
+# Stop running old binary when build error
+stop_on_error = true
+
+[screen]
+clear_on_rebuild = true
+keep_scroll = false
