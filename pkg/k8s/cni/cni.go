@@ -43,16 +43,17 @@ func DeployCNI(
 		Version: pulumi.String("1.17.2"),
 		Values: pulumi.Map{
 			"image": pulumi.Map{
+				// Don't pull if image already present
 				"pullPolicy": pulumi.String("IfNotPresent"),
 			},
-			// Use a nillable value to avoid including the Helm value when it is nil
+			// kind specific, permit initial operator deployment, use a nillable value to avoid including the Helm value when it is nil
 			"k8sServiceHost": func() pulumi.StringOutput {
 				if ctx.Stack() != "dev" {
 					return pulumi.StringOutput{}
 				}
 				return pulumi.String(clusterName + "-control-plane").ToStringOutput()
 			}(),
-			// Use a nillable value to avoid including the Helm value when it is nil
+			// kind specific, permit initial operator deployment, use a nillable value to avoid including the Helm value when it is nil
 			"k8sServicePort": *func() *pulumi.Int {
 				if ctx.Stack() != "dev" {
 					return nil
@@ -60,35 +61,53 @@ func DeployCNI(
 				res := pulumi.Int(6443)
 				return &res
 			}(),
+			// Replace kube-proxy
 			"kubeProxyReplacement": pulumi.Bool(true),
-			"l7Proxy":              pulumi.Bool(true),
+			// Enable L7 Gateway API capabilities
+			"l7Proxy": pulumi.Bool(true),
 			"encryption": pulumi.Map{
-				"enabled":        pulumi.Bool(true),
-				"type":           pulumi.String("wireguard"),
+				// Enable transparent pod-to-pod encryption
+				"enabled": pulumi.Bool(true),
+				// Use WireGuard as encryption method
+				"type": pulumi.String("wireguard"),
+				// Encrypt pure node-to-node traffic
 				"nodeEncryption": pulumi.Bool(true),
+				// Force pod-to-pod encrpytion in all case, see https://docs.cilium.io/en/stable/security/network/encryption/#egress-traffic-to-not-yet-discovered-remote-endpoints-may-be-unencrypted
+				// "strictMode":     pulumi.String("enabled"),
 			},
 			"gatewayAPI": pulumi.Map{
+				// Enable cilium Gateway API
 				"enabled": pulumi.Bool(true),
 				"gatewayClass": pulumi.Map{
+					// Create Cilium's GatewayClass
 					"create": pulumi.String("true"),
 				},
-				"enableAlpn":        pulumi.Bool(true),
+				// Enable ALPN
+				"enableAlpn": pulumi.Bool(true),
+				// Enable appProtocol, see https://kubernetes.io/docs/concepts/services-networking/service/#application-protocol
 				"enableAppProtocol": pulumi.Bool(true),
 				"hostNetwork": pulumi.Map{
+					// Allow exposing Gateway API Gateway on host network
 					"enabled": pulumi.Bool(true),
 				},
 			},
 			"hubble": pulumi.Map{
+				// Enable Hubble
 				"enabled": pulumi.Bool(true),
 				"relay": pulumi.Map{
-					"enabled":     pulumi.Bool(true),
+					// Enable Hubble relay
+					"enabled": pulumi.Bool(true),
+					// Rollout pods on ConfigMap change
 					"rollOutPods": pulumi.Bool(true),
 				},
 				"ui": pulumi.Map{
-					"enabled":     pulumi.Bool(true),
+					// Enable Hubble UI
+					"enabled": pulumi.Bool(true),
+					// Rollout pods on ConfigMap change
 					"rollOutPods": pulumi.Bool(true),
 				},
 				"metrics": pulumi.Map{
+					// Expose Hubble metrics
 					"enabled": pulumi.Array{
 						pulumi.String("tcp"),
 						pulumi.String("flow"),
@@ -100,69 +119,126 @@ func DeployCNI(
 							"httpV2:exemplars=true;sourceContext=workload-name|pod-name|reserved-identity;destinationContext=workload-name|pod-name|reserved-identity;labelsContext=source_namespace,destination_namespace,traffic_direction",
 						),
 					},
+					// Also expose as OpenMetrics format
 					"enableOpenMetrics": pulumi.Bool(true),
 				},
 			},
 			"prometheus": pulumi.Map{
+				// Expose cilium-envoy metrics
 				"enabled": pulumi.Bool(true),
 			},
 			"operator": pulumi.Map{
 				"prometheus": pulumi.Map{
+					// Expose cilium-operator metrics
 					"enabled": pulumi.Bool(true),
 				},
+				// Rollout pods on ConfigMap change
 				"rollOutPods": pulumi.Bool(true),
 			},
 			"ipam": pulumi.Map{
+				// Let cilium assign per-node PodCIDRs, see https://docs.cilium.io/en/stable/network/concepts/ipam/cluster-pool/
 				"mode": pulumi.String("cluster-pool"),
 			},
+			// Rollout pods on ConfigMap change
 			"rollOutCiliumPods": pulumi.Bool(true),
 			"envoyConfig": pulumi.Map{
+				// Enable CiliumEnvoyConfig CRD
 				"enabled": pulumi.Bool(true),
 			},
 			"envoy": pulumi.Map{
+				// Rollout pods on ConfigMap change
 				"rollOutPods": pulumi.Bool(true),
+				"prometheus": pulumi.Map{
+					// Expose envoy metrics
+					"enabled": pulumi.Bool(true),
+				},
+				// Enable Envoy structured logging, see https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/bootstrap/v3/bootstrap.proto#envoy-v3-api-field-config-bootstrap-v3-bootstrap-applicationlogconfig-logformat-json-format
+				"log": pulumi.Map{
+					"format": nil,
+					// TODO
+					// "format_json": pulumi.String(
+					// 	"[%Y-%m-%d %T.%e][%t][%l][%n] [%g:%#] %v",
+					// ),
+				},
 			},
 			"loadBalancer": pulumi.Map{
 				"l7": pulumi.Map{
+					// Use Envoy as L7 load balancer
 					"backend": pulumi.String("envoy"),
 				},
+				// Use native mode XDP acceleration on devices that support it, see https://docs.cilium.io/en/stable/operations/performance/tuning/#xdp-acceleration
 				"acceleration": pulumi.String("best-effort"),
-			},
-			"maglev": pulumi.Map{
-				"tableSize": pulumi.Int(16381),
 			},
 			"authentication": pulumi.Map{
 				"mutual": pulumi.Map{
 					"spire": pulumi.Map{
+						// Enable SPIRE integration for mTLS, see https://docs.cilium.io/en/stable/security/network/encryption-wireguard/
 						"enabled": pulumi.Bool(true),
 						"install": pulumi.Map{
-							"enabled": pulumi.Bool(true),
+							"server": pulumi.Map{
+								"ca": pulumi.Map{
+									// Set CA key algorithm, see https://spiffe.io/docs/latest/deploying/spire_server/#server-configuration-file
+									"keyType": pulumi.String("ec-p384"),
+								},
+							},
 						},
 					},
 				},
 			},
-			"l2announcements": pulumi.Map{
-				"enabled": pulumi.Bool(true),
-			},
-			"ipv6": pulumi.Map{
-				"enabled": pulumi.Bool(true),
-			},
-			"endpointRoutes": pulumi.Map{
-				"enabled": pulumi.Bool(true),
-			},
-			"bpf": pulumi.Map{
-				"masquerade":      pulumi.Bool(true),
-				"dataPathMode":    pulumi.String("netkit"),
-				"preallocateMaps": pulumi.Bool(true),
-				"tproxy":          pulumi.Bool(true),
-			},
-			"bandwidthManager": pulumi.Map{
-				"enabled": pulumi.Bool(true),
-				"bbr":     pulumi.Bool(true),
-			},
-			"localRedirectPolicy": pulumi.Bool(true),
-			// TODO enable those values and look for new ones
-			// "routingMode": pulumi.String("native"),
+			// "l2announcements": pulumi.Map{
+			// 	// Enable L2 announcements
+			// 	"enabled": pulumi.Bool(true),
+			// },
+			// "ipv6": pulumi.Map{
+			// 	// Enable IPv6
+			// 	"enabled": pulumi.Bool(true),
+			// },
+			// "endpointRoutes": pulumi.Map{
+			// 	// Enable use of per endpoint routes instead of routing via cilium_host interface
+			// 	"enabled": pulumi.Bool(true),
+			// },
+			// "bpf": pulumi.Map{
+			// 	// Enable masquerading, see https://docs.cilium.io/en/stable/network/concepts/masquerading/
+			// 	"masquerade": pulumi.Bool(true),
+			// 	// Mode for Pod devices for the core datapath (veth, netkit, netkit-l2)
+			// 	"dataPathMode": pulumi.String("netkit"),
+			// 	// Enables pre-allocation of eBPF map values
+			// 	"preallocateMaps": pulumi.Bool(true),
+			// 	// Enable eBPF-based TPROXY
+			// 	"tproxy": pulumi.Bool(true),
+			// },
+
+			// "bandwidthManager": pulumi.Map{
+			// 	// Enable Cilium’s bandwidth manager, see https://docs.cilium.io/en/stable/network/kubernetes/bandwidth-manager/
+			// 	"enabled": pulumi.Bool(true),
+			// 	// Enable BBR congestion control, see https://docs.cilium.io/en/stable/network/kubernetes/bandwidth-manager/#bbr-for-pods
+			// 	"bbr": pulumi.Bool(true),
+			// },
+			// // Enable local redirect, see https://docs.cilium.io/en/stable/network/kubernetes/local-redirect-policy/
+			// "localRedirectPolicy": pulumi.Bool(true),
+			// // Enable synchronizing Kubernetes EndpointSlice
+			// "ciliumEndpointSlice": pulumi.Map{
+			// 	"enabled": pulumi.Bool(true),
+			// },
+			// "hostFirewall": pulumi.Map{
+			// 	// Enable cilium host firewall
+			// 	"enabled": pulumi.Bool(true),
+			// },
+			// // TODO
+			// "maglev": pulumi.Map{
+			// 	"tableSize": pulumi.Int(16381),
+			// },
+			// // TODO
+			// "nat46x64Gateway": pulumi.Map{
+			// 	"enabled": pulumi.Bool(true),
+			// },
+			// // TODO
+			// "nodeIPAM": pulumi.Map{
+			// 	"enabled": pulumi.Bool(true),
+			// },
+			// // TODO
+			// "routingMode":          pulumi.String("native"),
+			// // TODO
 			// "autoDirectNodeRoutes": pulumi.Bool(true),
 		},
 	}, pulumi.DependsOn([]pulumi.Resource{gwapiCrd}))
