@@ -227,10 +227,16 @@ func DeployCNI(
 				// Set Maglev table size, see https://docs.cilium.io/en/latest/network/kubernetes/kubeproxy-free/#maglev-consistent-hashing
 				"tableSize": pulumi.Int(16381),
 			},
-			// // TODO
-			// "routingMode":          pulumi.String("native"),
-			// // TODO
-			// "autoDirectNodeRoutes": pulumi.Bool(true),
+			"ipv4": pulumi.Map{
+				// Disable IPv4
+				"enabled": pulumi.Bool(false),
+			},
+			// Use packet forwarding instead of encapsulation, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
+			"routingMode": pulumi.String("native"),
+			// Set cluster network CIDR, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
+			"ipv6NativeRoutingCIDR": pulumi.String("fc00:f853:ccd:e793::/64"),
+			// Load routes in Linux kernel, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
+			"autoDirectNodeRoutes": pulumi.Bool(true),
 			// // TODO https://isovalent.com/blog/post/cilium-release-112/#nat46-nat64
 			// "nat46x64Gateway": pulumi.Map{
 			// 	"enabled": pulumi.Bool(true),
