@@ -151,11 +151,16 @@ func DeployCNI(
 					"enabled": pulumi.Bool(true),
 				},
 				"log": pulumi.Map{
+					// Enable Envoy structured logging, see https://www.envoyproxy.io/docs/envoy/latest/operations/cli#cmdoption-log-format & https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/bootstrap/v3/bootstrap.proto#envoy-v3-api-field-config-bootstrap-v3-bootstrap-applicationlogconfig-logformat-json-format
+					"format_json": pulumi.Map{
+						"date":        pulumi.String("%Y-%m-%dT%T.%e"),
+						"level":       pulumi.String("%l"),
+						"logger":      pulumi.String("%n"),
+						"message":     pulumi.String("%j"),
+						"source_line": pulumi.String("%@"),
+						"thread_id":   pulumi.String("%t"),
+					},
 					"format": nil,
-					"format_json": pulumi.String(
-						// Enable Envoy structured logging, see https://www.envoyproxy.io/docs/envoy/latest/operations/cli#cmdoption-log-format & https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/bootstrap/v3/bootstrap.proto#envoy-v3-api-field-config-bootstrap-v3-bootstrap-applicationlogconfig-logformat-json-format
-						`{"date":"%Y-%m-%dT%T.%e","level":"%l","logger":"%n","message":"%j","source_line":"%@","thread_id":"%t"}`,
-					),
 				},
 			},
 			"loadBalancer": pulumi.Map{
