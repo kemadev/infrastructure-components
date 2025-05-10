@@ -1,6 +1,8 @@
 package cni
 
 import (
+	"fmt"
+
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/helm/v3"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
@@ -11,6 +13,7 @@ import (
 func DeployCNI(
 	ctx *pulumi.Context,
 	gwapiCrd *yamlv2.ConfigFile,
+	clusterName string,
 ) (*helm.Release, error) {
 	const cniName = "cilium"
 
@@ -24,7 +27,7 @@ func DeployCNI(
 		},
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create namespace %s: %w", cniName, err)
 	}
 
 	release, err := helm.NewRelease(ctx, cniName, &helm.ReleaseArgs{
@@ -42,19 +45,20 @@ func DeployCNI(
 			"image": pulumi.Map{
 				"pullPolicy": pulumi.String("IfNotPresent"),
 			},
-			// Using an input to let dev value be nil, thus not included in Helm values
-			"k8sServiceHost": func() pulumi.StringInput {
+			// Use a nillable value to avoid including the Helm value when it is nil
+			"k8sServiceHost": func() pulumi.StringOutput {
 				if ctx.Stack() != "dev" {
-					return nil
+					return pulumi.StringOutput{}
 				}
-				return pulumi.String(ctx.Stack())
+				return pulumi.String(clusterName + "-control-plane").ToStringOutput()
 			}(),
-			// Using an input to let dev value be nil, thus not included in Helm values
-			"k8sServicePort": func() pulumi.IntInput {
+			// Use a nillable value to avoid including the Helm value when it is nil
+			"k8sServicePort": *func() *pulumi.Int {
 				if ctx.Stack() != "dev" {
 					return nil
 				}
-				return pulumi.Int(6443)
+				res := pulumi.Int(6443)
+				return &res
 			}(),
 			"kubeProxyReplacement": pulumi.Bool(true),
 			"l7Proxy":              pulumi.Bool(true),
@@ -165,7 +169,7 @@ func DeployCNI(
 		},
 	}, pulumi.DependsOn([]pulumi.Resource{gwapiCrd}))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to deploy cni: %w", err)
 	}
 
 	return release, nil

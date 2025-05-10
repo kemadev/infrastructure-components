@@ -1,6 +1,8 @@
 package gwapi
 
 import (
+	"fmt"
+
 	yamlv2 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/yaml/v2"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
@@ -13,7 +15,7 @@ func DeployGatewayAPICRDs(ctx *pulumi.Context) (*yamlv2.ConfigFile, error) {
 		),
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to deploy gateway api crds: %w", err)
 	}
 	return crd, err
 }
