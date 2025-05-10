@@ -14,6 +14,8 @@ func DeployCNI(
 	ctx *pulumi.Context,
 	gwapiCrd *yamlv2.ConfigFile,
 	clusterName string,
+	nativeIPv4CIDR string,
+	nativeIPv6CIDR string,
 ) (*helm.Release, error) {
 	const cniName = "cilium"
 
@@ -148,13 +150,12 @@ func DeployCNI(
 					// Expose envoy metrics
 					"enabled": pulumi.Bool(true),
 				},
-				// Enable Envoy structured logging, see https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/bootstrap/v3/bootstrap.proto#envoy-v3-api-field-config-bootstrap-v3-bootstrap-applicationlogconfig-logformat-json-format
 				"log": pulumi.Map{
 					"format": nil,
-					// TODO
-					// "format_json": pulumi.String(
-					// 	"[%Y-%m-%d %T.%e][%t][%l][%n] [%g:%#] %v",
-					// ),
+					"format_json": pulumi.String(
+						// Enable Envoy structured logging, see https://www.envoyproxy.io/docs/envoy/latest/operations/cli#cmdoption-log-format & https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/bootstrap/v3/bootstrap.proto#envoy-v3-api-field-config-bootstrap-v3-bootstrap-applicationlogconfig-logformat-json-format
+						`{"date":"%Y-%m-%dT%T.%e","level":"%l","logger":"%n","message":"%j","source_line":"%@","thread_id":"%t"}`,
+					),
 				},
 			},
 			"loadBalancer": pulumi.Map{
@@ -223,31 +224,26 @@ func DeployCNI(
 				// Set Maglev table size, see https://docs.cilium.io/en/latest/network/kubernetes/kubeproxy-free/#maglev-consistent-hashing
 				"tableSize": pulumi.Int(16381),
 			},
-			"ipv4": pulumi.Map{
-				// Disable IPv4
-				"enabled": pulumi.Bool(false),
-			},
 			"ipam": pulumi.Map{
 				// Let cilium assign per-node PodCIDRs, see https://docs.cilium.io/en/stable/network/concepts/ipam/cluster-pool/
 				"mode": pulumi.String("cluster-pool"),
-				// "operator": pulumi.Map{
-				// 	"clusterPoolIPv6PodCIDRList": pulumi.String(""),
-				// },
-			},
-			"k8s": pulumi.Map{
-				"requireIPv6PodCIDR": pulumi.Bool(true),
 			},
 			// Use packet forwarding instead of encapsulation, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
 			"routingMode": pulumi.String("native"),
 			// Set cluster network CIDR, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
-			"ipv6NativeRoutingCIDR": pulumi.String("fc00:f853:ccd:e793::/64"),
-			// "ipv4NativeRoutingCIDR": pulumi.String("172.18.0.0/16"),
+			"ipv4NativeRoutingCIDR": pulumi.String(nativeIPv4CIDR),
+			"ipv6NativeRoutingCIDR": pulumi.String(nativeIPv6CIDR),
 			// Load routes in Linux kernel, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
 			"autoDirectNodeRoutes": pulumi.Bool(true),
-			// // TODO https://isovalent.com/blog/post/cilium-release-112/#nat46-nat64
-			// "nat46x64Gateway": pulumi.Map{
-			// 	"enabled": pulumi.Bool(true),
-			// },
+			"nat46x64Gateway":      pulumi.Map{
+				// TODO Enable NAT gateway, see https://isovalent.com/blog/post/cilium-release-112/#nat46-nat64
+				// "enabled": pulumi.Bool(true),
+			},
+			"ipv4": pulumi.Map{
+				// TODO Disable IPv4
+				// TODO Also disable in kind
+				// "enabled": pulumi.Bool(false),
+			},
 			// TODO https://medium.com/@nahelou.j/play-with-cilium-native-routing-in-kind-cluster-5a9e586a81ca
 		},
 	}, pulumi.DependsOn([]pulumi.Resource{gwapiCrd}))
