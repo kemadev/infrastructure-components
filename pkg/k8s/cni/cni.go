@@ -224,7 +224,7 @@ func DeployCNI(
 				"enabled": pulumi.Bool(true),
 			},
 			"maglev": pulumi.Map{
-				// Sett Maglev table size, see https://docs.cilium.io/en/latest/network/kubernetes/kubeproxy-free/#maglev-consistent-hashing
+				// Set Maglev table size, see https://docs.cilium.io/en/latest/network/kubernetes/kubeproxy-free/#maglev-consistent-hashing
 				"tableSize": pulumi.Int(16381),
 			},
 			// // TODO
