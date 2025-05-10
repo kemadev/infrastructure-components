@@ -153,7 +153,6 @@ func DeployCNI(
 			// "endpointRoutes": pulumi.Map{
 			// 	"enabled": pulumi.Bool(true),
 			// },
-			// "enableIPv4BIGTCP": pulumi.Bool(true),
 			// "bpf": pulumi.Map{
 			// 	"masquerade": pulumi.Bool(true),
 			// 	"dataPathMode": pulumi.String("netkit"),
