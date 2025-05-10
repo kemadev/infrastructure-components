@@ -185,61 +185,56 @@ func DeployCNI(
 					},
 				},
 			},
-			// "l2announcements": pulumi.Map{
-			// 	// Enable L2 announcements
-			// 	"enabled": pulumi.Bool(true),
-			// },
-			// "ipv6": pulumi.Map{
-			// 	// Enable IPv6
-			// 	"enabled": pulumi.Bool(true),
-			// },
-			// "endpointRoutes": pulumi.Map{
-			// 	// Enable use of per endpoint routes instead of routing via cilium_host interface
-			// 	"enabled": pulumi.Bool(true),
-			// },
-			// "bpf": pulumi.Map{
-			// 	// Enable masquerading, see https://docs.cilium.io/en/stable/network/concepts/masquerading/
-			// 	"masquerade": pulumi.Bool(true),
-			// 	// Mode for Pod devices for the core datapath (veth, netkit, netkit-l2)
-			// 	"dataPathMode": pulumi.String("netkit"),
-			// 	// Enables pre-allocation of eBPF map values
-			// 	"preallocateMaps": pulumi.Bool(true),
-			// 	// Enable eBPF-based TPROXY
-			// 	"tproxy": pulumi.Bool(true),
-			// },
-
-			// "bandwidthManager": pulumi.Map{
-			// 	// Enable Cilium’s bandwidth manager, see https://docs.cilium.io/en/stable/network/kubernetes/bandwidth-manager/
-			// 	"enabled": pulumi.Bool(true),
-			// 	// Enable BBR congestion control, see https://docs.cilium.io/en/stable/network/kubernetes/bandwidth-manager/#bbr-for-pods
-			// 	"bbr": pulumi.Bool(true),
-			// },
-			// // Enable local redirect, see https://docs.cilium.io/en/stable/network/kubernetes/local-redirect-policy/
-			// "localRedirectPolicy": pulumi.Bool(true),
-			// // Enable synchronizing Kubernetes EndpointSlice
-			// "ciliumEndpointSlice": pulumi.Map{
-			// 	"enabled": pulumi.Bool(true),
-			// },
-			// "hostFirewall": pulumi.Map{
-			// 	// Enable cilium host firewall
-			// 	"enabled": pulumi.Bool(true),
-			// },
-			// // TODO
-			// "maglev": pulumi.Map{
-			// 	"tableSize": pulumi.Int(16381),
-			// },
-			// // TODO
-			// "nat46x64Gateway": pulumi.Map{
-			// 	"enabled": pulumi.Bool(true),
-			// },
-			// // TODO
-			// "nodeIPAM": pulumi.Map{
-			// 	"enabled": pulumi.Bool(true),
-			// },
+			"l2announcements": pulumi.Map{
+				// Enable L2 announcements (see https://docs.cilium.io/en/stable/network/l2-announcements/), enabling LB IPAM, see https://docs.cilium.io/en/stable/network/lb-ipam/
+				"enabled": pulumi.Bool(true),
+			},
+			"ipv6": pulumi.Map{
+				// Enable IPv6
+				"enabled": pulumi.Bool(true),
+			},
+			"endpointRoutes": pulumi.Map{
+				// Enable use of per endpoint routes instead of routing via cilium_host interface
+				"enabled": pulumi.Bool(true),
+			},
+			"bpf": pulumi.Map{
+				// Enable masquerading, see https://docs.cilium.io/en/stable/network/concepts/masquerading/
+				"masquerade": pulumi.Bool(true),
+				// Mode for Pod devices for the core datapath (veth, netkit, netkit-l2)
+				"dataPathMode": pulumi.String("netkit"),
+				// Enables pre-allocation of eBPF map values
+				"preallocateMaps": pulumi.Bool(true),
+				// Enable eBPF-based TPROXY
+				"tproxy": pulumi.Bool(true),
+			},
+			"bandwidthManager": pulumi.Map{
+				// Enable Cilium’s bandwidth manager, see https://docs.cilium.io/en/stable/network/kubernetes/bandwidth-manager/
+				"enabled": pulumi.Bool(true),
+				// Enable BBR congestion control, see https://docs.cilium.io/en/stable/network/kubernetes/bandwidth-manager/#bbr-for-pods
+				"bbr": pulumi.Bool(true),
+			},
+			// Enable local redirect, see https://docs.cilium.io/en/stable/network/kubernetes/local-redirect-policy/
+			"localRedirectPolicy": pulumi.Bool(true),
+			// Enable synchronizing Kubernetes EndpointSlice
+			"ciliumEndpointSlice": pulumi.Map{
+				"enabled": pulumi.Bool(true),
+			},
+			"hostFirewall": pulumi.Map{
+				// Enable cilium host firewall
+				"enabled": pulumi.Bool(true),
+			},
+			"maglev": pulumi.Map{
+				// Sett Maglev table size, see https://docs.cilium.io/en/latest/network/kubernetes/kubeproxy-free/#maglev-consistent-hashing
+				"tableSize": pulumi.Int(16381),
+			},
 			// // TODO
 			// "routingMode":          pulumi.String("native"),
 			// // TODO
 			// "autoDirectNodeRoutes": pulumi.Bool(true),
+			// // TODO https://isovalent.com/blog/post/cilium-release-112/#nat46-nat64
+			// "nat46x64Gateway": pulumi.Map{
+			// 	"enabled": pulumi.Bool(true),
+			// },
 		},
 	}, pulumi.DependsOn([]pulumi.Resource{gwapiCrd}))
 	if err != nil {
