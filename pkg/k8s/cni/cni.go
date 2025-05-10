@@ -74,10 +74,9 @@ func DeployCNI(
 				},
 				"enableAlpn":        pulumi.Bool(true),
 				"enableAppProtocol": pulumi.Bool(true),
-				// TODO
-				// "hostNetwork": pulumi.Map{
-				// 	"enabled": pulumi.Bool(true),
-				// },
+				"hostNetwork": pulumi.Map{
+					"enabled": pulumi.Bool(true),
+				},
 			},
 			"hubble": pulumi.Map{
 				"enabled": pulumi.Bool(true),
@@ -148,23 +147,23 @@ func DeployCNI(
 			"ipv6": pulumi.Map{
 				"enabled": pulumi.Bool(true),
 			},
+			"endpointRoutes": pulumi.Map{
+				"enabled": pulumi.Bool(true),
+			},
+			"bpf": pulumi.Map{
+				"masquerade":      pulumi.Bool(true),
+				"dataPathMode":    pulumi.String("netkit"),
+				"preallocateMaps": pulumi.Bool(true),
+				"tproxy":          pulumi.Bool(true),
+			},
+			"bandwidthManager": pulumi.Map{
+				"enabled": pulumi.Bool(true),
+				"bbr":     pulumi.Bool(true),
+			},
+			"localRedirectPolicy": pulumi.Bool(true),
 			// TODO enable those values and look for new ones
 			// "routingMode": pulumi.String("native"),
-			// "endpointRoutes": pulumi.Map{
-			// 	"enabled": pulumi.Bool(true),
-			// },
-			// "bpf": pulumi.Map{
-			// 	"masquerade": pulumi.Bool(true),
-			// 	"dataPathMode": pulumi.String("netkit"),
-			// 	"preallocateMaps": pulumi.Bool(true),
-			// 	"tproxy": pulumi.Bool(true),
-			// },
-			// "bandwidthManager": pulumi.Map{
-			// 	"enabled": pulumi.Bool(true),
-			// 	"bbr": pulumi.Bool(true),
-			// },
 			// "autoDirectNodeRoutes": pulumi.Bool(true),
-			// "localRedirectPolicy": pulumi.Bool(true),
 		},
 	}, pulumi.DependsOn([]pulumi.Resource{gwapiCrd}))
 	if err != nil {
