@@ -1,0 +1,6 @@
+name: vcs-kema-run-kema-infrastructure-components-deploy-00-dev-cluster
+description: Dev cluster creation for infrastructure-components
+runtime: go
+config: {}
+backend:
+  url: file://./pulumi-backend

@@ -6,7 +6,7 @@ We are committed to support the latest release, as well as the pre-release. You 
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability related to this project, please report it by sending us a mail at `public-security@kema.dev`. We will review the reports as soon as possible and will discuss the best plan of action, including the disclosure of the vulnerability to the public.
+If you discover a security vulnerability related to this project, please report it by following [our reporting guidelines](https://discuss.kema.cloud/c/security). We will review the reports as soon as possible and will discuss the best plan of action, including the disclosure of the vulnerability to the public.
 
 ## Responsible Disclosure
 

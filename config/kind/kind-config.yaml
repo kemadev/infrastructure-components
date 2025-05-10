@@ -1,0 +1,37 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kema8s
+nodes:
+  - role: control-plane
+    extraMounts:
+      # Permit disks and (and other stuff) discovery
+      - hostPath: /run/udev
+        containerPath: /run/udev
+      # Permit bind-mounting application code inside (nodes then) app containers
+      # NOTE `../../` is relative to cwd, not config file directory!
+      - hostPath: ../../
+        containerPath: /app-code
+  - role: worker
+    extraMounts:
+      - hostPath: /run/udev
+        containerPath: /run/udev
+      - hostPath: ../../
+        containerPath: /app-code
+  - role: worker
+    extraMounts:
+      - hostPath: /run/udev
+        containerPath: /run/udev
+      - hostPath: ../../
+        containerPath: /app-code
+  - role: worker
+    extraMounts:
+      - hostPath: /run/udev
+        containerPath: /run/udev
+      - hostPath: ../../
+        containerPath: /app-code
+networking:
+  ipFamily: dual
+  # Let cilium be exclusive CNI
+  disableDefaultCNI: true
+  # Let cilium replace kube-proxy
+  kubeProxyMode: none

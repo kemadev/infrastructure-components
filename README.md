@@ -36,6 +36,7 @@
 - Code sharing is encouraged, such code should be placed in [pkg](pkg) and [internal/pkg](internal/pkg) directories, as-per Go's conventions
 - Importing other applications libraries and packages is encouraged, following code sharing encouragement
 - First class code documentation (following [Go doc comment guidelines](https://go.dev/doc/comment)) as well as project documentation is encouraged
+- Following [Learn Go with tests](https://github.com/quii/learn-go-with-tests) is encouraged
 - Following [Effective Go](https://go.dev/doc/effective_go) and [Google's styleguide](https://google.github.io/styleguide/go/) is encouraged
 - Following [locality of behaviour](https://htmx.org/essays/locality-of-behaviour/) and [principle of least astonishment](https://en.wikipedia.org/wiki/Principle_of_least_astonishment) is encouraged
 - Variables, functions, methods, ... should be named in a short and descriptive way
@@ -51,7 +52,7 @@
 - [Docker](https://github.com/docker/cli) and [Docker Compose](https://github.com/docker/compose) to run applications in containers. You should configure your credentials store and credential helpers for Docker to work with your container registry
 - [Go](https://github.com/golang/go) to install applications dependencies as needed
 - [Pulumi](https://github.com/pulumi/pulumi) to manage Cloud resources
-- [KinD](https://github.com/kubernetes-sigs/kind) to run Kubernetes clusters locally
+- [kind](https://github.com/kubernetes-sigs/kind) to run Kubernetes clusters locally
 - [Kubectl](https://github.com/kubernetes/kubectl) to manage Kubernetes resources (not strictly required but quite handy)
 - Very few other CLI tools such as [git](https://github.com/git/git), that are most likely already installed on your system
 
@@ -67,7 +68,7 @@
 - That is, you can run the following command to run the whole CI pipeline locally:
 
   ```bash
-  docker run [--rm] -i -t -v .:/src <registry URL>/kema-runner ci [--fix]
+  docker run [--rm] -i -t -v .:/src vcs.kema.run/kema/kema-runner ci [--fix]
   ```
 
 ##### False positives

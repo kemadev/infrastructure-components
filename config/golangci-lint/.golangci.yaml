@@ -250,6 +250,9 @@ linters:
       sql-isolation-level: true
       tls-signature-scheme: true
       constant-kind: true
+      time-weekday: true
+      http-method: true
+      http-status-code: true
     usetesting:
       os-temp-dir: true
     wsl:
@@ -279,6 +282,10 @@ formatters:
       tab-len: 4
       shorten-comments: false
       reformat-tags: true
+    gofmt:
+      rewrite-rules:
+        - pattern: 'interface{}'
+          replacement: 'any'
 
 issues:
   max-issues-per-linter: 0

@@ -1,0 +1,2 @@
+pulumi-backend/*
+!pulumi-backend/.gitkeep
