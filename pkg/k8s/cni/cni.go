@@ -235,14 +235,13 @@ func DeployCNI(
 			"ipv6NativeRoutingCIDR": pulumi.String(nativeIPv6CIDR),
 			// Load routes in Linux kernel, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
 			"autoDirectNodeRoutes": pulumi.Bool(true),
-			"nat46x64Gateway":      pulumi.Map{
+			"ipv4":                 pulumi.Map{
+				// TODO Disable IPv4 (disable in kind too)
+				// "enabled": pulumi.Bool(false),
+			},
+			"nat46x64Gateway": pulumi.Map{
 				// TODO Enable NAT gateway, see https://isovalent.com/blog/post/cilium-release-112/#nat46-nat64
 				// "enabled": pulumi.Bool(true),
-			},
-			"ipv4": pulumi.Map{
-				// TODO Disable IPv4
-				// TODO Also disable in kind
-				// "enabled": pulumi.Bool(false),
 			},
 			// TODO https://medium.com/@nahelou.j/play-with-cilium-native-routing-in-kind-cluster-5a9e586a81ca
 		},
