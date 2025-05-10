@@ -135,10 +135,6 @@ func DeployCNI(
 				// Rollout pods on ConfigMap change
 				"rollOutPods": pulumi.Bool(true),
 			},
-			"ipam": pulumi.Map{
-				// Let cilium assign per-node PodCIDRs, see https://docs.cilium.io/en/stable/network/concepts/ipam/cluster-pool/
-				"mode": pulumi.String("cluster-pool"),
-			},
 			// Rollout pods on ConfigMap change
 			"rollOutCiliumPods": pulumi.Bool(true),
 			"envoyConfig": pulumi.Map{
@@ -231,16 +227,28 @@ func DeployCNI(
 				// Disable IPv4
 				"enabled": pulumi.Bool(false),
 			},
+			"ipam": pulumi.Map{
+				// Let cilium assign per-node PodCIDRs, see https://docs.cilium.io/en/stable/network/concepts/ipam/cluster-pool/
+				"mode": pulumi.String("cluster-pool"),
+				// "operator": pulumi.Map{
+				// 	"clusterPoolIPv6PodCIDRList": pulumi.String(""),
+				// },
+			},
+			"k8s": pulumi.Map{
+				"requireIPv6PodCIDR": pulumi.Bool(true),
+			},
 			// Use packet forwarding instead of encapsulation, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
 			"routingMode": pulumi.String("native"),
 			// Set cluster network CIDR, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
 			"ipv6NativeRoutingCIDR": pulumi.String("fc00:f853:ccd:e793::/64"),
+			// "ipv4NativeRoutingCIDR": pulumi.String("172.18.0.0/16"),
 			// Load routes in Linux kernel, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
 			"autoDirectNodeRoutes": pulumi.Bool(true),
 			// // TODO https://isovalent.com/blog/post/cilium-release-112/#nat46-nat64
 			// "nat46x64Gateway": pulumi.Map{
 			// 	"enabled": pulumi.Bool(true),
 			// },
+			// TODO https://medium.com/@nahelou.j/play-with-cilium-native-routing-in-kind-cluster-5a9e586a81ca
 		},
 	}, pulumi.DependsOn([]pulumi.Resource{gwapiCrd}))
 	if err != nil {
