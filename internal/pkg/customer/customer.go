@@ -1,5 +1,7 @@
 package customer
 
+import "strings"
+
 type Customer string
 
 const (
@@ -7,5 +9,5 @@ const (
 )
 
 func (c Customer) String() string {
-	return string(c)
+	return strings.ToLower(string(c))
 }

@@ -2,6 +2,7 @@ package host
 
 import (
 	"net/url"
+	"strings"
 
 	"vcs.kema.run/kema/infrastructure-components/internal/pkg/domain"
 )
@@ -21,7 +22,7 @@ type (
 )
 
 func (h Host) String() string {
-	return h.String()
+	return strings.ToLower(h.String())
 }
 
 func (u URL) String() string {
@@ -29,7 +30,7 @@ func (u URL) String() string {
 		Host: u.BaseHost.Host,
 		Path: u.PathPattern,
 	}
-	return f.String()
+	return strings.ToLower(f.String())
 }
 
 const (

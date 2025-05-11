@@ -1,6 +1,10 @@
 package mail
 
-import "vcs.kema.run/kema/infrastructure-components/internal/pkg/domain"
+import (
+	"strings"
+
+	"vcs.kema.run/kema/infrastructure-components/internal/pkg/domain"
+)
 
 type (
 	MailDomain  string
@@ -8,11 +12,11 @@ type (
 )
 
 func (md MailDomain) String() string {
-	return string(md)
+	return strings.ToLower(string(md))
 }
 
 func (ma MailAddress) String() string {
-	return string(ma)
+	return strings.ToLower(string(ma))
 }
 
 var PrimaryMailDomain MailDomain = MailDomain(domain.DomainKemaDotDev.String())

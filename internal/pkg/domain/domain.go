@@ -1,5 +1,7 @@
 package domain
 
+import "strings"
+
 type Domain string
 
 const (
@@ -13,7 +15,7 @@ const (
 )
 
 func (d Domain) String() string {
-	return string(d)
+	return strings.ToLower(string(d))
 }
 
 var (
