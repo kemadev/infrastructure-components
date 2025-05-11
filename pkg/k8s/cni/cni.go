@@ -143,6 +143,10 @@ func DeployCNI(
 				// Enable CiliumEnvoyConfig CRD
 				"enabled": pulumi.Bool(true),
 			},
+			"nodePort": pulumi.Map{
+				// Enable NoodePort, required for Gateway API Support
+				"enabled": pulumi.Bool(true),
+			},
 			"envoy": pulumi.Map{
 				// Rollout pods on ConfigMap change
 				"rollOutPods": pulumi.Bool(true),
