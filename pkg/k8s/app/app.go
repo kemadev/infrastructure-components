@@ -163,6 +163,34 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		return err
 	}
 
+	cm, err := corev1.NewConfigMap(ctx, "configmap", &corev1.ConfigMapArgs{
+		Metadata: &metav1.ObjectMetaArgs{
+			Name:      pulumi.String(params.AppName),
+			Namespace: pulumi.String(params.AppName),
+			Labels: pulumi.StringMap{
+				"app": pulumi.String(params.AppName),
+			},
+		},
+		Data: pulumi.StringMap{
+			"RUNTIME_ENV":           pulumi.String(params.RuntimeEnv),
+			"APP_VERSION":           pulumi.String(params.AppVersion.String()),
+			"APP_NAME":              pulumi.String(params.AppName),
+			"APP_NAMESPACE":         pulumi.String(params.AppNamespace),
+			"OTEL_ENDPOINT_URL":     pulumi.String(params.OTelEndpointUrl.String()),
+			"BUSINESS_UNIT_ID":      pulumi.String(params.BusinessUnitId),
+			"CUSTOMER_ID":           pulumi.String(params.CustomerId),
+			"COST_CENTER":           pulumi.String(params.CostCenter),
+			"COST_ALLOCATION_OWNER": pulumi.String(params.CostAllocationOwner),
+			"OPERATIONS_OWNER":      pulumi.String(params.OperationsOwner),
+			"RPO":                   pulumi.String(params.Rpo.String()),
+			"DATA_CLASSIFICATION":   pulumi.String(params.DataClassification),
+			"COMPLIANCE_FRAMEWORK":  pulumi.String(params.ComplianceFramework),
+			"EXPIRATION":            pulumi.String(params.Expiration.String()),
+			"PROJECT_URL":           pulumi.String(params.ProjectUrl.String()),
+			"MONITORING_URL":        pulumi.String(params.MonitoringUrl.String()),
+		},
+	})
+
 	_, err = appsv1.NewDeployment(ctx, "deployment", &appsv1.DeploymentArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String(params.AppName),
@@ -191,32 +219,12 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 						&corev1.ContainerArgs{
 							// TODO dev pass args jq
 							Args: pulumi.StringArray{},
-							// Basic environment variables required by applications
-							Env: corev1.EnvVarArray{
-								corev1.EnvVarArgs{
-									Name:  pulumi.String("OTEL_ENDPOINT_URL"),
-									Value: pulumi.String(params.OTelEndpointUrl.String()),
-								},
-								corev1.EnvVarArgs{
-									Name:  pulumi.String("APP_NAME"),
-									Value: pulumi.String(params.AppName),
-								},
-								corev1.EnvVarArgs{
-									Name:  pulumi.String("APP_NAMESPACE"),
-									Value: pulumi.String(params.AppNamespace),
-								},
-								corev1.EnvVarArgs{
-									Name:  pulumi.String("APP_VERSION"),
-									Value: pulumi.String(params.AppVersion.String()),
-								},
-								corev1.EnvVarArgs{
-									Name:  pulumi.String("RUNTIME_ENV"),
-									Value: pulumi.String(params.RuntimeEnv),
-								},
-							},
-							// TODO make a configmap with all params
 							EnvFrom: corev1.EnvFromSourceArray{
-								corev1.EnvFromSourceArgs{},
+								corev1.EnvFromSourceArgs{
+									ConfigMapRef: corev1.ConfigMapEnvSourceArgs{
+										Name: cm.Metadata.Name(),
+									},
+								},
 							},
 							LivenessProbe: corev1.ProbeArgs{
 								InitialDelaySeconds: pulumi.Int(10),
