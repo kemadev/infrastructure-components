@@ -239,7 +239,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 											Value: pulumi.String("ReadinessProbe"),
 										},
 									},
-									Path: pulumi.String("/ready"),
+									Path: pulumi.String("/readyz"),
 									Port: pulumi.Int(params.Port),
 								},
 							},
