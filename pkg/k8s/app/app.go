@@ -148,15 +148,22 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String(params.AppName),
 			Namespace: pulumi.String(params.AppName),
-			Labels: pulumi.StringMap{
-				"app":                                pulumi.String(params.AppName),
-				"pod-security.kubernetes.io/enforce": pulumi.String("restricted"),
-				"pod-security.kubernetes.io/enforce-version": pulumi.String("latest"),
-				"pod-security.kubernetes.io/audit":           pulumi.String("restricted"),
-				"pod-security.kubernetes.io/audit-version":   pulumi.String("latest"),
-				"pod-security.kubernetes.io/warn":            pulumi.String("restricted"),
-				"pod-security.kubernetes.io/warn-version":    pulumi.String("latest"),
-			},
+			Labels: func() pulumi.StringMap {
+				enforce := "restricted"
+				if ctx.Stack() == "dev" {
+					// Allow using HostPath volume in dev
+					enforce = "privileged"
+				}
+				return pulumi.StringMap{
+					"app":                                pulumi.String(params.AppName),
+					"pod-security.kubernetes.io/enforce": pulumi.String(enforce),
+					"pod-security.kubernetes.io/enforce-version": pulumi.String("latest"),
+					"pod-security.kubernetes.io/audit":           pulumi.String("restricted"),
+					"pod-security.kubernetes.io/audit-version":   pulumi.String("latest"),
+					"pod-security.kubernetes.io/warn":            pulumi.String("restricted"),
+					"pod-security.kubernetes.io/warn-version":    pulumi.String("latest"),
+				}
+			}(),
 		},
 	})
 	if err != nil {
@@ -207,9 +214,11 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 					"app": pulumi.String(params.AppName),
 				},
 			},
-			ProgressDeadlineSeconds: pulumi.Int(10),
+			ProgressDeadlineSeconds: pulumi.Int(180),
 			Template: &corev1.PodTemplateSpecArgs{
 				Metadata: &metav1.ObjectMetaArgs{
+					Name:      pulumi.String(params.AppName),
+					Namespace: pulumi.String(params.AppName),
 					Labels: pulumi.StringMap{
 						"app": pulumi.String(params.AppName),
 					},
@@ -241,10 +250,19 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 									Port:        pulumi.Int(params.Port),
 								},
 							},
-							// TODO hack to air
-							Stdin: pulumi.Bool(true),
-							// TODO hack to air
-							Tty:   pulumi.Bool(true),
+							// HACK Enable colorful output for air, remove once https://github.com/air-verse/air/pull/768 is merged
+							Stdin: func() pulumi.Bool {
+								if ctx.Stack() == "dev" {
+									return pulumi.Bool(true)
+								}
+								return pulumi.Bool(false)
+							}(),
+							Tty: func() pulumi.Bool {
+								if ctx.Stack() == "dev" {
+									return pulumi.Bool(true)
+								}
+								return pulumi.Bool(false)
+							}(),
 							Image: pulumi.String(params.AppName + ":" + params.ImageTag.String()),
 							Name:  pulumi.String(params.AppName),
 							Ports: corev1.ContainerPortArray{
@@ -265,6 +283,18 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 								}
 								return corev1.VolumeMountArray{}
 							}(),
+							SecurityContext: corev1.SecurityContextArgs{
+								AllowPrivilegeEscalation: pulumi.Bool(false),
+								RunAsNonRoot:             pulumi.Bool(true),
+								SeccompProfile: corev1.SeccompProfileArgs{
+									Type: pulumi.String("RuntimeDefault"),
+								},
+								Capabilities: corev1.CapabilitiesArgs{
+									Drop: pulumi.StringArray{
+										pulumi.String("ALL"),
+									},
+								},
+							},
 							ImagePullPolicy: pulumi.String("IfNotPresent"),
 						},
 					},
