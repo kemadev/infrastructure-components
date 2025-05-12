@@ -55,6 +55,8 @@ type AppParms struct {
 	ProjectUrl url.URL
 	// Monitoring URL, (e.g. APM URL)
 	MonitoringUrl url.URL
+	// Port which application serves
+	Port int
 }
 
 var (
@@ -127,6 +129,7 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 		// TODO stackref to collector project
 		OTelEndpointUrl: url.URL{},
 		ProjectUrl:      repoUrl,
+		Port:            8080,
 	}
 	err = mergo.Merge(params, defParams)
 	if err != nil {
@@ -146,7 +149,13 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 			Name:      pulumi.String(params.AppName),
 			Namespace: pulumi.String(params.AppName),
 			Labels: pulumi.StringMap{
-				"app": pulumi.String(params.AppName),
+				"app":                                pulumi.String(params.AppName),
+				"pod-security.kubernetes.io/enforce": pulumi.String("restricted"),
+				"pod-security.kubernetes.io/enforce-version": pulumi.String("latest"),
+				"pod-security.kubernetes.io/audit":           pulumi.String("restricted"),
+				"pod-security.kubernetes.io/audit-version":   pulumi.String("latest"),
+				"pod-security.kubernetes.io/warn":            pulumi.String("restricted"),
+				"pod-security.kubernetes.io/warn-version":    pulumi.String("latest"),
 			},
 		},
 	})
@@ -163,13 +172,14 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 			},
 		},
 		Spec: &appsv1.DeploymentSpecArgs{
-			// TODO
+			// TODO use HPA / VPA
 			Replicas: pulumi.Int(1),
 			Selector: &metav1.LabelSelectorArgs{
 				MatchLabels: pulumi.StringMap{
 					"app": pulumi.String(params.AppName),
 				},
 			},
+			ProgressDeadlineSeconds: pulumi.Int(10),
 			Template: &corev1.PodTemplateSpecArgs{
 				Metadata: &metav1.ObjectMetaArgs{
 					Labels: pulumi.StringMap{
@@ -179,11 +189,73 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 				Spec: &corev1.PodSpecArgs{
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
+							// TODO dev pass args jq
+							Args: pulumi.StringArray{},
+							// Basic environment variables required by applications
+							Env: corev1.EnvVarArray{
+								corev1.EnvVarArgs{
+									Name:  pulumi.String("OTEL_ENDPOINT_URL"),
+									Value: pulumi.String(params.OTelEndpointUrl.String()),
+								},
+								corev1.EnvVarArgs{
+									Name:  pulumi.String("APP_NAME"),
+									Value: pulumi.String(params.AppName),
+								},
+								corev1.EnvVarArgs{
+									Name:  pulumi.String("APP_NAMESPACE"),
+									Value: pulumi.String(params.AppNamespace),
+								},
+								corev1.EnvVarArgs{
+									Name:  pulumi.String("APP_VERSION"),
+									Value: pulumi.String(params.AppVersion.String()),
+								},
+								corev1.EnvVarArgs{
+									Name:  pulumi.String("RUNTIME_ENV"),
+									Value: pulumi.String(params.RuntimeEnv),
+								},
+							},
+							// TODO make a configmap with all params
+							EnvFrom: corev1.EnvFromSourceArray{
+								corev1.EnvFromSourceArgs{},
+							},
+							// TODO
+							LivenessProbe: corev1.ProbeArgs{
+								InitialDelaySeconds: pulumi.Int(10),
+								HttpGet: corev1.HTTPGetActionArgs{
+									Host:        pulumi.String(""),
+									HttpHeaders: corev1.HTTPHeaderArray{},
+									Path:        pulumi.String(""),
+									Port:        pulumi.Int(params.Port),
+								},
+							},
+							// TODO
+							StartupProbe: corev1.ProbeArgs{
+								HttpGet: corev1.HTTPGetActionArgs{
+									Host:        pulumi.String(""),
+									HttpHeaders: corev1.HTTPHeaderArray{},
+									Path:        pulumi.String(""),
+									Port:        pulumi.Int(params.Port),
+								},
+							},
+							// TODO
+							ReadinessProbe: corev1.ProbeArgs{
+								HttpGet: corev1.HTTPGetActionArgs{
+									Host:        pulumi.String(""),
+									HttpHeaders: corev1.HTTPHeaderArray{},
+									Path:        pulumi.String(""),
+									Port:        pulumi.Int(params.Port),
+								},
+							},
+							// TODO hack to air
+							Stdin: pulumi.Bool(true),
+							// TODO hack to air
+							Tty:   pulumi.Bool(true),
 							Image: pulumi.String(params.AppName + ":" + params.ImageTag.String()),
 							Name:  pulumi.String(params.AppName),
 							Ports: corev1.ContainerPortArray{
 								&corev1.ContainerPortArgs{
-									ContainerPort: pulumi.Int(8080),
+									ContainerPort: pulumi.Int(params.Port),
+									Protocol:      pulumi.String("TCP"),
 								},
 							},
 							VolumeMounts: func() corev1.VolumeMountArray {
@@ -216,6 +288,12 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 						}
 						return corev1.VolumeArray{}
 					}(),
+					Resources: corev1.ResourceRequirementsArgs{
+						Requests: pulumi.StringMap{
+							"cpu":    pulumi.String("500m"),
+							"memory": pulumi.String("100m"),
+						},
+					},
 				},
 			},
 		},
@@ -235,9 +313,11 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		Spec: &corev1.ServiceSpecArgs{
 			Ports: corev1.ServicePortArray{
 				&corev1.ServicePortArgs{
-					Port:       pulumi.Int(8080),
-					Protocol:   pulumi.String("TCP"),
-					TargetPort: pulumi.Any(8080),
+					// TODO
+					AppProtocol: pulumi.String(""),
+					Port:        pulumi.Int(params.Port),
+					Protocol:    pulumi.String("TCP"),
+					TargetPort:  pulumi.Any(params.Port),
 				},
 			},
 			Selector: pulumi.StringMap{
