@@ -221,26 +221,16 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 							LivenessProbe: corev1.ProbeArgs{
 								InitialDelaySeconds: pulumi.Int(10),
 								HttpGet: corev1.HTTPGetActionArgs{
-									HttpHeaders: corev1.HTTPHeaderArray{
-										corev1.HTTPHeaderArgs{
-											Name:  pulumi.String("Kema-Monitoring-Type"),
-											Value: pulumi.String("LivenessProbe"),
-										},
-									},
-									Path: pulumi.String("/healthz"),
-									Port: pulumi.Int(params.Port),
+									HttpHeaders: corev1.HTTPHeaderArray{},
+									Path:        pulumi.String("/healthz"),
+									Port:        pulumi.Int(params.Port),
 								},
 							},
 							ReadinessProbe: corev1.ProbeArgs{
 								HttpGet: corev1.HTTPGetActionArgs{
-									HttpHeaders: corev1.HTTPHeaderArray{
-										corev1.HTTPHeaderArgs{
-											Name:  pulumi.String("Kema-Monitoring-Type"),
-											Value: pulumi.String("ReadinessProbe"),
-										},
-									},
-									Path: pulumi.String("/readyz"),
-									Port: pulumi.Int(params.Port),
+									HttpHeaders: corev1.HTTPHeaderArray{},
+									Path:        pulumi.String("/readyz"),
+									Port:        pulumi.Int(params.Port),
 								},
 							},
 							// TODO hack to air
