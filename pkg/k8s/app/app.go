@@ -98,7 +98,6 @@ func getGitInfos() (string, url.URL, error) {
 
 func getVersionFromGit() (semver.Version, error) {
 	versionString, err := svu.Current(
-		svu.WithPrefix("v"),
 		svu.StripPrefix(),
 	)
 	if err != nil {
@@ -128,8 +127,12 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 		RuntimeEnv: ctx.Stack(),
 		// TODO stackref to collector project
 		OTelEndpointUrl: url.URL{},
-		ProjectUrl:      repoUrl,
-		Port:            8080,
+		ProjectUrl: func() url.URL {
+			t := repoUrl
+			t.Scheme = "https"
+			return t
+		}(),
+		Port: 8080,
 	}
 	err = mergo.Merge(params, defParams)
 	if err != nil {
@@ -139,12 +142,15 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 }
 
 func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
-	mergeParams(ctx, &params)
+	err := mergeParams(ctx, &params)
+	if err != nil {
+		return fmt.Errorf("failed to apply default applicatiomn parameters: %w", err)
+	}
 
 	// Must match kind mount
 	appCodeVolume := "/app-code"
 
-	_, err := corev1.NewNamespace(ctx, "namespace", &corev1.NamespaceArgs{
+	_, err = corev1.NewNamespace(ctx, "namespace", &corev1.NamespaceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String(params.AppName),
 			Namespace: pulumi.String(params.AppName),
@@ -263,8 +269,10 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 								}
 								return pulumi.Bool(false)
 							}(),
-							Image: pulumi.String(params.AppName + ":" + params.ImageTag.String()),
-							Name:  pulumi.String(params.AppName),
+							Image: pulumi.String(
+								params.ImageRef.String() + ":" + params.ImageTag.String(),
+							),
+							Name: pulumi.String(params.AppName),
 							Ports: corev1.ContainerPortArray{
 								&corev1.ContainerPortArgs{
 									ContainerPort: pulumi.Int(params.Port),
@@ -327,7 +335,6 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 	if err != nil {
 		return err
 	}
-
 	_, err = corev1.NewService(ctx, "service", &corev1.ServiceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String(params.AppName),
