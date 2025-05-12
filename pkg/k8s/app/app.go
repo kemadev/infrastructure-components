@@ -218,32 +218,29 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 							EnvFrom: corev1.EnvFromSourceArray{
 								corev1.EnvFromSourceArgs{},
 							},
-							// TODO
 							LivenessProbe: corev1.ProbeArgs{
 								InitialDelaySeconds: pulumi.Int(10),
 								HttpGet: corev1.HTTPGetActionArgs{
-									Host:        pulumi.String(""),
-									HttpHeaders: corev1.HTTPHeaderArray{},
-									Path:        pulumi.String(""),
-									Port:        pulumi.Int(params.Port),
+									HttpHeaders: corev1.HTTPHeaderArray{
+										corev1.HTTPHeaderArgs{
+											Name:  pulumi.String("Kema-Monitoring-Type"),
+											Value: pulumi.String("LivenessProbe"),
+										},
+									},
+									Path: pulumi.String("/healthz"),
+									Port: pulumi.Int(params.Port),
 								},
 							},
-							// TODO
-							StartupProbe: corev1.ProbeArgs{
-								HttpGet: corev1.HTTPGetActionArgs{
-									Host:        pulumi.String(""),
-									HttpHeaders: corev1.HTTPHeaderArray{},
-									Path:        pulumi.String(""),
-									Port:        pulumi.Int(params.Port),
-								},
-							},
-							// TODO
 							ReadinessProbe: corev1.ProbeArgs{
 								HttpGet: corev1.HTTPGetActionArgs{
-									Host:        pulumi.String(""),
-									HttpHeaders: corev1.HTTPHeaderArray{},
-									Path:        pulumi.String(""),
-									Port:        pulumi.Int(params.Port),
+									HttpHeaders: corev1.HTTPHeaderArray{
+										corev1.HTTPHeaderArgs{
+											Name:  pulumi.String("Kema-Monitoring-Type"),
+											Value: pulumi.String("ReadinessProbe"),
+										},
+									},
+									Path: pulumi.String("/ready"),
+									Port: pulumi.Int(params.Port),
 								},
 							},
 							// TODO hack to air
