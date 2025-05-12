@@ -313,11 +313,10 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		Spec: &corev1.ServiceSpecArgs{
 			Ports: corev1.ServicePortArray{
 				&corev1.ServicePortArgs{
-					// TODO
-					AppProtocol: pulumi.String(""),
+					AppProtocol: pulumi.String("http"),
 					Port:        pulumi.Int(params.Port),
-					Protocol:    pulumi.String("TCP"),
 					TargetPort:  pulumi.Any(params.Port),
+					Protocol:    pulumi.String("TCP"),
 				},
 			},
 			Selector: pulumi.StringMap{
