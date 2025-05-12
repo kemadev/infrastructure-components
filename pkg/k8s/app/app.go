@@ -209,7 +209,7 @@ func DeployApp(ctx *pulumi.Context, params AppParms) error {
 		Spec: &corev1.ServiceSpecArgs{
 			Ports: corev1.ServicePortArray{
 				&corev1.ServicePortArgs{
-					Port:       pulumi.Int(80),
+					Port:       pulumi.Int(8080),
 					Protocol:   pulumi.String("TCP"),
 					TargetPort: pulumi.Any(8080),
 				},
