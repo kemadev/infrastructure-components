@@ -286,6 +286,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 						return corev1.VolumeArray{}
 					}(),
 					Resources: corev1.ResourceRequirementsArgs{
+						// TODO refine values after benchmarking / load testing
 						Requests: pulumi.StringMap{
 							"cpu":    pulumi.String("500m"),
 							"memory": pulumi.String("100m"),
