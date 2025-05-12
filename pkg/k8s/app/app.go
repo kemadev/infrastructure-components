@@ -161,6 +161,7 @@ func DeployApp(ctx *pulumi.Context, params AppParms) error {
 								},
 							},
 							VolumeMounts: func() corev1.VolumeMountArray {
+								// Mount app code volume in dev
 								if ctx.Stack() == "dev" {
 									return corev1.VolumeMountArray{
 										&corev1.VolumeMountArgs{
@@ -175,6 +176,7 @@ func DeployApp(ctx *pulumi.Context, params AppParms) error {
 						},
 					},
 					Volumes: func() corev1.VolumeArray {
+						// Create app code volume in dev
 						if ctx.Stack() == "dev" {
 							return corev1.VolumeArray{
 								corev1.VolumeArgs{
