@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
 	"dario.cat/mergo"
 	"github.com/blang/semver"
@@ -13,27 +14,47 @@ import (
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"vcs.kema.cloud/kema/runner-tools/pkg/git"
+	"vcs.kema.run/kema/infrastructure-components/internal/pkg/businessunit"
+	"vcs.kema.run/kema/infrastructure-components/internal/pkg/customer"
 )
 
 type AppParms struct {
-	ImageRef            string
-	ImageTag            string
-	RuntimeEnv          string
-	OTelEndpointUrl     url.URL
-	AppVersion          semver.Version
-	AppName             string
-	AppNamespace        string
-	BusinessUnitId      string
-	CustomerId          string
-	CostCenter          string
-	CostAllocationOwner string
-	OperationsOwner     string
-	Rpo                 string
-	DataClassification  string
+	// Image reference (URL)
+	ImageRef url.URL
+	// Image tag
+	ImageTag semver.Version
+	// Runtime env
+	RuntimeEnv string
+	// OpenTelemetry endpoint URL
+	OTelEndpointUrl url.URL
+	// Application version, i.e. SemVer tag
+	AppVersion semver.Version
+	// Application name, i.e. repository name
+	AppName string
+	// Application namespace, which group it belogs to (e.g. shoppingcart, auth, ...)
+	AppNamespace string
+	// Business unit developing application
+	BusinessUnitId businessunit.BusinessUnit
+	// Customer intended to use application
+	CustomerId customer.Customer
+	// Cost center, which i
+	CostCenter string
+	// Cost allocation owner, who pays for the application, budget holder
+	CostAllocationOwner businessunit.BusinessUnit
+	// Team  responsible for application
+	OperationsOwner businessunit.BusinessUnit
+	// Recovery Point Objective (RPO) of resource
+	Rpo time.Duration
+	// Data classification resource is subject to (e.g. )
+	DataClassification string
+	// Compliance framework resource is subject to (e.g. )
 	ComplianceFramework string
-	Expiration          string
-	ProjectUrl          string
-	MonitoringUrl       string
+	// Time at which resource should expire, be deleted
+	Expiration time.Time
+	// Git repository URL
+	ProjectUrl url.URL
+	// Monitoring URL, (e.g. APM URL)
+	MonitoringUrl url.URL
 }
 
 var (
@@ -42,31 +63,35 @@ var (
 	ErrInvalidUrl         = fmt.Errorf("repository remote URL is invlid")
 )
 
-func getGitInfos() (string, string, error) {
+func getGitInfos() (string, url.URL, error) {
 	repo, err := git.GetGitRepo()
 	if err != nil {
-		return "", "", fmt.Errorf("error getting git repository: %w", err)
+		return "", url.URL{}, fmt.Errorf("error getting git repository: %w", err)
 	}
 	remote, err := repo.Remote("origin")
 	if err != nil {
-		return "", "", fmt.Errorf("error getting git remote origin: %w", err)
+		return "", url.URL{}, fmt.Errorf("error getting git remote origin: %w", err)
 	}
 	urls := remote.Config().URLs
 	if len(urls) < 1 {
-		return "", "", ErrNoRemoteURL
+		return "", url.URL{}, ErrNoRemoteURL
 	} else if len(urls) > 1 {
-		return "", "", ErrMultipleRemoteURLs
+		return "", url.URL{}, ErrMultipleRemoteURLs
 	}
 	gitUrl, err := git.GetGitBasePathWithRepo(repo)
 	if err != nil {
-		return "", "", fmt.Errorf("error getting git repository base path: %w", err)
+		return "", url.URL{}, fmt.Errorf("error getting git repository base path: %w", err)
 	}
 	urlParts := strings.Split(gitUrl, "/")
 	if len(urlParts) < 2 {
-		return "", "", fmt.Errorf("remote url %s: %w", gitUrl, ErrInvalidUrl)
+		return "", url.URL{}, fmt.Errorf("remote url %s: %w", gitUrl, ErrInvalidUrl)
 	}
 	appName := strings.Join(urlParts[len(urlParts)-1:], "")
-	return appName, gitUrl, nil
+	parsedUrl, err := url.Parse(gitUrl)
+	if err != nil {
+		return "", url.URL{}, fmt.Errorf("error parsing git repository url: %w", err)
+	}
+	return appName, *parsedUrl, nil
 }
 
 func getVersionFromGit() (semver.Version, error) {
@@ -96,12 +121,12 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 	defParams := AppParms{
 		AppName:    appName,
 		ImageRef:   repoUrl,
-		ImageTag:   appVersion.String(),
+		ImageTag:   appVersion,
 		AppVersion: appVersion,
 		RuntimeEnv: ctx.Stack(),
 		// TODO stackref to collector project
 		OTelEndpointUrl: url.URL{},
-		ProjectUrl:      "https://" + repoUrl,
+		ProjectUrl:      repoUrl,
 	}
 	err = mergo.Merge(params, defParams)
 	if err != nil {
@@ -110,7 +135,7 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 	return nil
 }
 
-func DeployApp(ctx *pulumi.Context, params AppParms) error {
+func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 	mergeParams(ctx, &params)
 
 	// Must match kind mount
@@ -138,6 +163,7 @@ func DeployApp(ctx *pulumi.Context, params AppParms) error {
 			},
 		},
 		Spec: &appsv1.DeploymentSpecArgs{
+			// TODO
 			Replicas: pulumi.Int(1),
 			Selector: &metav1.LabelSelectorArgs{
 				MatchLabels: pulumi.StringMap{
@@ -153,7 +179,7 @@ func DeployApp(ctx *pulumi.Context, params AppParms) error {
 				Spec: &corev1.PodSpecArgs{
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
-							Image: pulumi.String(params.AppName + ":" + params.ImageTag),
+							Image: pulumi.String(params.AppName + ":" + params.ImageTag.String()),
 							Name:  pulumi.String(params.AppName),
 							Ports: corev1.ContainerPortArray{
 								&corev1.ContainerPortArgs{
