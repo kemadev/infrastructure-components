@@ -1,4 +1,4 @@
-name: -kemadev-infrastructure-components-deploy-00-dev-cluster
+name: -kemadev-infrastructure-components-deploy-50-app
 description: Dev cluster creation for infrastructure-components
 runtime: go
 config: {}

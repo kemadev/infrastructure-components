@@ -1,4 +1,4 @@
-module /kemadev/infrastructure-components/deploy/00-dev-cluster
+module /kemadev/infrastructure-components/deploy/01-dev-cluster-core
 
 go 1.22
 
@@ -6,7 +6,7 @@ toolchain go1.24.1
 
 require (
 	github.com/pulumi/pulumi-command/sdk v1.0.2
-	github.com/pulumi/pulumi/sdk/v3 v3.150.0
+	github.com/pulumi/pulumi/sdk/v3 v3.156.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -63,6 +63,7 @@ require (
 	github.com/pkg/term v1.1.0 // indirect
 	github.com/pulumi/appdash v0.0.0-20231130102222-75f619a67231 // indirect
 	github.com/pulumi/esc v0.10.0 // indirect
+	github.com/pulumi/pulumi-docker/sdk/v4 v4.6.2 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06 // indirect
@@ -75,7 +76,7 @@ require (
 	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	github.com/zclconf/go-cty v1.13.2 // indirect
+	github.com/zclconf/go-cty v1.14.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect

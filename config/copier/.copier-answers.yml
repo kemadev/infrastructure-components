@@ -1,9 +1,9 @@
 # Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
-_commit: c882378
+_commit: 3a43e78
 _src_path: https://github.com/kemadev/repo-template-k8s
-codeowner_default: '@kema/maintainers'
-vcs_namespace: kema
-vcs_provider: gitea
+codeowner_default: '@kemadev/maintainers'
+vcs_namespace: kemadev
+vcs_provider: github
 vcs_repo: infrastructure-components
-vcs_server_host: vcs.kema.run
+vcs_server_host: ''
 vcs_url_scheme: https://

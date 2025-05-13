@@ -1,3 +1,4 @@
+# TODO Add renovate tracking
 FROM --platform=${BUILDPLATFORM} docker.io/alpine:3.21.3 AS go-deps
 
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
@@ -18,6 +19,7 @@ RUN --mount=type=bind,source=go.mod,target=go.mod curl -sSL "https://go.dev/dl/g
 # Ensure future GOPATH exists
 RUN mkdir -p /root/go
 
+# TODO Add renovate tracking
 FROM --platform=${BUILDPLATFORM} docker.io/alpine:3.21.3 AS clean-deps
 
 # Docker buildx ARGs
@@ -34,10 +36,7 @@ COPY --link --from=go-deps /root/go /root/go
 ENV CGO_ENABLED=${ENABLE_CGO} GOOS=${TARGETOS} GOARCH=${TARGETARCH}
 ENV PATH="/root/go/bin:/usr/local/go/bin:${PATH}"
 
-FROM --platform=${BUILDPLATFORM} clean-deps AS dev-deps
-
-RUN go install github.com/air-verse/air@latest
-
+# TODO Add renovate tracking
 FROM --platform=${BUILDPLATFORM} docker.io/alpine:3.21.3 AS dev
 
 # Docker buildx ARGs
@@ -51,10 +50,16 @@ ENV CGO_ENABLED=${ENABLE_CGO} GOOS=${TARGETOS} GOARCH=${TARGETARCH}
 # Use manually mounted volume for dev, providing hot-reload possibility
 WORKDIR /app
 
-COPY --link --from=dev-deps /usr/local/go /usr/local/go
-COPY --link --from=dev-deps /root/go /root/go
+COPY --link --from=go-deps /usr/local/go /usr/local/go
 
-ENV PATH="/root/go/bin:/usr/local/go/bin:${PATH}"
+# hadolint ignore=DL3018
+RUN apk add --no-cache sudo && adduser -D -u 1000 nonroot && echo "nonroot ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/nonroot && chmod 0440 /etc/sudoers.d/nonroot && chown nonroot:nonroot /usr/local/go
+
+ENV PATH="/home/nonroot/go/bin:/usr/local/go/bin:${PATH}"
+
+USER 1000:1000
+
+RUN go install github.com/air-verse/air@latest
 
 ENTRYPOINT ["air", "-c", "config/air/.air.toml"]
 
@@ -75,7 +80,8 @@ RUN --mount=type=cache,target=/root/go/pkg \
 	go build -ldflags='-s -w' -o /usr/local/bin/app ./cmd/main
 
 # hadolint ignore=DL3007
-FROM gcr.io/distroless/static-debian12:latest AS main
+FROM gcr.io/distroless/static-debian12:nonroot AS main
 
 COPY --link --from=build /usr/local/bin/app /app
+
 CMD ["/app"]

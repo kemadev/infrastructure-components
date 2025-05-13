@@ -30,6 +30,7 @@ func main() {
 		fallbackLogger.Error(
 			"run",
 			slog.String("Body", "http failure"),
+			// TODO use semconv value once released, see https://opentelemetry.io/docs/specs/semconv/attributes-registry/error/#error-message
 			slog.String("error.message", err.Error()),
 		)
 		os.Exit(1)

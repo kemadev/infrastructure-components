@@ -19,6 +19,9 @@ import (
 	khttp "vcs.kema.run/kema/framework-go/pkg/http"
 )
 
+// NOTE This file should be placed in a dedicated package as per Go standards, it is
+// placed in main package for ease of demo purpose only
+
 // Name for telemetry, should reflect go import structure.
 const name = "vcs.kema.run/kema/framework-go/cmd/main"
 
@@ -66,6 +69,10 @@ func rolldice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Please note that you can also link spans using `span.AddLink()`, see https://opentelemetry.io/docs/specs/otel/trace/api/#link
+	// Using following links whenever possible is encouraged
+	// Users - https://opentelemetry.io/docs/specs/semconv/attributes-registry/user/
+	// Web sessions - https://opentelemetry.io/docs/specs/semconv/attributes-registry/session/
+	// Feature flags - https://opentelemetry.io/docs/specs/semconv/attributes-registry/feature-flag/
 
 	// Run business logic
 	roll := 1 + rand.Intn(6)
@@ -90,6 +97,7 @@ func rolldice(w http.ResponseWriter, r *http.Request) {
 	// Some more instrumentation is handled by using instrumented libraries like HTTP server, slog logger, ...
 	// That is, only include attributes your programs *handles*, not attributes defining what your program *is*, e.g. do not include
 	// HTTP status code which is already provided by HTTP server instrumentation, but include enduser ID which you got from business logic
+
 	logger.InfoContext(
 		ctx,
 		msg,
