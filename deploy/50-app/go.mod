@@ -1,4 +1,4 @@
-module /kemadev/infrastructure-components/deploy/50-app
+module github.com/kemadev/infrastructure-components/deploy/50-app
 
 go 1.22
 

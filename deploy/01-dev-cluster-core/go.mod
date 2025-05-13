@@ -1,4 +1,4 @@
-module /kemadev/infrastructure-components/deploy/01-dev-cluster-core
+module github.com/kemadev/infrastructure-components/deploy/01-dev-cluster-core
 
 go 1.22
 

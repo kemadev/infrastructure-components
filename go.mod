@@ -1,4 +1,4 @@
-module /kemadev/infrastructure-components
+module github.com/kemadev/infrastructure-components
 
 go 1.24.2
 

@@ -5,5 +5,5 @@ codeowner_default: '@kemadev/maintainers'
 vcs_namespace: kemadev
 vcs_provider: github
 vcs_repo: infrastructure-components
-vcs_server_host: ''
+vcs_server_host: github.com
 vcs_url_scheme: https://
