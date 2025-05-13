@@ -141,9 +141,9 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 			t.Scheme = "https"
 			return t
 		}(),
-		Port:        8080,
-		CPULimit:    1200,
-		MemoryLimit: 1600,
+		Port:          8080,
+		CPURequest:    500,
+		MemoryRequest: 500,
 	}
 	err = mergo.Merge(params, defParams)
 	if err != nil {
