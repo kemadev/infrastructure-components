@@ -332,6 +332,28 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 								},
 							},
 							ImagePullPolicy: pulumi.String("IfNotPresent"),
+							Resources: corev1.ResourceRequirementsArgs{
+								Requests: pulumi.StringMap{
+									"cpu": pulumi.String(strconv.Itoa(params.CPURequest) + "m"),
+									"memory": pulumi.String(
+										strconv.Itoa(params.MemoryRequest) + "Mi",
+									),
+								},
+								Limits: func() pulumi.StringMapInput {
+									l := pulumi.StringMap{}
+									if params.CPULimit != 0 {
+										l["cpu"] = pulumi.String(
+											strconv.Itoa(params.CPULimit) + "m",
+										)
+									}
+									if params.MemoryLimit != 0 {
+										l["memory"] = pulumi.String(
+											strconv.Itoa(params.MemoryLimit) + "Mi",
+										)
+									}
+									return l
+								}(),
+							},
 						},
 					},
 					Volumes: func() corev1.VolumeArrayInput {
