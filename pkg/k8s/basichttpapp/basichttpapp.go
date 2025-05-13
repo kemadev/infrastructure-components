@@ -236,7 +236,6 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 			},
 		},
 		Spec: &appsv1.DeploymentSpecArgs{
-			// TODO use HPA / VPA
 			Replicas: pulumi.Int(1),
 			Selector: &metav1.LabelSelectorArgs{
 				MatchLabels: pulumi.StringMap{
@@ -255,7 +254,6 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 				Spec: &corev1.PodSpecArgs{
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
-							// TODO dev pass args jq
 							Args: pulumi.StringArray{},
 							EnvFrom: corev1.EnvFromSourceArray{
 								corev1.EnvFromSourceArgs{
