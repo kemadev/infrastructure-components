@@ -189,7 +189,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 
 	cm, err := corev1.NewConfigMap(ctx, "env-configmap", &corev1.ConfigMapArgs{
 		Metadata: &metav1.ObjectMetaArgs{
-			Name:      pulumi.String(params.AppName),
+			Name:      pulumi.String(params.AppName + "-env"),
 			Namespace: pulumi.String(params.AppName),
 			Labels: pulumi.StringMap{
 				"app": pulumi.String(params.AppName),
@@ -346,8 +346,8 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 					}(),
 					Resources: corev1.ResourceRequirementsArgs{
 						Requests: pulumi.StringMap{
-							"cpu":    pulumi.String(params.CPURequest),
-							"memory": pulumi.String(params.MemoryRequest),
+							"cpu":    pulumi.String(strconv.Itoa(params.CPURequest) + "m"),
+							"memory": pulumi.String(strconv.Itoa(params.MemoryRequest) + "Mi"),
 						},
 						Limits: func() pulumi.StringMapInput {
 							l := pulumi.StringMap{}
