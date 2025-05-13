@@ -254,7 +254,6 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 				Spec: &corev1.PodSpecArgs{
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
-							Args: pulumi.StringArray{},
 							EnvFrom: corev1.EnvFromSourceArray{
 								corev1.EnvFromSourceArgs{
 									ConfigMapRef: corev1.ConfigMapEnvSourceArgs{
@@ -262,21 +261,29 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 									},
 								},
 							},
-							LivenessProbe: corev1.ProbeArgs{
-								InitialDelaySeconds: pulumi.Int(10),
-								HttpGet: corev1.HTTPGetActionArgs{
-									HttpHeaders: corev1.HTTPHeaderArray{},
-									Path:        pulumi.String("/healthz"),
-									Port:        pulumi.Int(params.Port),
-								},
-							},
-							ReadinessProbe: corev1.ProbeArgs{
-								HttpGet: corev1.HTTPGetActionArgs{
-									HttpHeaders: corev1.HTTPHeaderArray{},
-									Path:        pulumi.String("/readyz"),
-									Port:        pulumi.Int(params.Port),
-								},
-							},
+							LivenessProbe: func() corev1.ProbePtrInput {
+								if ctx.Stack() == "dev" {
+									return nil
+								}
+								return corev1.ProbeArgs{
+									InitialDelaySeconds: pulumi.Int(10),
+									HttpGet: corev1.HTTPGetActionArgs{
+										Path: pulumi.String("/healthz"),
+										Port: pulumi.Int(params.Port),
+									},
+								}
+							}(),
+							ReadinessProbe: func() corev1.ProbePtrInput {
+								if ctx.Stack() == "dev" {
+									return nil
+								}
+								return corev1.ProbeArgs{
+									HttpGet: corev1.HTTPGetActionArgs{
+										Path: pulumi.String("/readyz"),
+										Port: pulumi.Int(params.Port),
+									},
+								}
+							}(),
 							// HACK Enable colorful output for air, remove once https://github.com/air-verse/air/pull/768 is merged
 							Stdin: func() pulumi.Bool {
 								if ctx.Stack() == "dev" {
@@ -300,7 +307,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 									Protocol:      pulumi.String("TCP"),
 								},
 							},
-							VolumeMounts: func() corev1.VolumeMountArray {
+							VolumeMounts: func() corev1.VolumeMountArrayInput {
 								// Mount app code volume in dev
 								if ctx.Stack() == "dev" {
 									return corev1.VolumeMountArray{
@@ -310,7 +317,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 										},
 									}
 								}
-								return corev1.VolumeMountArray{}
+								return nil
 							}(),
 							SecurityContext: corev1.SecurityContextArgs{
 								AllowPrivilegeEscalation: pulumi.Bool(false),
@@ -327,7 +334,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 							ImagePullPolicy: pulumi.String("IfNotPresent"),
 						},
 					},
-					Volumes: func() corev1.VolumeArray {
+					Volumes: func() corev1.VolumeArrayInput {
 						// Create app code volume in dev
 						if ctx.Stack() == "dev" {
 							return corev1.VolumeArray{
@@ -340,7 +347,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 								},
 							}
 						}
-						return corev1.VolumeArray{}
+						return nil
 					}(),
 					Resources: corev1.ResourceRequirementsArgs{
 						Requests: pulumi.StringMap{
