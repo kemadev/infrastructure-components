@@ -10,13 +10,13 @@ import (
 	"dario.cat/mergo"
 	"github.com/blang/semver"
 	"github.com/caarlos0/svu/pkg/svu"
+	"github.com/kemadev/infrastructure-components/internal/pkg/businessunit"
+	"github.com/kemadev/infrastructure-components/internal/pkg/customer"
 	appsv1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/apps/v1"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"vcs.kema.cloud/kema/runner-tools/pkg/git"
-	"vcs.kema.run/kema/infrastructure-components/internal/pkg/businessunit"
-	"vcs.kema.run/kema/infrastructure-components/internal/pkg/customer"
 )
 
 type AppParms struct {

@@ -3,7 +3,7 @@ package mail
 import (
 	"strings"
 
-	"vcs.kema.run/kema/infrastructure-components/internal/pkg/domain"
+	"github.com/kemadev/infrastructure-components/internal/pkg/domain"
 )
 
 type (

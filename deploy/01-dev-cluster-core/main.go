@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/kemadev/infrastructure-components/pkg/k8s/cni"
+	"github.com/kemadev/infrastructure-components/pkg/k8s/gwapi"
+	"github.com/kemadev/infrastructure-components/pkg/k8s/kind"
 	"github.com/pulumi/pulumi-docker/sdk/v4/go/docker"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"vcs.kema.run/kema/infrastructure-components/pkg/k8s/cni"
-	"vcs.kema.run/kema/infrastructure-components/pkg/k8s/gwapi"
-	"vcs.kema.run/kema/infrastructure-components/pkg/k8s/kind"
 )
 
 func main() {

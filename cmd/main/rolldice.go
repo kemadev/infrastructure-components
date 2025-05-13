@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 
+	khttp "github.com/kemadev/framework-go/pkg/http"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -16,14 +17,13 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.opentelemetry.io/otel/trace"
-	khttp "vcs.kema.run/kema/framework-go/pkg/http"
 )
 
 // NOTE This file should be placed in a dedicated package as per Go standards, it is
 // placed in main package for ease of demo purpose only
 
 // Name for telemetry, should reflect go import structure.
-const name = "vcs.kema.run/kema/framework-go/cmd/main"
+const name = "github.com/kemadev/framework-go/cmd/main"
 
 // Telemetry components should be package-scoped.
 var (

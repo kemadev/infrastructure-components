@@ -4,8 +4,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/kemadev/infrastructure-components/pkg/k8s/basichttpapp"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"vcs.kema.run/kema/infrastructure-components/pkg/k8s/basichttpapp"
 )
 
 func main() {

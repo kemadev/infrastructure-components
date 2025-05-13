@@ -4,8 +4,8 @@ import (
 	"log/slog"
 	"os"
 
-	"vcs.kema.run/kema/framework-go/pkg/http"
-	"vcs.kema.run/kema/framework-go/pkg/log"
+	"github.com/kemadev/framework-go/pkg/http"
+	"github.com/kemadev/framework-go/pkg/log"
 )
 
 func main() {

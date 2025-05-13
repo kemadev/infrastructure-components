@@ -68,7 +68,7 @@
 - That is, you can run the following command to run the whole CI pipeline locally:
 
   ```bash
-  docker run [--rm] -i -t -v .:/src vcs.kema.run/kema/kema-runner ci [--fix]
+  docker run [--rm] -i -t -v .:/src github.com/kemadev/kema-runner ci [--fix]
   ```
 
 ##### False positives
