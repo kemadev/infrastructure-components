@@ -3,6 +3,7 @@ package basichttpapp
 import (
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -57,6 +58,14 @@ type AppParms struct {
 	MonitoringUrl url.URL
 	// Port which application serves
 	Port int
+	// CPU request for pod, in mili vCPU (will be set as `strconv.Itoa(CPURequest) + "m"`)
+	CPURequest int
+	// CPU limit for pod, in mili vCPU (will be set as `strconv.Itoa(CPULimit) + "m"`), will also set GOMAXPROCS to 1/1000th of this value, floored (you should only specific multiples of 1000)
+	CPULimit int
+	// Memory request for pod, in MiB (will be set as `strconv.Itoa(MemoryRequest) + "MiB"`)
+	MemoryRequest int
+	// Memory limit for pod, in MiB (will be set as `strconv.Itoa(MemoryLimit) + "MiB"`), will also set GOMEMLIMIT to 0.9 * this value
+	MemoryLimit int
 }
 
 var (
@@ -132,7 +141,9 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 			t.Scheme = "https"
 			return t
 		}(),
-		Port: 8080,
+		Port:        8080,
+		CPULimit:    1200,
+		MemoryLimit: 1600,
 	}
 	err = mergo.Merge(params, defParams)
 	if err != nil {
@@ -176,7 +187,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		return err
 	}
 
-	cm, err := corev1.NewConfigMap(ctx, "configmap", &corev1.ConfigMapArgs{
+	cm, err := corev1.NewConfigMap(ctx, "env-configmap", &corev1.ConfigMapArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String(params.AppName),
 			Namespace: pulumi.String(params.AppName),
@@ -184,24 +195,35 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 				"app": pulumi.String(params.AppName),
 			},
 		},
-		Data: pulumi.StringMap{
-			"RUNTIME_ENV":           pulumi.String(params.RuntimeEnv),
-			"APP_VERSION":           pulumi.String(params.AppVersion.String()),
-			"APP_NAME":              pulumi.String(params.AppName),
-			"APP_NAMESPACE":         pulumi.String(params.AppNamespace),
-			"OTEL_ENDPOINT_URL":     pulumi.String(params.OTelEndpointUrl.String()),
-			"BUSINESS_UNIT_ID":      pulumi.String(params.BusinessUnitId),
-			"CUSTOMER_ID":           pulumi.String(params.CustomerId),
-			"COST_CENTER":           pulumi.String(params.CostCenter),
-			"COST_ALLOCATION_OWNER": pulumi.String(params.CostAllocationOwner),
-			"OPERATIONS_OWNER":      pulumi.String(params.OperationsOwner),
-			"RPO":                   pulumi.String(params.Rpo.String()),
-			"DATA_CLASSIFICATION":   pulumi.String(params.DataClassification),
-			"COMPLIANCE_FRAMEWORK":  pulumi.String(params.ComplianceFramework),
-			"EXPIRATION":            pulumi.String(params.Expiration.String()),
-			"PROJECT_URL":           pulumi.String(params.ProjectUrl.String()),
-			"MONITORING_URL":        pulumi.String(params.MonitoringUrl.String()),
-		},
+		Data: func() pulumi.StringMap {
+			envMap := pulumi.StringMap{
+				"RUNTIME_ENV":           pulumi.String(params.RuntimeEnv),
+				"APP_VERSION":           pulumi.String(params.AppVersion.String()),
+				"APP_NAME":              pulumi.String(params.AppName),
+				"APP_NAMESPACE":         pulumi.String(params.AppNamespace),
+				"OTEL_ENDPOINT_URL":     pulumi.String(params.OTelEndpointUrl.String()),
+				"BUSINESS_UNIT_ID":      pulumi.String(params.BusinessUnitId),
+				"CUSTOMER_ID":           pulumi.String(params.CustomerId),
+				"COST_CENTER":           pulumi.String(params.CostCenter),
+				"COST_ALLOCATION_OWNER": pulumi.String(params.CostAllocationOwner),
+				"OPERATIONS_OWNER":      pulumi.String(params.OperationsOwner),
+				"RPO":                   pulumi.String(params.Rpo.String()),
+				"DATA_CLASSIFICATION":   pulumi.String(params.DataClassification),
+				"COMPLIANCE_FRAMEWORK":  pulumi.String(params.ComplianceFramework),
+				"EXPIRATION":            pulumi.String(params.Expiration.String()),
+				"PROJECT_URL":           pulumi.String(params.ProjectUrl.String()),
+				"MONITORING_URL":        pulumi.String(params.MonitoringUrl.String()),
+			}
+			if params.CPULimit != 0 {
+				envMap["GOMAXPROCS"] = pulumi.String(strconv.Itoa(params.CPULimit / 1000))
+			}
+			if params.MemoryLimit != 0 {
+				envMap["GOMEMLIMIT"] = pulumi.String(
+					pulumi.String(strconv.Itoa(params.MemoryLimit) + "MiB"),
+				)
+			}
+			return envMap
+		}(),
 	})
 
 	_, err = appsv1.NewDeployment(ctx, "deployment", &appsv1.DeploymentArgs{
@@ -322,11 +344,22 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 						return corev1.VolumeArray{}
 					}(),
 					Resources: corev1.ResourceRequirementsArgs{
-						// TODO refine values after benchmarking / load testing
 						Requests: pulumi.StringMap{
 							"cpu":    pulumi.String("500m"),
 							"memory": pulumi.String("100m"),
 						},
+						Limits: func() pulumi.StringMapInput {
+							l := pulumi.StringMap{}
+							if params.CPULimit != 0 {
+								l["cpu"] = pulumi.String(strconv.Itoa(params.CPULimit) + "m")
+							}
+							if params.MemoryLimit != 0 {
+								l["memory"] = pulumi.String(
+									strconv.Itoa(params.MemoryLimit*9/10) + "Mi",
+								)
+							}
+							return l
+						}(),
 					},
 				},
 			},
