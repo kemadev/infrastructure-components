@@ -215,11 +215,12 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 				"MONITORING_URL":        pulumi.String(params.MonitoringUrl.String()),
 			}
 			if params.CPULimit != 0 {
+				// Match number of allocated CPUs, floored
 				envMap["GOMAXPROCS"] = pulumi.String(strconv.Itoa(params.CPULimit / 1000))
 			}
 			if params.MemoryLimit != 0 {
 				envMap["GOMEMLIMIT"] = pulumi.String(
-					pulumi.String(strconv.Itoa(params.MemoryLimit) + "MiB"),
+					pulumi.String(strconv.Itoa(params.MemoryLimit*9/10) + "MiB"),
 				)
 			}
 			return envMap
@@ -345,8 +346,8 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 					}(),
 					Resources: corev1.ResourceRequirementsArgs{
 						Requests: pulumi.StringMap{
-							"cpu":    pulumi.String("500m"),
-							"memory": pulumi.String("100m"),
+							"cpu":    pulumi.String(params.CPURequest),
+							"memory": pulumi.String(params.MemoryRequest),
 						},
 						Limits: func() pulumi.StringMapInput {
 							l := pulumi.StringMap{}
@@ -355,7 +356,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 							}
 							if params.MemoryLimit != 0 {
 								l["memory"] = pulumi.String(
-									strconv.Itoa(params.MemoryLimit*9/10) + "Mi",
+									strconv.Itoa(params.MemoryLimit) + "Mi",
 								)
 							}
 							return l
