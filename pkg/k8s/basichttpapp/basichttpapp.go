@@ -180,9 +180,15 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		"app.kubernetes.io/managed-by": pulumi.String("pulumi"),
 	}
 
+	// Select components of application instance
+	basicSelector := pulumi.StringMap{
+		"app.kubernetes.io/instance": sharedLabels["app.kubernetes.io/instance"],
+	}
+
 	// Must match kind mount
 	appCodeVolume := "/app-code"
 
+	// Application namespace
 	_, err = corev1.NewNamespace(ctx, "namespace", &corev1.NamespaceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String(params.AppName),
@@ -194,6 +200,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 					enforce = "privileged"
 				}
 				labels := pulumi.StringMap{
+					// See https://kubernetes.io/docs/concepts/security/pod-security-admission/#pod-security-admission-labels-for-namespaces
 					"pod-security.kubernetes.io/enforce":         pulumi.String(enforce),
 					"pod-security.kubernetes.io/enforce-version": pulumi.String("latest"),
 					"pod-security.kubernetes.io/audit":           pulumi.String("restricted"),
@@ -210,6 +217,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		return err
 	}
 
+	// ConfigMap providing common environment variable to containers
 	cm, err := corev1.NewConfigMap(ctx, "env-configmap", &corev1.ConfigMapArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String(params.AppName + "-env"),
@@ -249,6 +257,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		}(),
 	})
 
+	// Application deployment
 	_, err = appsv1.NewDeployment(ctx, "deployment", &appsv1.DeploymentArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String(params.AppName),
@@ -258,9 +267,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		Spec: &appsv1.DeploymentSpecArgs{
 			Replicas: pulumi.Int(1),
 			Selector: &metav1.LabelSelectorArgs{
-				MatchLabels: pulumi.StringMap{
-					"app.kubernetes.io/instance": sharedLabels["app.kubernetes.io/instance"],
-				},
+				MatchLabels: basicSelector,
 			},
 			ProgressDeadlineSeconds: pulumi.Int(180),
 			Template: &corev1.PodTemplateSpecArgs{
@@ -396,6 +403,8 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 	if err != nil {
 		return err
 	}
+
+	// Application service
 	_, err = corev1.NewService(ctx, "service", &corev1.ServiceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String(params.AppName),
@@ -411,9 +420,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 					Protocol:    pulumi.String("TCP"),
 				},
 			},
-			Selector: pulumi.StringMap{
-				"app.kubernetes.io/instance": sharedLabels["app.kubernetes.io/instance"],
-			},
+			Selector: basicSelector,
 		},
 	})
 	if err != nil {
