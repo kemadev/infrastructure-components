@@ -293,7 +293,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 								return corev1.ProbeArgs{
 									InitialDelaySeconds: pulumi.Int(10),
 									HttpGet: corev1.HTTPGetActionArgs{
-										Path: pulumi.String("/healthz"),
+										Path: pulumi.String(config.HTTPLivenessCheckPath),
 										Port: pulumi.Int(params.Port),
 									},
 								}
@@ -304,7 +304,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 								}
 								return corev1.ProbeArgs{
 									HttpGet: corev1.HTTPGetActionArgs{
-										Path: pulumi.String("/readyz"),
+										Path: pulumi.String(config.HTTPReadinessCheckPath),
 										Port: pulumi.Int(params.Port),
 									},
 								}
