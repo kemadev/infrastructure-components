@@ -245,12 +245,16 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		return fmt.Errorf("failed to apply default application parameters: %w", err)
 	}
 
+	// Application instance to use
+	appInstance := params.AppName + "-" + params.RuntimeEnv
+
+	// Namespace to deploy to
+	namespace := appInstance
+
 	// See https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/#labels
 	sharedLabels := pulumi.StringMap{
-		"app.kubernetes.io/name": pulumi.String(params.AppName),
-		"app.kubernetes.io/instance": pulumi.String(
-			params.AppName + "-" + params.CustomerId.String(),
-		),
+		"app.kubernetes.io/name":       pulumi.String(params.AppName),
+		"app.kubernetes.io/instance":   pulumi.String(appInstance),
 		"app.kubernetes.io/version":    pulumi.String(params.AppVersion.String()),
 		"app.kubernetes.io/component":  pulumi.String(params.AppComponent),
 		"app.kubernetes.io/part-of":    pulumi.String(params.AppNamespace),
@@ -269,7 +273,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 	_, err = corev1.NewNamespace(ctx, "namespace", &corev1.NamespaceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String(params.AppName),
-			Namespace: pulumi.String(params.AppName),
+			Namespace: pulumi.String(namespace),
 			Labels: func() pulumi.StringMap {
 				enforce := "restricted"
 				if ctx.Stack() == "dev" {
@@ -297,15 +301,15 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 	// ConfigMap providing common environment variable to containers
 	cm, err := corev1.NewConfigMap(ctx, "env-configmap", &corev1.ConfigMapArgs{
 		Metadata: &metav1.ObjectMetaArgs{
-			Name:      pulumi.String(params.AppName + "-env"),
-			Namespace: pulumi.String(params.AppName),
+			Name:      pulumi.String(appInstance),
+			Namespace: pulumi.String(namespace),
 			Labels:    sharedLabels,
 		},
 		Data: func() pulumi.StringMap {
 			envMap := pulumi.StringMap{
 				config.EnvVarKeyRuntimeEnv:          pulumi.String(params.RuntimeEnv),
 				config.EnvVarKeyAppVersion:          pulumi.String(params.AppVersion.String()),
-				config.EnvVarKeyAppName:             pulumi.String(params.AppName),
+				config.EnvVarKeyAppName:             pulumi.String(appInstance),
 				config.EnvVarKeyAppNamespace:        pulumi.String(params.AppNamespace),
 				config.EnvVarKeyOtelEndpointURL:     pulumi.String(params.OTelEndpointUrl.String()),
 				config.EnvVarKeyBusinessUnitId:      pulumi.String(params.BusinessUnitId),
@@ -337,8 +341,8 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 	// Application deployment
 	_, err = appsv1.NewDeployment(ctx, "deployment", &appsv1.DeploymentArgs{
 		Metadata: &metav1.ObjectMetaArgs{
-			Name:      pulumi.String(params.AppName),
-			Namespace: pulumi.String(params.AppName),
+			Name:      pulumi.String(appInstance),
+			Namespace: pulumi.String(namespace),
 			Labels:    sharedLabels,
 		},
 		Spec: &appsv1.DeploymentSpecArgs{
@@ -349,8 +353,8 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 			ProgressDeadlineSeconds: pulumi.Int(180),
 			Template: &corev1.PodTemplateSpecArgs{
 				Metadata: &metav1.ObjectMetaArgs{
-					Name:      pulumi.String(params.AppName),
-					Namespace: pulumi.String(params.AppName),
+					Name:      pulumi.String(appInstance),
+					Namespace: pulumi.String(namespace),
 					Labels:    sharedLabels,
 				},
 				Spec: &corev1.PodSpecArgs{
@@ -402,7 +406,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 							Image: pulumi.String(
 								params.ImageRef.String() + ":" + params.ImageTag.String(),
 							),
-							Name: pulumi.String(params.AppName),
+							Name: pulumi.String(appInstance),
 							Ports: corev1.ContainerPortArray{
 								&corev1.ContainerPortArgs{
 									ContainerPort: pulumi.Int(params.Port),
@@ -414,7 +418,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 								if ctx.Stack() == "dev" {
 									return corev1.VolumeMountArray{
 										&corev1.VolumeMountArgs{
-											Name:      pulumi.String(params.AppName),
+											Name:      pulumi.String(appInstance),
 											MountPath: pulumi.String("/app"),
 										},
 									}
@@ -463,7 +467,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 						if ctx.Stack() == "dev" {
 							return corev1.VolumeArray{
 								corev1.VolumeArgs{
-									Name: pulumi.String(params.AppName),
+									Name: pulumi.String(appInstance),
 									HostPath: corev1.HostPathVolumeSourceArgs{
 										Path: pulumi.String(appCodeVolume),
 										Type: pulumi.String("Directory"),
@@ -484,8 +488,8 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 	// Application service
 	_, err = corev1.NewService(ctx, "service", &corev1.ServiceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
-			Name:      pulumi.String(params.AppName),
-			Namespace: pulumi.String(params.AppName),
+			Name:      pulumi.String(appInstance),
+			Namespace: pulumi.String(namespace),
 			Labels:    sharedLabels,
 		},
 		Spec: &corev1.ServiceSpecArgs{
