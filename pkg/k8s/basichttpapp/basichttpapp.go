@@ -522,7 +522,8 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 					Protocol:    pulumi.String("TCP"),
 				},
 			},
-			Selector: basicSelector,
+			Selector:            basicSelector,
+			TrafficDistribution: pulumi.String("PreferClose"),
 		},
 	})
 	if err != nil {

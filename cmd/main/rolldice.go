@@ -63,7 +63,7 @@ func rolldice(w http.ResponseWriter, r *http.Request) {
 
 	kclient := khttp.HTTPClientInfo{
 		Ctx:    ctx,
-		W:      w,
+		Writer:      w,
 		Logger: logger,
 		Span:   span,
 	}
