@@ -211,11 +211,11 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 		ImageTag:   appVersion,
 		AppVersion: appVersion,
 		RuntimeEnv: ctx.Stack(),
-		// TODO stackref to collector project
+		// TODO go export ref to collector url (via hostname + cluster.local)
 		OTelEndpointUrl: url.URL{
 			Scheme: "grpc",
-			Host: "string",
-			Path: "string",
+			Host:   "string",
+			Path:   "string",
 		},
 		ProjectUrl: func() url.URL {
 			t := repoUrl
