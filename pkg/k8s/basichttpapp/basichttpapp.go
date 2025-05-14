@@ -12,8 +12,9 @@ import (
 	"github.com/blang/semver"
 	"github.com/caarlos0/svu/pkg/svu"
 	"github.com/kemadev/framework-go/pkg/config"
-	"github.com/kemadev/infrastructure-components/internal/pkg/businessunit"
-	"github.com/kemadev/infrastructure-components/internal/pkg/customer"
+	"github.com/kemadev/infrastructure-components/pkg/private/businessunit"
+	"github.com/kemadev/infrastructure-components/pkg/private/costcenter"
+	"github.com/kemadev/infrastructure-components/pkg/private/customer"
 	"github.com/kemadev/runner-tools/pkg/git"
 	appsv1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/apps/v1"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
@@ -43,7 +44,7 @@ type AppParms struct {
 	// Customer intended to use application
 	CustomerId customer.Customer
 	// Cost center, which i
-	CostCenter string
+	CostCenter costcenter.CostCenter
 	// Cost allocation owner, who pays for the application, budget holder
 	CostAllocationOwner businessunit.BusinessUnit
 	// Team  responsible for application
@@ -127,6 +128,74 @@ func getVersionFromGit() (semver.Version, error) {
 	return version, nil
 }
 
+func validateParams(params *AppParms) error {
+	// Check for non-default values in AppParms
+	if params.ImageRef.String() == "" {
+		return fmt.Errorf("ImageRef cannot be empty")
+	}
+	if params.ImageTag.String() == "" {
+		return fmt.Errorf("ImageTag cannot be empty")
+	}
+	if params.RuntimeEnv == "" {
+		return fmt.Errorf("RuntimeEnv cannot be empty")
+	}
+	if params.OTelEndpointUrl.String() == "" {
+		return fmt.Errorf("OTelEndpointUrl cannot be empty")
+	}
+	if params.AppVersion.String() == "" {
+		return fmt.Errorf("AppVersion cannot be empty")
+	}
+	if params.AppName == "" {
+		return fmt.Errorf("AppName cannot be empty")
+	}
+	if params.AppNamespace == "" {
+		return fmt.Errorf("AppNamespace cannot be empty")
+	}
+	if params.AppComponent == "" {
+		return fmt.Errorf("AppComponent cannot be empty")
+	}
+	if params.BusinessUnitId == "" {
+		return fmt.Errorf("BusinessUnitId cannot be empty")
+	}
+	if params.CustomerId == "" {
+		return fmt.Errorf("CustomerId cannot be empty")
+	}
+	if params.CostCenter == "" {
+		return fmt.Errorf("CostCenter cannot be empty")
+	}
+	if params.CostAllocationOwner == "" {
+		return fmt.Errorf("CostAllocationOwner cannot be empty")
+	}
+	if params.OperationsOwner == "" {
+		return fmt.Errorf("OperationsOwner cannot be empty")
+	}
+	if params.Rpo == 0 {
+		return fmt.Errorf("Rpo cannot be zero")
+	}
+	if params.ProjectUrl.String() == "" {
+		return fmt.Errorf("ProjectUrl cannot be empty")
+	}
+	if params.MonitoringUrl.String() == "" {
+		return fmt.Errorf("MonitoringUrl cannot be empty")
+	}
+	if params.Port == 0 {
+		return fmt.Errorf("Port cannot be zero")
+	}
+	if params.HTTPReadTimeout == 0 {
+		return fmt.Errorf("HTTPReadTimeout cannot be zero")
+	}
+	if params.HTTPWriteTimeout == 0 {
+		return fmt.Errorf("HTTPWriteTimeout cannot be zero")
+	}
+	if params.CPURequest == 0 {
+		return fmt.Errorf("CPURequest cannot be zero")
+	}
+	if params.MemoryRequest == 0 {
+		return fmt.Errorf("MemoryRequest cannot be zero")
+	}
+	return nil
+}
+
 func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 	appName, repoUrl, err := getGitInfos()
 	if err != nil {
@@ -143,7 +212,11 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 		AppVersion: appVersion,
 		RuntimeEnv: ctx.Stack(),
 		// TODO stackref to collector project
-		OTelEndpointUrl: url.URL{},
+		OTelEndpointUrl: url.URL{
+			Scheme: "grpc",
+			Host: "string",
+			Path: "string",
+		},
 		ProjectUrl: func() url.URL {
 			t := repoUrl
 			t.Scheme = "https"
@@ -159,13 +232,17 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 	if err != nil {
 		return fmt.Errorf("error filling app parameters: %w", err)
 	}
+	err = validateParams(params)
+	if err != nil {
+		return fmt.Errorf("error validating app parameters: %w", err)
+	}
 	return nil
 }
 
 func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 	err := mergeParams(ctx, &params)
 	if err != nil {
-		return fmt.Errorf("failed to apply default applicatiomn parameters: %w", err)
+		return fmt.Errorf("failed to apply default application parameters: %w", err)
 	}
 
 	// See https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/#labels
