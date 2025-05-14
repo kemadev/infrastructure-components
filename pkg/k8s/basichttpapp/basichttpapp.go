@@ -180,6 +180,9 @@ func validateParams(params *AppParms) error {
 	if params.ComplianceFramework == "" {
 		return fmt.Errorf("ComplianceFramework cannot be empty")
 	}
+	// if params.Expiration.IsZero() {
+	// 	return fmt.Errorf("Expiration cannot be zero")
+	// }
 	if params.ProjectUrl.String() == "" {
 		return fmt.Errorf("ProjectUrl cannot be empty")
 	}
@@ -336,9 +339,11 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 				config.EnvVarKeyRpo:                 pulumi.String(params.Rpo.String()),
 				config.EnvVarKeyDataClassification:  pulumi.String(params.DataClassification),
 				config.EnvVarKeyComplianceFramework: pulumi.String(params.ComplianceFramework),
-				config.EnvVarKeyExpiration:          pulumi.String(params.Expiration.String()),
 				config.EnvVarKeyProjectUrl:          pulumi.String(params.ProjectUrl.String()),
 				config.EnvVarKeyMonitoringUrl:       pulumi.String(params.MonitoringUrl.String()),
+			}
+			if !params.Expiration.IsZero() {
+				envMap[config.EnvVarKeyExpiration] = pulumi.String(params.Expiration.String())
 			}
 			if params.CPULimit != 0 {
 				// Match allocated CPUs, floored
