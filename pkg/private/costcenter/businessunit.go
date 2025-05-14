@@ -36,6 +36,6 @@ const (
 	CostCenterInternal CostCenter = CostCenter(businessunit.BusinessUnitInternal)
 )
 
-func (bu CostCenter) String() string {
-	return strings.ToLower(string(bu))
+func (cc CostCenter) String() string {
+	return strings.ToLower(string(cc))
 }

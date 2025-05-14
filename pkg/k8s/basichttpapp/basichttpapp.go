@@ -13,8 +13,10 @@ import (
 	"github.com/caarlos0/svu/pkg/svu"
 	"github.com/kemadev/framework-go/pkg/config"
 	"github.com/kemadev/infrastructure-components/pkg/private/businessunit"
+	"github.com/kemadev/infrastructure-components/pkg/private/complianceframework"
 	"github.com/kemadev/infrastructure-components/pkg/private/costcenter"
 	"github.com/kemadev/infrastructure-components/pkg/private/customer"
+	"github.com/kemadev/infrastructure-components/pkg/private/dataclassification"
 	"github.com/kemadev/runner-tools/pkg/git"
 	appsv1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/apps/v1"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
@@ -52,9 +54,9 @@ type AppParms struct {
 	// Recovery Point Objective (RPO) of resource
 	Rpo time.Duration
 	// Data classification resource is subject to (e.g. )
-	DataClassification string
+	DataClassification dataclassification.DataClassification
 	// Compliance framework resource is subject to (e.g. )
-	ComplianceFramework string
+	ComplianceFramework complianceframework.ComplianceFramework
 	// Time at which resource should expire, be deleted
 	Expiration time.Time
 	// Git repository URL
@@ -129,7 +131,7 @@ func getVersionFromGit() (semver.Version, error) {
 }
 
 func validateParams(params *AppParms) error {
-	// Check for non-default values in AppParms
+	// Enforce parameters, with commented-out non-enforced values
 	if params.ImageRef.String() == "" {
 		return fmt.Errorf("ImageRef cannot be empty")
 	}
@@ -172,6 +174,12 @@ func validateParams(params *AppParms) error {
 	if params.Rpo == 0 {
 		return fmt.Errorf("Rpo cannot be zero")
 	}
+	if params.DataClassification == "" {
+		return fmt.Errorf("DataClassification cannot be empty")
+	}
+	if params.ComplianceFramework == "" {
+		return fmt.Errorf("ComplianceFramework cannot be empty")
+	}
 	if params.ProjectUrl.String() == "" {
 		return fmt.Errorf("ProjectUrl cannot be empty")
 	}
@@ -190,9 +198,15 @@ func validateParams(params *AppParms) error {
 	if params.CPURequest == 0 {
 		return fmt.Errorf("CPURequest cannot be zero")
 	}
+	// if params.CPULimit == 0 {
+	// 	return fmt.Errorf("CPULimit cannot be zero")
+	// }
 	if params.MemoryRequest == 0 {
 		return fmt.Errorf("MemoryRequest cannot be zero")
 	}
+	// if params.MemoryLimit == 0 {
+	// 	return fmt.Errorf("MemoryLimit cannot be zero")
+	// }
 	return nil
 }
 
@@ -206,11 +220,13 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 		return fmt.Errorf("error getting app version from git: %w", err)
 	}
 	defParams := AppParms{
-		AppName:    appName,
-		ImageRef:   repoUrl,
-		ImageTag:   appVersion,
-		AppVersion: appVersion,
-		RuntimeEnv: ctx.Stack(),
+		AppName:             appName,
+		ImageRef:            repoUrl,
+		ImageTag:            appVersion,
+		AppVersion:          appVersion,
+		DataClassification:  dataclassification.DataClassificationNone,
+		ComplianceFramework: complianceframework.ComplianceFrameworkNone,
+		RuntimeEnv:          ctx.Stack(),
 		// TODO go export ref to collector url (via hostname + cluster.local)
 		OTelEndpointUrl: url.URL{
 			Scheme: "grpc",
@@ -272,7 +288,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 	// Application namespace
 	_, err = corev1.NewNamespace(ctx, "namespace", &corev1.NamespaceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
-			Name:      pulumi.String(params.AppName),
+			Name:      pulumi.String(namespace),
 			Namespace: pulumi.String(namespace),
 			Labels: func() pulumi.StringMap {
 				enforce := "restricted"
