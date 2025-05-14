@@ -34,6 +34,8 @@ type AppParms struct {
 	AppName string
 	// Application namespace, which group it belogs to (e.g. shoppingcart, auth, ...)
 	AppNamespace string
+	// Application component, what the application role is (e.g. frontend, api, database, ...)
+	AppComponent string
 	// Business unit developing application
 	BusinessUnitId businessunit.BusinessUnit
 	// Customer intended to use application
@@ -158,6 +160,18 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		return fmt.Errorf("failed to apply default applicatiomn parameters: %w", err)
 	}
 
+	// See https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/#labels
+	sharedLabels := pulumi.StringMap{
+		"app.kubernetes.io/name": pulumi.String(params.AppName),
+		"app.kubernetes.io/instance": pulumi.String(
+			params.AppName + "-" + params.CustomerId.String(),
+		),
+		"app.kubernetes.io/version":    pulumi.String(params.AppVersion.String()),
+		"app.kubernetes.io/component":  pulumi.String(params.AppComponent),
+		"app.kubernetes.io/part-of":    pulumi.String(params.AppNamespace),
+		"app.kubernetes.io/managed-by": pulumi.String("pulumi"),
+	}
+
 	// Must match kind mount
 	appCodeVolume := "/app-code"
 
@@ -171,15 +185,18 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 					// Allow using HostPath volume in dev
 					enforce = "privileged"
 				}
-				return pulumi.StringMap{
-					"app":                                pulumi.String(params.AppName),
-					"pod-security.kubernetes.io/enforce": pulumi.String(enforce),
+				labels := pulumi.StringMap{
+					"pod-security.kubernetes.io/enforce":         pulumi.String(enforce),
 					"pod-security.kubernetes.io/enforce-version": pulumi.String("latest"),
 					"pod-security.kubernetes.io/audit":           pulumi.String("restricted"),
 					"pod-security.kubernetes.io/audit-version":   pulumi.String("latest"),
 					"pod-security.kubernetes.io/warn":            pulumi.String("restricted"),
 					"pod-security.kubernetes.io/warn-version":    pulumi.String("latest"),
 				}
+				for key, value := range sharedLabels {
+					labels[key] = value
+				}
+				return labels
 			}(),
 		},
 	})
@@ -191,9 +208,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String(params.AppName + "-env"),
 			Namespace: pulumi.String(params.AppName),
-			Labels: pulumi.StringMap{
-				"app": pulumi.String(params.AppName),
-			},
+			Labels:    sharedLabels,
 		},
 		Data: func() pulumi.StringMap {
 			envMap := pulumi.StringMap{
@@ -231,9 +246,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String(params.AppName),
 			Namespace: pulumi.String(params.AppName),
-			Labels: pulumi.StringMap{
-				"app": pulumi.String(params.AppName),
-			},
+			Labels:    sharedLabels,
 		},
 		Spec: &appsv1.DeploymentSpecArgs{
 			Replicas: pulumi.Int(1),
@@ -400,9 +413,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String(params.AppName),
 			Namespace: pulumi.String(params.AppName),
-			Labels: pulumi.StringMap{
-				"app": pulumi.String(params.AppName),
-			},
+			Labels:    sharedLabels,
 		},
 		Spec: &corev1.ServiceSpecArgs{
 			Ports: corev1.ServicePortArray{
