@@ -270,8 +270,8 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 	// Namespace to deploy to
 	namespace := appInstance
 
-	// See https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/#labels
 	sharedLabels := pulumi.StringMap{
+		// Application common labels under `app.kubernetes.io`, see https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/#labels
 		"app.kubernetes.io/name":       pulumi.String(params.AppName),
 		"app.kubernetes.io/instance":   pulumi.String(appInstance),
 		"app.kubernetes.io/version":    pulumi.String(params.AppVersion.String()),
