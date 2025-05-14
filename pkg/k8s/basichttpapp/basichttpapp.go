@@ -2,6 +2,7 @@ package basichttpapp
 
 import (
 	"fmt"
+	"maps"
 	"net/url"
 	"strconv"
 	"strings"
@@ -193,9 +194,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 					"pod-security.kubernetes.io/warn":            pulumi.String("restricted"),
 					"pod-security.kubernetes.io/warn-version":    pulumi.String("latest"),
 				}
-				for key, value := range sharedLabels {
-					labels[key] = value
-				}
+				maps.Copy(labels, sharedLabels)
 				return labels
 			}(),
 		},
