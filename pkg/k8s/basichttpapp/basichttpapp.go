@@ -245,7 +245,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		return fmt.Errorf("failed to apply default application parameters: %w", err)
 	}
 
-	// Application instance to use
+	// Application instance to use, using runtime env as suffix to distinguish different stacks, e.g. to distinguish review applications using their stack name (i.e. branch name)
 	appInstance := params.AppName + "-" + params.RuntimeEnv
 
 	// Namespace to deploy to
