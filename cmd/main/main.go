@@ -1,3 +1,7 @@
+/*
+infrastructure-components serves infrastructure-components microservice.
+It is deployed in Kubernetes and serves over HTTP.
+*/
 package main
 
 import (

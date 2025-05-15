@@ -27,16 +27,20 @@ const name = "github.com/kemadev/framework-go/cmd/main"
 
 // Telemetry components should be package-scoped.
 var (
+	// Tracing instrument
 	tracer = otel.Tracer(name)
-	meter  = otel.Meter(name)
+	// Metring instrument
+	meter = otel.Meter(name)
+	// Logging instrument
 	logger = otelslog.NewLogger(
 		"default",
 		otelslog.WithSource(true),
 	)
+	// Count of rolls
 	rollCnt metric.Int64Counter
 )
 
-// Declare telemetry elements.
+// init initializes the telemetry components.
 func init() {
 	var err error
 	// Other types are available, for recommendations see https://opentelemetry.io/docs/specs/otel/metrics/api/
@@ -48,7 +52,7 @@ func init() {
 	}
 }
 
-// Actual business code.
+// rolldice is the handler for the /rolldice/{player} endpoint.
 func rolldice(w http.ResponseWriter, r *http.Request) {
 	// Init trace span
 	ctx, span := tracer.Start(
@@ -63,7 +67,13 @@ func rolldice(w http.ResponseWriter, r *http.Request) {
 
 	kclient := khttp.HTTPClientInfo{
 		Ctx:    ctx,
+<<<<<<< before updating
 		Writer:      w,
+||||||| last update
+		W:      w,
+=======
+		Writer: w,
+>>>>>>> after updating
 		Logger: logger,
 		Span:   span,
 	}
@@ -97,7 +107,6 @@ func rolldice(w http.ResponseWriter, r *http.Request) {
 	// Some more instrumentation is handled by using instrumented libraries like HTTP server, slog logger, ...
 	// That is, only include attributes your programs *handles*, not attributes defining what your program *is*, e.g. do not include
 	// HTTP status code which is already provided by HTTP server instrumentation, but include enduser ID which you got from business logic
-
 	logger.InfoContext(
 		ctx,
 		msg,
@@ -130,6 +139,7 @@ func rolldice(w http.ResponseWriter, r *http.Request) {
 	span.SetStatus(codes.Ok, "roll successful")
 }
 
+// subTask is a helper function to show how to call another service
 func subTask(ctx context.Context, roll int) (*http.Response, error) {
 	// You can create nested spans, see https://opentelemetry.io/docs/languages/go/instrumentation/#create-nested-spans
 	// Nested spans are useful to track different parts of the handling, such as external calls like in this example
