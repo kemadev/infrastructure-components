@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/kemadev/infrastructure-components/internal/pkg/domain"
+	"github.com/kemadev/infrastructure-components/pkg/private/domain"
 )
 
 type (
