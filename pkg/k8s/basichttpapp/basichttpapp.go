@@ -295,7 +295,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 			Namespace: pulumi.String(namespace),
 			Labels: func() pulumi.StringMap {
 				enforce := "restricted"
-				if ctx.Stack() == "dev" {
+				if ctx.Stack() == config.Env_dev {
 					// Allow using HostPath volume in dev
 					enforce = "privileged"
 				}
@@ -389,7 +389,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 								},
 							},
 							LivenessProbe: func() corev1.ProbePtrInput {
-								if ctx.Stack() == "dev" {
+								if ctx.Stack() == config.Env_dev {
 									return nil
 								}
 								return corev1.ProbeArgs{
@@ -401,7 +401,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 								}
 							}(),
 							ReadinessProbe: func() corev1.ProbePtrInput {
-								if ctx.Stack() == "dev" {
+								if ctx.Stack() == config.Env_dev {
 									return nil
 								}
 								return corev1.ProbeArgs{
@@ -413,13 +413,13 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 							}(),
 							// HACK Enable colorful output for air, remove once https://github.com/air-verse/air/pull/768 is merged
 							Stdin: func() pulumi.Bool {
-								if ctx.Stack() == "dev" {
+								if ctx.Stack() == config.Env_dev {
 									return pulumi.Bool(true)
 								}
 								return pulumi.Bool(false)
 							}(),
 							Tty: func() pulumi.Bool {
-								if ctx.Stack() == "dev" {
+								if ctx.Stack() == config.Env_dev {
 									return pulumi.Bool(true)
 								}
 								return pulumi.Bool(false)
@@ -436,7 +436,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 							},
 							VolumeMounts: func() corev1.VolumeMountArrayInput {
 								// Mount app code volume in dev
-								if ctx.Stack() == "dev" {
+								if ctx.Stack() == config.Env_dev {
 									return corev1.VolumeMountArray{
 										&corev1.VolumeMountArgs{
 											Name:      pulumi.String(appInstance),
@@ -485,7 +485,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 					},
 					Volumes: func() corev1.VolumeArrayInput {
 						// Create app code volume in dev
-						if ctx.Stack() == "dev" {
+						if ctx.Stack() == config.Env_dev {
 							return corev1.VolumeArray{
 								corev1.VolumeArgs{
 									Name: pulumi.String(appInstance),
