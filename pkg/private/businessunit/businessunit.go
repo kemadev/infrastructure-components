@@ -2,36 +2,37 @@ package businessunit
 
 import "strings"
 
-// Company Business Unit (BU)
+// A BusinessUnit represents a taskforce within the organization.
 type BusinessUnit string
 
 const (
-	// Infrastructure related taskforce
+	// BusinessUnitInfrastructure is the business unit in charge of infrastructure related tasks
 	BusinessUnitInfrastructure BusinessUnit = "infrastructure"
-	// Security related taskforce
+	// BusinessUnitSecurity is the business unit in charge of security related tasks
 	BusinessUnitSecurity BusinessUnit = "security"
-	// Engineering related taskforce
+	// BusinessUnitEngineering is the business unit in charge of engineering related tasks
 	BusinessUnitEngineering BusinessUnit = "engineering"
-	// Human-resources related taskforce
+	// BusinessUnitHumanResources is the business unit in charge of human-resources related tasks
 	BusinessUnitHumanResources BusinessUnit = "human-resources"
-	// Finance related taskforce
+	// BusinessUnitFinance is the business unit in charge of finance related tasks
 	BusinessUnitFinance BusinessUnit = "finance"
-	// Marketing related taskforce
+	// BusinessUnitMarketing is the business unit in charge of marketing related tasks
 	BusinessUnitMarketing BusinessUnit = "marketing"
-	// Product related taskforce
+	// BusinessUnitProduct is the business unit in charge of product related tasks
 	BusinessUnitProduct BusinessUnit = "product"
-	// Operations related taskforce
+	// BusinessUnitOperations is the business unit in charge of operations related tasks
 	BusinessUnitOperations BusinessUnit = "operations"
-	// Sales related taskforce
+	// BusinessUnitSales is the business unit in charge of sales related tasks
 	BusinessUnitSales BusinessUnit = "sales"
-	// Management related taskforce
+	// BusinessUnitManagement is the business unit in charge of management related tasks
 	BusinessUnitManagement BusinessUnit = "management"
-	// Executive related taskforce
+	// BusinessUnitExecutive is the business unit in charge of executive related tasks
 	BusinessUnitExecutive BusinessUnit = "executive"
-	// Internal related taskforce
+	// BusinessUnitInternal is the business unit in charge of internal related tasks
 	BusinessUnitInternal BusinessUnit = "internal"
 )
 
+// String returns the string representation of the BusinessUnit
 func (bu BusinessUnit) String() string {
 	return strings.ToLower(string(bu))
 }

@@ -9,6 +9,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// GetClusterName reads the kind config file and returns the cluster name, and an error if any.
 func GetClusterName(ctx *pulumi.Context, kindConfigPath string) (string, error) {
 	if _, err := os.Stat(kindConfigPath); os.IsNotExist(err) {
 		return "", fmt.Errorf("kind-config-path %s does not exist", kindConfigPath)
@@ -32,6 +33,7 @@ func GetClusterName(ctx *pulumi.Context, kindConfigPath string) (string, error) 
 	return clusterName, nil
 }
 
+// CreateKindCluster creates a kind cluster using the provided kind config path, and returns a command object and an error if any.
 func CreateKindCluster(ctx *pulumi.Context, kindConfigPath string) (*local.Command, error) {
 	clusterName, err := GetClusterName(ctx, kindConfigPath)
 	if err != nil {

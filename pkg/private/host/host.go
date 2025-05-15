@@ -8,9 +8,9 @@ import (
 )
 
 type (
-	// A base host, used to construct URLs
+	// A Host is a representation of a DNS host name.
 	Host url.URL
-	// An URL template, used to distribute traffic
+	// A URL is a representation of an URL,
 	URL struct {
 		// Host where traffic is destinated
 		BaseHost Host
@@ -21,10 +21,12 @@ type (
 	}
 )
 
+// String returns the string representation of the Host, lowercased.
 func (h Host) String() string {
 	return strings.ToLower(h.String())
 }
 
+// String returns the string representation of the URL, lowercased.
 func (u URL) String() string {
 	f := url.URL{
 		Host: u.BaseHost.Host,
@@ -34,91 +36,94 @@ func (u URL) String() string {
 }
 
 const (
-	// HTTPs protocol scheme
+	// SchemeHTTPS is the HTTPS scheme
 	SchemeHTTPS string = "https"
-	// `http.ServeMux` matching pattern every application / service should use
-	// `entity` is service / application's name
-	// `version` is service / application's SemVer version (e.g. `v0.1.12`)
+	// APIPathPattern is the conventional [net/http.ServeMux] matching pattern every application / service should use
+	// `entity` being the service, i.e. the application's name, and `version` its SemVer version, without prefix `v`.
 	APIPathPattern string = "{entity}/{version}/"
 )
 
 var (
-	// Base host for internet-facing public applications
+	// BaseHostPublicInternetFacingApp is the base host for internet-facing public applications. This is where client-facing
+	// applications are hosted.
 	BaseHostPublicInternetFacingApp Host = Host(url.URL{
 		Scheme: SchemeHTTPS,
 		Host:   domain.DomainKemaDotDev.String(),
 	})
-	// Base host for internet-facing public services
+	// BaseHostPublicInternetFacingService is the base host for internet-facing public services. This is where client-facing
+	// services are hosted, service meaning a service for the client such as a forum, a chat, ... , not a microservice.
 	BaseHostPublicInternetFacingService Host = Host(url.URL{
 		Scheme: SchemeHTTPS,
 		Host:   domain.DomainKemaDotCloud.String(),
 	})
-	// Base host for internet-facing internal services
+	// BaseHostInternalInternetFacingService is the base host for internet-facing internal services. This is where internal
+	// services are hosted, service meaning a service for internal use such as VCS, chat, ... , not a microservice.
 	BaseHostInternalInternetFacingService Host = Host(url.URL{
 		Scheme: SchemeHTTPS,
 		Host:   domain.DomainKemaDotRun.String(),
 	})
-	// Base host for non-internet internal services
+	// BaseHostInternalPrivateService is the base host for internal private services. This is where internal services are hosted, such as
+	// Kubernetes control planes, preview applications, ...
 	BaseHostInternalPrivateService Host = Host(url.URL{
 		Scheme: SchemeHTTPS,
 		Host:   domain.DomainKemaDotInternal.String(),
 	})
-	// Base host for preview applications
+	// BaseHostPrivatePreview is the base host for private preview applications.
 	BaseHostPrivatePreview Host = Host(url.URL{
 		Scheme: SchemeHTTPS,
 		Host:   "preview" + BaseHostInternalPrivateService.Host,
 	})
 
-	// Host for company's VCS service
+	// HostVCS is the host for company's VCS.
 	HostVCS Host = Host(url.URL{
 		Scheme: SchemeHTTPS,
 		Host:   "vcs." + BaseHostInternalInternetFacingService.Host,
 	})
-	// Host for company's chat service
+	// HostChat is the host for company's chat.
 	HostChat Host = Host(url.URL{
 		Scheme: SchemeHTTPS,
 		Host:   "chat." + BaseHostInternalInternetFacingService.Host,
 	})
-	// Host for company's main website
+	// HostMainWebsite is the host for company's main website.
 	HostMainWebsite Host = Host(url.URL{
 		Scheme: SchemeHTTPS,
 		Host:   "www." + domain.DomainKemaDotDev.String(),
 	})
-	// Host for company's forum
+	// HostForum is the host for company's forum.
 	HostForum Host = Host(url.URL{
 		Scheme: SchemeHTTPS,
 		Host:   "discuss." + domain.DomainKemaDotDev.String(),
 	})
-	// Host for Kubernetes control planes (kube-apiserver access)
+	// HostKubeControlePlane is the host for Kubernetes control planes (kube-apiserver access)
 	HostKubeControlePlane Host = Host(url.URL{
 		Scheme: SchemeHTTPS,
 		Host:   "kube.{clusterName}." + BaseHostInternalPrivateService.Host + ":6443",
 	})
-	// Host for Kubernetes control planes (kube-apiserver access)
+	// HostReviewApp is the host for preview applications.
 	HostReviewApp Host = Host(url.URL{
 		Scheme: SchemeHTTPS,
 		// `repoFQDN` is repository's Fully Qualified Domain Name, i.e. go module name, in lowercase alphanum + dashes form (e.g. `host-tld-owner-repo`)
 		Host: "{repoFQDN}-{prNumber}." + BaseHostPrivatePreview.Host,
 	})
-	// Host used to access consoles of internal services
+	// HostServiceConsole is the host for service consoles.
 	HostServiceConsole Host = Host(url.URL{
 		Scheme: SchemeHTTPS,
 		// `service` is service's name
 		Host: "{service}." + BaseHostInternalPrivateService.Host,
 	})
-	// Host for company's main API
+	// HostMainApi is the host for company's main API.
 	HostMainApi Host = Host(url.URL{
 		Scheme: SchemeHTTPS,
 		Host:   "api." + domain.DomainKemaDotInternal.String(),
 	})
 
-	// Base URL for all APIs, providing a common structure for all applications / services
-	// All applications / services should use the same pattern
+	// URLMainApi is the URL for company's main API, providing a common structure for all applications / services
+	// All applications / services should use this pattern
 	URLMainApi URL = URL{
 		BaseHost:    HostMainApi,
 		PathPattern: APIPathPattern,
 	}
-	// URL for company's security guidelines & responsible disclosure procedure
+	// URLSecurityGuidelines is the URL for company's security guidelines & responsible disclosure procedure
 	URLSecurityGuidelines URL = URL{
 		BaseHost:    HostForum,
 		PathPattern: "/c/security",

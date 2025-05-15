@@ -6,7 +6,8 @@ import (
 	"github.com/kemadev/infrastructure-components/pkg/private/businessunit"
 )
 
-// Cost center
+// A CostCenter represents a business unit within the organization that is responsible for
+// which the cost is allocated. It is used to determine the cost allocation for a given resource.
 type CostCenter string
 
 const (

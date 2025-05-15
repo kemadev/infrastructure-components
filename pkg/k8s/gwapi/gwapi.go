@@ -7,6 +7,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
+// DeployGatewayAPICRDs deploys the Gateway API CRDs to the cluster, returning the corresponding ConfigFile object and an error if any.
 func DeployGatewayAPICRDs(ctx *pulumi.Context) (*yamlv2.ConfigFile, error) {
 	crd, err := yamlv2.NewConfigFile(ctx, "gateway-api-crds", &yamlv2.ConfigFileArgs{
 		// TODO add renovate tracking

@@ -10,6 +10,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
+// DeployCNI deploys the Cilium CNI using Helm, returning the corresponding Release object and an error if any.
 func DeployCNI(
 	ctx *pulumi.Context,
 	gwapiCrd *yamlv2.ConfigFile,

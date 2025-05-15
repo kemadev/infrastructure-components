@@ -25,73 +25,84 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
+// A AppParms contains all the parameters needed to deploy a basic HTTP application
 type AppParms struct {
-	// Image reference (URL)
+	// ImageRef is the base image reference, e.g. registry.host.tld/repo/imagename.
 	ImageRef url.URL
-	// Image tag
+	// ImageTag is the image tag, as a SemVer tag. It should not be manually set, as it
+	// is automatically set to AppVersion.
 	ImageTag semver.Version
-	// Runtime env
+	// RuntimeEnv is the runtime environment, i.e. Pulumi stack name. It is used as a suffix to the application name
+	// in application instance name, ensuring uniqueness across environments. Please note that [github.com/kemadev/framework-go/pkg/config.Env_dev]
+	// is a special case, tweaking the application deployment to ease local development.
 	RuntimeEnv string
-	// OpenTelemetry endpoint URL
+	// OTelEndpointUrl is the OpenTelemetry collector endpoint URL.
 	OTelEndpointUrl url.URL
-	// Application version, i.e. SemVer tag
+	// AppVersion is the application version, as a SemVer tag.
 	AppVersion semver.Version
-	// Application name, i.e. repository name
+	// AppName is the application name, i.e. the name of the repository.
 	AppName string
-	// Application namespace, which group it belogs to (e.g. shoppingcart, auth, ...)
+	// AppNamespace is the application namespace, i.e. which group it belongs to (e.g. shoppingcart, auth, ...)
 	AppNamespace string
-	// Application component, what the application role is (e.g. frontend, api, database, ...)
+	// AppComponent is the application role, e.g. frontend, api, database, ...
 	AppComponent string
-	// Business unit developing application
+	// BusinessUnitId is the business unit developing application.
 	BusinessUnitId businessunit.BusinessUnit
-	// Customer intended to use application
+	// CustomerId is the customer using the application.
 	CustomerId customer.Customer
-	// Cost center, which i
+	// CostCenter is the cost center to which the application belongs.
 	CostCenter costcenter.CostCenter
-	// Cost allocation owner, who pays for the application, budget holder
+	// CostAllocationOwner is the business unit allocating resources to the application, i.e. the budget holder.
 	CostAllocationOwner businessunit.BusinessUnit
-	// Team  responsible for application
+	// OperationsOwner is the business unit responsible for developing and maintaining the application.
 	OperationsOwner businessunit.BusinessUnit
-	// Recovery Point Objective (RPO) of resource
+	// Rpo is the recovery point objective, i.e. the maximum amount of data that can be lost in case of a failure.
 	Rpo time.Duration
-	// Data classification resource is subject to (e.g. )
+	// DataClassification is the data classification the application is subject to.
 	DataClassification dataclassification.DataClassification
-	// Compliance framework resource is subject to (e.g. )
+	// ComplianceFramework is the compliance framework the application is subject to.
 	ComplianceFramework complianceframework.ComplianceFramework
-	// Time at which resource should expire, be deleted
+	// Expiration is the expiration date of the application, i.e. when should be decommissioned.
 	Expiration time.Time
-	// Git repository URL
+	// ProjectUrl is the URL of the project, i.e. the URL of the repository.
 	ProjectUrl url.URL
-	// Monitoring URL, (e.g. APM URL)
+	// MonitoringUrl is the URL of the monitoring system, e.g. the URL of the APM.
 	MonitoringUrl url.URL
-	// Port which application serves
+	// Port is the port on which the application is listening.
 	Port int
-	// HTTP read timeout to use
+	// HTTPReadTimeout is the HTTP read timeout, in seconds.
 	HTTPReadTimeout int
-	// HTTP write timeout to use
+	// HTTPWriteTimeout is the HTTP write timeout, in seconds.
 	HTTPWriteTimeout int
-	// CPU request for pod, in mili vCPU (will be set as `strconv.Itoa(CPURequest) + "m"`)
+	// CPURequest is the CPU request for the pod, in mili vCPU (will be set as `strconv.Itoa(CPURequest) + "m"`)
 	CPURequest int
-	// CPU limit for pod, in mili vCPU (will be set as `strconv.Itoa(CPULimit) + "m"`), will also set GOMAXPROCS to 1/1000th of this value, floored (you should only specific multiples of 1000)
+	// CPULimit is the CPU limit for the pod, in mili vCPU (will be set as `strconv.Itoa(CPULimit) + "m"`). It will also be used to
+	// set GOMAXPROCS to 1/1000th of this value, floored (you should only specify multiples of 1000)
 	CPULimit int
-	// Memory request for pod, in MiB (will be set as `strconv.Itoa(MemoryRequest) + "MiB"`)
+	// MemoryRequest is the memory request for the pod, in MiB (will be set as `strconv.Itoa(MemoryRequest) + "MiB"`)
 	MemoryRequest int
-	// Memory limit for pod, in MiB (will be set as `strconv.Itoa(MemoryLimit) + "MiB"`), will also set GOMEMLIMIT to 0.9 * this value
+	// MemoryLimit is the memory limit for the pod, in MiB (will be set as `strconv.Itoa(MemoryLimit) + "MiB"`). It will also be used to
+	// set GOMEMLIMIT to 95% of this value.
 	MemoryLimit int
-	// CPU utilization target, used for HPA
+	// TargetCPUUtilization is the target CPU utilization for the pod, in percent. It is used to set the HPA target CPU utilization.
 	TargetCPUUtilization int
-	// Maximum replicas, used for HPA
+	// MinReplicas is the minimum number of replicas for the pod, used for HPA
 	MinReplicas int
-	// Minimum replicas, used for HPA
+	// MaxReplicas is the maximum number of replicas for the pod, used for HPA
 	MaxReplicas int
 }
 
 var (
-	ErrNoRemoteURL        = fmt.Errorf("remote URL not found")
+	// ErrNoRemoteURL is a sentinel error indicating that no remote URL was found in the git repository.
+	ErrNoRemoteURL = fmt.Errorf("remote URL not found")
+	// ErrMultipleRemoteURLs is a sentinel error indicating that multiple remote URLs were found in the git repository.
 	ErrMultipleRemoteURLs = fmt.Errorf("found more than 1 remote URL")
-	ErrInvalidUrl         = fmt.Errorf("repository remote URL is invlid")
+	// ErrInvalidUrl is a sentinel error indicating that the remote URL is invalid.
+	ErrInvalidUrl = fmt.Errorf("repository remote URL is invlid")
 )
 
+// getGitInfos returns the application name and the remote URL of the git repository, based on the git remote "origin", and
+// an error if any.
 func getGitInfos() (string, url.URL, error) {
 	repo, err := git.GetGitRepo()
 	if err != nil {
@@ -123,6 +134,7 @@ func getGitInfos() (string, url.URL, error) {
 	return appName, *parsedUrl, nil
 }
 
+// getVersionFromGit returns the application version from the git repository, based on the current tag, and an error if any.
 func getVersionFromGit() (semver.Version, error) {
 	versionString, err := svu.Current(
 		svu.StripPrefix(),
@@ -137,6 +149,9 @@ func getVersionFromGit() (semver.Version, error) {
 	return version, nil
 }
 
+// validateParams validates the application parameters, returning an error if any of them is invalid.
+// Not all parameters are enforced, as some of them are optional.
+// NOTE(maintainers): When adding new parameters, add them to this function, even if they are not enforced, by commenting them out.
 func validateParams(params *AppParms) error {
 	// Enforce parameters, with commented-out non-enforced values
 	if params.ImageRef.String() == "" {
@@ -229,6 +244,7 @@ func validateParams(params *AppParms) error {
 	return nil
 }
 
+// mergeParams merges the default parameters with the provided parameters, returning an error if any of them is invalid.
 func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 	appName, repoUrl, err := getGitInfos()
 	if err != nil {
@@ -277,6 +293,8 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 	return nil
 }
 
+// DeployBasicHTTPApp deploys a basic HTTP application to the Kubernetes cluster, using the provided parameters merged with the default ones,
+// and returns an error if any of the parameters is invalid or if the deployment fails.
 func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 	err := mergeParams(ctx, &params)
 	if err != nil {
