@@ -38,9 +38,6 @@ func (u URL) String() string {
 const (
 	// SchemeHTTPS is the HTTPS scheme
 	SchemeHTTPS string = "https"
-	// APIPathPattern is the conventional [net/http.ServeMux] matching pattern every application / service should use
-	// `entity` being the service, i.e. the application's name, and `version` its SemVer version, without prefix `v`.
-	APIPathPattern string = "{entity}/{version}/"
 )
 
 var (
@@ -117,11 +114,13 @@ var (
 		Host:   "api." + domain.DomainKemaDotInternal.String(),
 	})
 
-	// URLMainApi is the URL for company's main API, providing a common structure for all applications / services
-	// All applications / services should use this pattern
+	// URLMainApi is the URL for conventional [net/http.ServeMux] matching pattern every application / service should use,
+	// providing a common structure for all applications / services.
+	// All applications / services should use this pattern, `entity` being the service, i.e. the application's
+	// name, and `version` its SemVer version, without prefix `v`.
 	URLMainApi URL = URL{
 		BaseHost:    HostMainApi,
-		PathPattern: APIPathPattern,
+		PathPattern: "{entity}/{version}/",
 	}
 	// URLSecurityGuidelines is the URL for company's security guidelines & responsible disclosure procedure
 	URLSecurityGuidelines URL = URL{
