@@ -19,6 +19,7 @@ import (
 	"github.com/kemadev/infrastructure-components/pkg/private/dataclassification"
 	"github.com/kemadev/runner-tools/pkg/git"
 	appsv1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/apps/v1"
+	autoscalingv2 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/autoscaling/v2"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -77,6 +78,12 @@ type AppParms struct {
 	MemoryRequest int
 	// Memory limit for pod, in MiB (will be set as `strconv.Itoa(MemoryLimit) + "MiB"`), will also set GOMEMLIMIT to 0.9 * this value
 	MemoryLimit int
+	// CPU utilization target, used for HPA
+	TargetCPUUtilization int
+	// Maximum replicas, used for HPA
+	MinReplicas int
+	// Minimum replicas, used for HPA
+	MaxReplicas int
 }
 
 var (
@@ -210,6 +217,15 @@ func validateParams(params *AppParms) error {
 	// if params.MemoryLimit == 0 {
 	// 	return fmt.Errorf("MemoryLimit cannot be zero")
 	// }
+	if params.TargetCPUUtilization == 0 {
+		return fmt.Errorf("TargetCPUUtilization cannot be zero")
+	}
+	if params.MinReplicas == 0 {
+		return fmt.Errorf("MinReplicas cannot be zero")
+	}
+	if params.MaxReplicas == 0 {
+		return fmt.Errorf("MaxReplicas cannot be zero")
+	}
 	return nil
 }
 
@@ -241,11 +257,14 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 			t.Scheme = "https"
 			return t
 		}(),
-		Port:             8080,
-		HTTPReadTimeout:  5,
-		HTTPWriteTimeout: 10,
-		CPURequest:       500,
-		MemoryRequest:    500,
+		Port:                 8080,
+		HTTPReadTimeout:      5,
+		HTTPWriteTimeout:     10,
+		CPURequest:           500,
+		MemoryRequest:        500,
+		TargetCPUUtilization: 70,
+		MinReplicas:          1,
+		MaxReplicas:          10,
 	}
 	err = mergo.Merge(params, defParams)
 	if err != nil {
@@ -360,14 +379,13 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 	})
 
 	// Application deployment
-	_, err = appsv1.NewDeployment(ctx, "deployment", &appsv1.DeploymentArgs{
+	deployment, err := appsv1.NewDeployment(ctx, "deployment", &appsv1.DeploymentArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String(appInstance),
 			Namespace: pulumi.String(namespace),
 			Labels:    sharedLabels,
 		},
 		Spec: &appsv1.DeploymentSpecArgs{
-			Replicas: pulumi.Int(1),
 			Selector: &metav1.LabelSelectorArgs{
 				MatchLabels: basicSelector,
 			},
@@ -502,6 +520,66 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 			},
 		},
 	})
+	if err != nil {
+		return err
+	}
+
+	_, err = autoscalingv2.NewHorizontalPodAutoscaler(
+		ctx,
+		"hpa",
+		&autoscalingv2.HorizontalPodAutoscalerArgs{
+			Metadata: &metav1.ObjectMetaArgs{
+				Name:      pulumi.String(appInstance),
+				Namespace: pulumi.String(namespace),
+				Labels:    sharedLabels,
+			},
+			Spec: &autoscalingv2.HorizontalPodAutoscalerSpecArgs{
+				MinReplicas: pulumi.Int(params.MinReplicas),
+				MaxReplicas: pulumi.Int(params.MaxReplicas),
+				ScaleTargetRef: &autoscalingv2.CrossVersionObjectReferenceArgs{
+					Kind:       deployment.Kind,
+					ApiVersion: deployment.ApiVersion,
+					Name:       deployment.Metadata.Name().Elem(),
+				},
+				Behavior: &autoscalingv2.HorizontalPodAutoscalerBehaviorArgs{
+					ScaleDown: &autoscalingv2.HPAScalingRulesArgs{
+						// Downscale max 30%/minute
+						Policies: autoscalingv2.HPAScalingPolicyArray{
+							&autoscalingv2.HPAScalingPolicyArgs{
+								Type:          pulumi.String("Percent"),
+								PeriodSeconds: pulumi.Int(60),
+								Value:         pulumi.Int(30),
+							},
+						},
+						SelectPolicy: pulumi.String("Min"),
+					},
+					ScaleUp: &autoscalingv2.HPAScalingRulesArgs{
+						// Upscale max 30%/minute
+						Policies: autoscalingv2.HPAScalingPolicyArray{
+							&autoscalingv2.HPAScalingPolicyArgs{
+								Type:          pulumi.String("Percent"),
+								PeriodSeconds: pulumi.Int(60),
+								Value:         pulumi.Int(30),
+							},
+						},
+						SelectPolicy: pulumi.String("Max"),
+					},
+				},
+				Metrics: autoscalingv2.MetricSpecArray{
+					&autoscalingv2.MetricSpecArgs{
+						Type: pulumi.String("Resource"),
+						Resource: &autoscalingv2.ResourceMetricSourceArgs{
+							Name: pulumi.String("cpu"),
+							Target: &autoscalingv2.MetricTargetArgs{
+								Type:               pulumi.String("Utilization"),
+								AverageUtilization: pulumi.Int(params.TargetCPUUtilization),
+							},
+						},
+					},
+				},
+			},
+		},
+	)
 	if err != nil {
 		return err
 	}
