@@ -91,17 +91,17 @@ func addNodeLabels(ctx *pulumi.Context, clusterName string, cluster *local.Comma
 			clusterDef.NodeZoneLabelKey:              zone2,
 		},
 
-		clusterName + "-worker5": {
-			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			clusterDef.NodeRegionLabelKey:            region1,
-			clusterDef.NodeZoneLabelKey:              zone3,
-		},
-		clusterName + "-worker6": {
-			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			clusterDef.NodeRegionLabelKey:            region1,
-			clusterDef.NodeZoneLabelKey:              zone3,
-		},
 		clusterName + "-worker7": {
+			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
+			clusterDef.NodeRegionLabelKey:            region1,
+			clusterDef.NodeZoneLabelKey:              zone3,
+		},
+		clusterName + "-worker8": {
+			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
+			clusterDef.NodeRegionLabelKey:            region1,
+			clusterDef.NodeZoneLabelKey:              zone3,
+		},
+		clusterName + "-worker9": {
 			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
 			clusterDef.NodeRegionLabelKey:            region1,
 			clusterDef.NodeZoneLabelKey:              zone3,
@@ -163,13 +163,13 @@ func CreateKindCluster(
 	kindConfigBasePath string,
 	ha bool,
 ) (*local.Command, error) {
-	clusterName, err := GetClusterName(ctx, kindConfigBasePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get cluster name: %w", err)
-	}
 	kindConfigPath := kindConfigBasePath + "/kind-config.yaml"
 	if ha {
 		kindConfigPath = kindConfigBasePath + "/kind-config-ha.yaml"
+	}
+	clusterName, err := GetClusterName(ctx, kindConfigPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get cluster name: %w", err)
 	}
 	cluster, err := local.NewCommand(ctx, "cluster", &local.CommandArgs{
 		Create: pulumi.String("kind create cluster --config " + kindConfigPath),
