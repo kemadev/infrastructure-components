@@ -38,92 +38,96 @@ func GetClusterName(ctx *pulumi.Context, kindConfigPath string) (string, error) 
 
 // addNodeLabels adds conventional labels to the nodes.
 func addNodeLabels(ctx *pulumi.Context, clusterName string, cluster *local.Command, ha bool) error {
+	region1 := "region-1"
+	zone1 := "region-1-1"
+	zone2 := "region-1-2"
+	zone3 := "region-1-3"
 	nodesMultiZoneHA := map[string]map[string]string{
 		clusterName + "-control-plane": {
 			clusterDef.NodeRoleControlPlaneLabelKey: clusterDef.NodeRoleControlPlaneLabelValue,
-			clusterDef.NodeRegionLabelKey:           "region-1",
-			clusterDef.NodeZoneLabelKey:             "region-1-1",
+			clusterDef.NodeRegionLabelKey:           region1,
+			clusterDef.NodeZoneLabelKey:             zone1,
 		},
 		clusterName + "-control-plane2": {
 			clusterDef.NodeRoleControlPlaneLabelKey: clusterDef.NodeRoleControlPlaneLabelValue,
-			clusterDef.NodeRegionLabelKey:           "region-1",
-			clusterDef.NodeZoneLabelKey:             "region-1-2",
+			clusterDef.NodeRegionLabelKey:           region1,
+			clusterDef.NodeZoneLabelKey:             zone2,
 		},
 		clusterName + "-control-plane3": {
 			clusterDef.NodeRoleControlPlaneLabelKey: clusterDef.NodeRoleControlPlaneLabelValue,
-			clusterDef.NodeRegionLabelKey:           "region-1",
-			clusterDef.NodeZoneLabelKey:             "region-1-3",
+			clusterDef.NodeRegionLabelKey:           region1,
+			clusterDef.NodeZoneLabelKey:             zone3,
 		},
 
 		clusterName + "-worker": {
 			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			clusterDef.NodeRegionLabelKey:            "region-1",
-			clusterDef.NodeZoneLabelKey:              "region-1-1",
+			clusterDef.NodeRegionLabelKey:            region1,
+			clusterDef.NodeZoneLabelKey:              zone1,
 		},
 		clusterName + "-worker2": {
 			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			clusterDef.NodeRegionLabelKey:            "region-1",
-			clusterDef.NodeZoneLabelKey:              "region-1-1",
+			clusterDef.NodeRegionLabelKey:            region1,
+			clusterDef.NodeZoneLabelKey:              zone1,
 		},
 		clusterName + "-worker3": {
 			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			clusterDef.NodeRegionLabelKey:            "region-1",
-			clusterDef.NodeZoneLabelKey:              "region-1-1",
+			clusterDef.NodeRegionLabelKey:            region1,
+			clusterDef.NodeZoneLabelKey:              zone1,
 		},
 
 		clusterName + "-worker4": {
 			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			clusterDef.NodeRegionLabelKey:            "region-1",
-			clusterDef.NodeZoneLabelKey:              "region-1-2",
+			clusterDef.NodeRegionLabelKey:            region1,
+			clusterDef.NodeZoneLabelKey:              zone2,
 		},
 		clusterName + "-worker5": {
 			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			clusterDef.NodeRegionLabelKey:            "region-1",
-			clusterDef.NodeZoneLabelKey:              "region-1-2",
+			clusterDef.NodeRegionLabelKey:            region1,
+			clusterDef.NodeZoneLabelKey:              zone2,
 		},
 		clusterName + "-worker6": {
 			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			clusterDef.NodeRegionLabelKey:            "region-1",
-			clusterDef.NodeZoneLabelKey:              "region-1-2",
+			clusterDef.NodeRegionLabelKey:            region1,
+			clusterDef.NodeZoneLabelKey:              zone2,
 		},
 
 		clusterName + "-worker5": {
 			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			clusterDef.NodeRegionLabelKey:            "region-1",
-			clusterDef.NodeZoneLabelKey:              "region-1-3",
+			clusterDef.NodeRegionLabelKey:            region1,
+			clusterDef.NodeZoneLabelKey:              zone3,
 		},
 		clusterName + "-worker6": {
 			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			clusterDef.NodeRegionLabelKey:            "region-1",
-			clusterDef.NodeZoneLabelKey:              "region-1-3",
+			clusterDef.NodeRegionLabelKey:            region1,
+			clusterDef.NodeZoneLabelKey:              zone3,
 		},
 		clusterName + "-worker7": {
 			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			clusterDef.NodeRegionLabelKey:            "region-1",
-			clusterDef.NodeZoneLabelKey:              "region-1-3",
+			clusterDef.NodeRegionLabelKey:            region1,
+			clusterDef.NodeZoneLabelKey:              zone3,
 		},
 	}
 	nodesMultiZone := map[string]map[string]string{
 		clusterName + "-control-plane": {
 			clusterDef.NodeRoleControlPlaneLabelKey: clusterDef.NodeRoleControlPlaneLabelValue,
-			clusterDef.NodeRegionLabelKey:           "region-1",
-			clusterDef.NodeZoneLabelKey:             "region-1-1",
+			clusterDef.NodeRegionLabelKey:           region1,
+			clusterDef.NodeZoneLabelKey:             zone1,
 		},
 
 		clusterName + "-worker": {
 			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			clusterDef.NodeRegionLabelKey:            "region-1",
-			clusterDef.NodeZoneLabelKey:              "region-1-1",
+			clusterDef.NodeRegionLabelKey:            region1,
+			clusterDef.NodeZoneLabelKey:              zone1,
 		},
 		clusterName + "-worker2": {
 			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			clusterDef.NodeRegionLabelKey:            "region-1",
-			clusterDef.NodeZoneLabelKey:              "region-1-2",
+			clusterDef.NodeRegionLabelKey:            region1,
+			clusterDef.NodeZoneLabelKey:              zone2,
 		},
 		clusterName + "-worker3": {
 			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			clusterDef.NodeRegionLabelKey:            "region-1",
-			clusterDef.NodeZoneLabelKey:              "region-1-3",
+			clusterDef.NodeRegionLabelKey:            region1,
+			clusterDef.NodeZoneLabelKey:              zone3,
 		},
 	}
 	nodes := nodesMultiZone
