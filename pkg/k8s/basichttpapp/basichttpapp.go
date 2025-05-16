@@ -38,6 +38,8 @@ type AppParms struct {
 	RuntimeEnv string
 	// OTelEndpointUrl is the OpenTelemetry collector endpoint URL.
 	OTelEndpointUrl url.URL
+	// OtelExporterCompression is the OpenTelemetry exporter compression method.
+	OtelExporterCompression string
 	// AppVersion is the application version, as a SemVer tag.
 	AppVersion semver.Version
 	// AppName is the application name, i.e. the name of the repository.
@@ -127,7 +129,8 @@ func getGitInfos() (string, url.URL, error) {
 		return "", url.URL{}, fmt.Errorf("remote url %s: %w", gitUrl, ErrInvalidUrl)
 	}
 	appName := strings.Join(urlParts[len(urlParts)-1:], "")
-	parsedUrl, err := url.Parse(gitUrl)
+	gitUrlWithScheme := "https://" + gitUrl
+	parsedUrl, err := url.Parse(gitUrlWithScheme)
 	if err != nil {
 		return "", url.URL{}, fmt.Errorf("error parsing git repository url: %w", err)
 	}
@@ -165,6 +168,9 @@ func validateParams(params *AppParms) error {
 	}
 	if params.OTelEndpointUrl.String() == "" {
 		return fmt.Errorf("OTelEndpointUrl cannot be empty")
+	}
+	if params.OtelExporterCompression == "" {
+		return fmt.Errorf("OtelCompression cannot be empty")
 	}
 	if params.AppVersion.String() == "" {
 		return fmt.Errorf("AppVersion cannot be empty")
@@ -268,6 +274,7 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 			Host:   "string",
 			Path:   "string",
 		},
+		OtelExporterCompression: "gzip",
 		ProjectUrl: func() url.URL {
 			t := repoUrl
 			t.Scheme = "https"
@@ -323,7 +330,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 	}
 
 	// Must match kind mount
-	appCodeVolume := "/app-code"
+	appCodeVolume := "/git-vcs-org"
 
 	// Application namespace
 	_, err = corev1.NewNamespace(ctx, "namespace", &corev1.NamespaceArgs{
@@ -363,11 +370,25 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		},
 		Data: func() pulumi.StringMap {
 			envMap := pulumi.StringMap{
-				config.EnvVarKeyRuntimeEnv:          pulumi.String(params.RuntimeEnv),
-				config.EnvVarKeyAppVersion:          pulumi.String(params.AppVersion.String()),
-				config.EnvVarKeyAppName:             pulumi.String(appInstance),
-				config.EnvVarKeyAppNamespace:        pulumi.String(params.AppNamespace),
-				config.EnvVarKeyOtelEndpointURL:     pulumi.String(params.OTelEndpointUrl.String()),
+				config.EnvVarKeyRuntimeEnv:   pulumi.String(params.RuntimeEnv),
+				config.EnvVarKeyAppVersion:   pulumi.String(params.AppVersion.String()),
+				config.EnvVarKeyAppName:      pulumi.String(appInstance),
+				config.EnvVarKeyAppNamespace: pulumi.String(params.AppNamespace),
+				config.EnvVarKeyOtelEndpointURL: pulumi.String(
+					params.OTelEndpointUrl.String(),
+				),
+				config.EnvVarKeyOtelExporterCompression: pulumi.String(
+					params.OtelExporterCompression,
+				),
+				config.EnvVarKeyHTTPServePort: pulumi.String(
+					strconv.Itoa(params.Port),
+				),
+				config.EnvVarKeyHTTPReadTimeout: pulumi.String(
+					strconv.Itoa(params.HTTPReadTimeout),
+				),
+				config.EnvVarKeyHTTPWriteTimeout: pulumi.String(
+					strconv.Itoa(params.HTTPWriteTimeout),
+				),
 				config.EnvVarKeyBusinessUnitId:      pulumi.String(params.BusinessUnitId),
 				config.EnvVarKeyCustomerId:          pulumi.String(params.CustomerId),
 				config.EnvVarKeyCostCenter:          pulumi.String(params.CostCenter),
@@ -377,7 +398,9 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 				config.EnvVarKeyDataClassification:  pulumi.String(params.DataClassification),
 				config.EnvVarKeyComplianceFramework: pulumi.String(params.ComplianceFramework),
 				config.EnvVarKeyProjectUrl:          pulumi.String(params.ProjectUrl.String()),
-				config.EnvVarKeyMonitoringUrl:       pulumi.String(params.MonitoringUrl.String()),
+				config.EnvVarKeyMonitoringUrl: pulumi.String(
+					params.MonitoringUrl.String(),
+				),
 			}
 			if !params.Expiration.IsZero() {
 				envMap[config.EnvVarKeyExpiration] = pulumi.String(params.Expiration.String())
@@ -395,6 +418,28 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 			return envMap
 		}(),
 	})
+
+	var gitSecret *corev1.Secret
+	if ctx.Stack() == config.Env_dev {
+		// TODO
+		gitToken := ""
+		gitSecret, err = corev1.NewSecret(ctx, "gitSecret", &corev1.SecretArgs{
+			Type: pulumi.String("Opaque"),
+			Metadata: &metav1.ObjectMetaArgs{
+				Name:      pulumi.String(appInstance + "-git-secret"),
+				Namespace: pulumi.String(namespace),
+				Labels:    sharedLabels,
+			},
+			StringData: pulumi.StringMap{
+				".netrc": pulumi.String("machine " + params.ProjectUrl.Host + `
+login git
+password ` + gitToken),
+			},
+		})
+		if err != nil {
+			return err
+		}
+	}
 
 	// Application deployment
 	deployment, err := appsv1.NewDeployment(ctx, "deployment", &appsv1.DeploymentArgs{
@@ -424,6 +469,25 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 									},
 								},
 							},
+							Env: func() corev1.EnvVarArray {
+								if ctx.Stack() == config.Env_dev {
+									// Set GOPRIVATE for dev environment
+									return corev1.EnvVarArray{
+										corev1.EnvVarArgs{
+											Name:  pulumi.String("GOPRIVATE"),
+											Value: pulumi.String("github.com/kemadev"),
+										},
+									}
+								}
+								return nil
+							}(),
+							WorkingDir: func() pulumi.StringPtrInput {
+								if ctx.Stack() == config.Env_dev {
+									// Use mounted volume's project dir as working dir in dev
+									return pulumi.String("/app/" + params.AppName)
+								}
+								return nil
+							}(),
 							LivenessProbe: func() corev1.ProbePtrInput {
 								if ctx.Stack() == config.Env_dev {
 									return nil
@@ -461,7 +525,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 								return pulumi.Bool(false)
 							}(),
 							Image: pulumi.String(
-								params.ImageRef.String() + ":" + params.ImageTag.String(),
+								params.ImageRef.Host + params.ImageRef.Path + ":" + params.ImageTag.String(),
 							),
 							Name: pulumi.String(appInstance),
 							Ports: corev1.ContainerPortArray{
@@ -471,12 +535,18 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 								},
 							},
 							VolumeMounts: func() corev1.VolumeMountArrayInput {
-								// Mount app code volume in dev
 								if ctx.Stack() == config.Env_dev {
 									return corev1.VolumeMountArray{
+										// Mount organization code volume in dev
 										&corev1.VolumeMountArgs{
 											Name:      pulumi.String(appInstance),
 											MountPath: pulumi.String("/app"),
+										},
+										// Mountnetrc file volume in dev
+										&corev1.VolumeMountArgs{
+											Name:      gitSecret.Metadata.Name().Elem(),
+											MountPath: pulumi.String("/home/nonroot/.netrc"),
+											SubPath:   pulumi.String(".netrc"),
 										},
 									}
 								}
@@ -519,15 +589,45 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 							},
 						},
 					},
+					DnsConfig: func() corev1.PodDNSConfigPtrInput {
+						if ctx.Stack() == config.Env_dev {
+							// Let 1.1.1.1 resolve public DNS names in dev
+							return corev1.PodDNSConfigArgs{
+								Nameservers: pulumi.StringArray{
+									pulumi.String("1.1.1.1"),
+								},
+							}
+						}
+						return nil
+					}(),
 					Volumes: func() corev1.VolumeArrayInput {
-						// Create app code volume in dev
 						if ctx.Stack() == config.Env_dev {
 							return corev1.VolumeArray{
+								// Create organization code volume in dev
 								corev1.VolumeArgs{
 									Name: pulumi.String(appInstance),
 									HostPath: corev1.HostPathVolumeSourceArgs{
 										Path: pulumi.String(appCodeVolume),
 										Type: pulumi.String("Directory"),
+									},
+								},
+								// Create netrc file volume in dev
+								corev1.VolumeArgs{
+									Name: gitSecret.Metadata.Name().Elem(),
+									Projected: corev1.ProjectedVolumeSourceArgs{
+										Sources: corev1.VolumeProjectionArray{
+											corev1.VolumeProjectionArgs{
+												Secret: corev1.SecretProjectionArgs{
+													Name: gitSecret.Metadata.Name(),
+													Items: corev1.KeyToPathArray{
+														corev1.KeyToPathArgs{
+															Key:  pulumi.String(".netrc"),
+															Path: pulumi.String(".netrc"),
+														},
+													},
+												},
+											},
+										},
 									},
 								},
 							}
