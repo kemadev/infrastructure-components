@@ -101,6 +101,10 @@ var (
 	ErrMultipleRemoteURLs = fmt.Errorf("found more than 1 remote URL")
 	// ErrInvalidUrl is a sentinel error indicating that the remote URL is invalid.
 	ErrInvalidUrl = fmt.Errorf("repository remote URL is invlid")
+	// ErrGitTokenNotFound is a sentinel error indicating that the git token was not found in the pulumi config.
+	ErrGitTokenNotFound = fmt.Errorf(
+		"git-token not found in pulumi config, please set it using `pulumi config set --secret git-token`, with a personal access token (with read access to organization's repositories) as value",
+	)
 )
 
 // getGitInfos returns the application name and the remote URL of the git repository, based on the git remote "origin", and
@@ -422,9 +426,13 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 	netRcFileName := ".netrc"
 	var gitSecret *corev1.Secret
 	if ctx.Stack() == config.Env_dev {
-		// TODO(maintainers) get it from pulumi config, as secret, only in dev stack
-		// TODO document usage of structured git clone to work with go.work (we mount parent dir of repo)
-		gitToken := ""
+		gitTokenConfigKey := "git-token"
+		gitToken, present := ctx.GetConfig(
+			ctx.Project() + ":" + gitTokenConfigKey,
+		)
+		if !present || gitToken == "" {
+			return ErrGitTokenNotFound
+		}
 		gitSecret, err = corev1.NewSecret(ctx, "gitSecret", &corev1.SecretArgs{
 			Type: pulumi.String("Opaque"),
 			Metadata: &metav1.ObjectMetaArgs{
