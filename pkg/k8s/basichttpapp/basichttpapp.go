@@ -419,6 +419,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		}(),
 	})
 
+	netRcFileName := ".netrc"
 	var gitSecret *corev1.Secret
 	if ctx.Stack() == config.Env_dev {
 		// TODO(maintainers) get it from pulumi config, as secret, only in dev stack
@@ -432,7 +433,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 				Labels:    sharedLabels,
 			},
 			StringData: pulumi.StringMap{
-				".netrc": pulumi.String("machine " + params.ProjectUrl.Host + `
+				netRcFileName: pulumi.String("machine " + params.ProjectUrl.Host + `
 login git
 password ` + gitToken),
 			},
@@ -547,7 +548,7 @@ password ` + gitToken),
 										&corev1.VolumeMountArgs{
 											Name:      gitSecret.Metadata.Name().Elem(),
 											MountPath: pulumi.String("/home/nonroot/.netrc"),
-											SubPath:   pulumi.String(".netrc"),
+											SubPath:   pulumi.String(netRcFileName),
 										},
 									}
 								}
@@ -622,8 +623,8 @@ password ` + gitToken),
 													Name: gitSecret.Metadata.Name(),
 													Items: corev1.KeyToPathArray{
 														corev1.KeyToPathArgs{
-															Key:  pulumi.String(".netrc"),
-															Path: pulumi.String(".netrc"),
+															Key:  pulumi.String(netRcFileName),
+															Path: pulumi.String(netRcFileName),
 														},
 													},
 												},
