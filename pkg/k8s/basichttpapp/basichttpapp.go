@@ -76,22 +76,32 @@ type AppParms struct {
 	HTTPReadTimeout int
 	// HTTPWriteTimeout is the HTTP write timeout, in seconds.
 	HTTPWriteTimeout int
-	// CPURequest is the CPU request for the pod, in mili vCPU (will be set as `strconv.Itoa(CPURequest) + "m"`)
-	CPURequest int
-	// CPULimit is the CPU limit for the pod, in mili vCPU (will be set as `strconv.Itoa(CPULimit) + "m"`). It will also be used to
+	// CPURequestMiliCPU is the CPU request for the pod, in mili vCPU (will be set as `strconv.Itoa(CPURequestMiliCPU) + "m"`)
+	CPURequestMiliCPU int
+	// CPULimitMiliCPU is the CPU limit for the pod, in mili vCPU (will be set as `strconv.Itoa(CPULimitMiliCPU) + "m"`). It will also be used to
 	// set GOMAXPROCS to 1/1000th of this value, floored (you should only specify multiples of 1000)
-	CPULimit int
-	// MemoryRequest is the memory request for the pod, in MiB (will be set as `strconv.Itoa(MemoryRequest) + "MiB"`)
-	MemoryRequest int
-	// MemoryLimit is the memory limit for the pod, in MiB (will be set as `strconv.Itoa(MemoryLimit) + "MiB"`). It will also be used to
+	CPULimitMiliCPU int
+	// MemoryRequestMiB is the memory request for the pod, in MiB (will be set as `strconv.Itoa(MemoryRequestMiB) + "MiB"`)
+	MemoryRequestMiB int
+	// MemoryLimitMiB is the memory limit for the pod, in MiB (will be set as `strconv.Itoa(MemoryLimitMiB) + "MiB"`). It will also be used to
 	// set GOMEMLIMIT to 95% of this value.
-	MemoryLimit int
+	MemoryLimitMiB int
 	// TargetCPUUtilization is the target CPU utilization for the pod, in percent. It is used to set the HPA target CPU utilization.
 	TargetCPUUtilization int
 	// MinReplicas is the minimum number of replicas for the pod, used for HPA
 	MinReplicas int
 	// MaxReplicas is the maximum number of replicas for the pod, used for HPA
 	MaxReplicas int
+	// ProgressDeadlineSeconds is the maximum time in seconds for the deployment to be ready.
+	ProgressDeadlineSeconds int
+	// DevImagePullPolicy is the image pull policy to use.
+	ImagePullPolicy string
+	// DevDnsAdditionalNameservers is the list of additional nameservers use in pods (dev stack only).
+	DevDnsAdditionalNameservers []string
+	// DevGoPrivateString is the GOPRIVATE string to set (dev stack only).
+	DevGoPrivateString string
+	// DevVolumeMountPath is the path where the organization code is mounted on node (dev stack only).
+	DevVolumeMountPath string
 }
 
 var (
@@ -230,13 +240,13 @@ func validateParams(params *AppParms) error {
 	if params.HTTPWriteTimeout == 0 {
 		return fmt.Errorf("HTTPWriteTimeout cannot be zero")
 	}
-	if params.CPURequest == 0 {
+	if params.CPURequestMiliCPU == 0 {
 		return fmt.Errorf("CPURequest cannot be zero")
 	}
 	// if params.CPULimit == 0 {
 	// 	return fmt.Errorf("CPULimit cannot be zero")
 	// }
-	if params.MemoryRequest == 0 {
+	if params.MemoryRequestMiB == 0 {
 		return fmt.Errorf("MemoryRequest cannot be zero")
 	}
 	// if params.MemoryLimit == 0 {
@@ -250,6 +260,21 @@ func validateParams(params *AppParms) error {
 	}
 	if params.MaxReplicas == 0 {
 		return fmt.Errorf("MaxReplicas cannot be zero")
+	}
+	if params.ProgressDeadlineSeconds == 0 {
+		return fmt.Errorf("ProgressDeadlineSeconds cannot be zero")
+	}
+	if params.ImagePullPolicy == "" {
+		return fmt.Errorf("ImagePullPolicy cannot be empty")
+	}
+	// if len(params.DevDnsAdditionalNameservers) == 0 {
+	// 	return fmt.Errorf("DevDnsAdditionalNameservers cannot be empty")
+	// }
+	// if params.DevGoPrivateString == "" {
+	// 	return fmt.Errorf("DevGoPrivateString cannot be empty")
+	// }
+	if params.DevVolumeMountPath == "" {
+		return fmt.Errorf("DevVolumeMountPath cannot be empty")
 	}
 	return nil
 }
@@ -272,7 +297,6 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 		DataClassification:  dataclassification.DataClassificationNone,
 		ComplianceFramework: complianceframework.ComplianceFrameworkNone,
 		RuntimeEnv:          ctx.Stack(),
-		// TODO go export ref to collector url (via hostname + cluster.local)
 		OTelEndpointUrl: url.URL{
 			Scheme: "grpc",
 			Host:   "string",
@@ -287,8 +311,8 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 		Port:                 8080,
 		HTTPReadTimeout:      5,
 		HTTPWriteTimeout:     10,
-		CPURequest:           500,
-		MemoryRequest:        500,
+		CPURequestMiliCPU:    500,
+		MemoryRequestMiB:     500,
 		TargetCPUUtilization: 70,
 		MinReplicas:          1,
 		MaxReplicas:          10,
@@ -333,8 +357,8 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		"app.kubernetes.io/instance": sharedLabels["app.kubernetes.io/instance"],
 	}
 
-	// Must match kind mount
-	appCodeVolume := "/git-vcs-org"
+	// Where to mount organization's code, must match kind mount
+	orgCodeVolume := "/git-vcs-org"
 
 	// Application namespace
 	_, err = corev1.NewNamespace(ctx, "namespace", &corev1.NamespaceArgs{
@@ -344,7 +368,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 			Labels: func() pulumi.StringMap {
 				enforce := "restricted"
 				if ctx.Stack() == config.Env_dev {
-					// Allow using HostPath volume in dev
+					// Allow using HostPath volume in dev, as well as other side-effects, but should be mitigated by SecurityContext
 					enforce = "privileged"
 				}
 				labels := pulumi.StringMap{
@@ -409,14 +433,14 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 			if !params.Expiration.IsZero() {
 				envMap[config.EnvVarKeyExpiration] = pulumi.String(params.Expiration.String())
 			}
-			if params.CPULimit != 0 {
+			if params.CPULimitMiliCPU != 0 {
 				// Match allocated CPUs, floored
-				envMap["GOMAXPROCS"] = pulumi.String(strconv.Itoa(params.CPULimit / 1000))
+				envMap["GOMAXPROCS"] = pulumi.String(strconv.Itoa(params.CPULimitMiliCPU / 1000))
 			}
-			if params.MemoryLimit != 0 {
+			if params.MemoryLimitMiB != 0 {
 				envMap["GOMEMLIMIT"] = pulumi.String(
 					// Match allocated memory, with little room, floored
-					pulumi.String(strconv.Itoa(params.MemoryLimit*95/100) + "MiB"),
+					pulumi.String(strconv.Itoa(params.MemoryLimitMiB*95/100) + "MiB"),
 				)
 			}
 			return envMap
@@ -462,7 +486,7 @@ password ` + gitToken),
 			Selector: &metav1.LabelSelectorArgs{
 				MatchLabels: basicSelector,
 			},
-			ProgressDeadlineSeconds: pulumi.Int(180),
+			ProgressDeadlineSeconds: pulumi.Int(params.ProgressDeadlineSeconds),
 			Template: &corev1.PodTemplateSpecArgs{
 				Metadata: &metav1.ObjectMetaArgs{
 					Name:      pulumi.String(appInstance),
@@ -481,11 +505,14 @@ password ` + gitToken),
 							},
 							Env: func() corev1.EnvVarArray {
 								if ctx.Stack() == config.Env_dev {
+									if params.DevGoPrivateString == "" {
+										return nil
+									}
 									// Set GOPRIVATE for dev environment
 									return corev1.EnvVarArray{
 										corev1.EnvVarArgs{
 											Name:  pulumi.String("GOPRIVATE"),
-											Value: pulumi.String("github.com/kemadev"),
+											Value: pulumi.String(params.DevGoPrivateString),
 										},
 									}
 								}
@@ -494,7 +521,9 @@ password ` + gitToken),
 							WorkingDir: func() pulumi.StringPtrInput {
 								if ctx.Stack() == config.Env_dev {
 									// Use mounted volume's project dir as working dir in dev
-									return pulumi.String("/app/" + params.AppName)
+									return pulumi.String(
+										params.DevVolumeMountPath + "/" + params.AppName,
+									)
 								}
 								return nil
 							}(),
@@ -550,13 +579,15 @@ password ` + gitToken),
 										// Mount organization code volume in dev
 										&corev1.VolumeMountArgs{
 											Name:      pulumi.String(appInstance),
-											MountPath: pulumi.String("/app"),
+											MountPath: pulumi.String(params.DevVolumeMountPath),
 										},
 										// Mountnetrc file volume in dev
 										&corev1.VolumeMountArgs{
-											Name:      gitSecret.Metadata.Name().Elem(),
-											MountPath: pulumi.String("/home/nonroot/.netrc"),
-											SubPath:   pulumi.String(netRcFileName),
+											Name: gitSecret.Metadata.Name().Elem(),
+											MountPath: pulumi.String(
+												"/home/nonroot/" + netRcFileName,
+											),
+											SubPath: pulumi.String(netRcFileName),
 										},
 									}
 								}
@@ -574,24 +605,26 @@ password ` + gitToken),
 									},
 								},
 							},
-							ImagePullPolicy: pulumi.String("IfNotPresent"),
+							ImagePullPolicy: pulumi.String(params.ImagePullPolicy),
 							Resources: corev1.ResourceRequirementsArgs{
 								Requests: pulumi.StringMap{
-									"cpu": pulumi.String(strconv.Itoa(params.CPURequest) + "m"),
+									"cpu": pulumi.String(
+										strconv.Itoa(params.CPURequestMiliCPU) + "m",
+									),
 									"memory": pulumi.String(
-										strconv.Itoa(params.MemoryRequest) + "Mi",
+										strconv.Itoa(params.MemoryRequestMiB) + "Mi",
 									),
 								},
 								Limits: func() pulumi.StringMapInput {
 									l := pulumi.StringMap{}
-									if params.CPULimit != 0 {
+									if params.CPULimitMiliCPU != 0 {
 										l["cpu"] = pulumi.String(
-											strconv.Itoa(params.CPULimit) + "m",
+											strconv.Itoa(params.CPULimitMiliCPU) + "m",
 										)
 									}
-									if params.MemoryLimit != 0 {
+									if params.MemoryLimitMiB != 0 {
 										l["memory"] = pulumi.String(
-											strconv.Itoa(params.MemoryLimit) + "Mi",
+											strconv.Itoa(params.MemoryLimitMiB) + "Mi",
 										)
 									}
 									return l
@@ -601,11 +634,21 @@ password ` + gitToken),
 					},
 					DnsConfig: func() corev1.PodDNSConfigPtrInput {
 						if ctx.Stack() == config.Env_dev {
-							// Let 1.1.1.1 resolve public DNS names in dev
+							// Add resolver for public DNS in dev
 							return corev1.PodDNSConfigArgs{
-								Nameservers: pulumi.StringArray{
-									pulumi.String("1.1.1.1"),
-								},
+								Nameservers: func() pulumi.StringArrayInput {
+									if len(params.DevDnsAdditionalNameservers) == 0 {
+										return nil
+									}
+									nameservers := make(
+										pulumi.StringArray,
+										len(params.DevDnsAdditionalNameservers),
+									)
+									for i, ns := range params.DevDnsAdditionalNameservers {
+										nameservers[i] = pulumi.String(ns)
+									}
+									return nameservers
+								}(),
 							}
 						}
 						return nil
@@ -617,7 +660,7 @@ password ` + gitToken),
 								corev1.VolumeArgs{
 									Name: pulumi.String(appInstance),
 									HostPath: corev1.HostPathVolumeSourceArgs{
-										Path: pulumi.String(appCodeVolume),
+										Path: pulumi.String(orgCodeVolume),
 										Type: pulumi.String("Directory"),
 									},
 								},
