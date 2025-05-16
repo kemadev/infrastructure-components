@@ -165,6 +165,9 @@ func CreateKindCluster(
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cluster name: %w", err)
 	}
+	if ha {
+		kindConfigPath = kindConfigPath + "-ha"
+	}
 	cluster, err := local.NewCommand(ctx, "cluster", &local.CommandArgs{
 		Create: pulumi.String("kind create cluster --config " + kindConfigPath),
 		Delete: pulumi.String("kind delete cluster --name " + clusterName),
