@@ -502,18 +502,39 @@ password ` + gitToken),
 				},
 				Spec: &corev1.PodSpecArgs{
 					TopologySpreadConstraints: corev1.TopologySpreadConstraintArray{
+						// Spread pods across regions, best effort
 						corev1.TopologySpreadConstraintArgs{
-							MaxSkew:           pulumi.Int(1),
+							MaxSkew: pulumi.Int(1),
+							LabelSelector: &metav1.LabelSelectorArgs{
+								MatchLabels: basicSelector,
+							},
+							MatchLabelKeys: pulumi.StringArray{
+								pulumi.String("pod-template-hash"),
+							},
 							TopologyKey:       pulumi.String("topology.kubernetes.io/region"),
 							WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
 						},
+						// Spread pods across zones, best effort
 						corev1.TopologySpreadConstraintArgs{
-							MaxSkew:           pulumi.Int(1),
+							MaxSkew: pulumi.Int(1),
+							LabelSelector: &metav1.LabelSelectorArgs{
+								MatchLabels: basicSelector,
+							},
+							MatchLabelKeys: pulumi.StringArray{
+								pulumi.String("pod-template-hash"),
+							},
 							TopologyKey:       pulumi.String("topology.kubernetes.io/zone"),
 							WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
 						},
+						// Spread pods across nodes, best effort
 						corev1.TopologySpreadConstraintArgs{
-							MaxSkew:           pulumi.Int(1),
+							MaxSkew: pulumi.Int(1),
+							LabelSelector: &metav1.LabelSelectorArgs{
+								MatchLabels: basicSelector,
+							},
+							MatchLabelKeys: pulumi.StringArray{
+								pulumi.String("pod-template-hash"),
+							},
 							TopologyKey:       pulumi.String("kubernetes.io/hostname"),
 							WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
 						},
