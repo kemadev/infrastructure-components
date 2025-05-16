@@ -37,22 +37,22 @@ func GetClusterName(ctx *pulumi.Context, kindConfigPath string) (string, error) 
 }
 
 // addNodeLabels adds conventional labels to the nodes.
-func addNodeLabels(ctx *pulumi.Context, clusterName string, cluster *local.Command) error {
-	nodes := map[string]map[string]string{
+func addNodeLabels(ctx *pulumi.Context, clusterName string, cluster *local.Command, ha bool) error {
+	nodesMultiZoneHA := map[string]map[string]string{
 		clusterName + "-control-plane": {
 			clusterDef.NodeRoleControlPlaneLabelKey: clusterDef.NodeRoleControlPlaneLabelValue,
-			clusterDef.NodeRegionLabelKey:            "region-1",
-			clusterDef.NodeZoneLabelKey:              "region-1-1",
+			clusterDef.NodeRegionLabelKey:           "region-1",
+			clusterDef.NodeZoneLabelKey:             "region-1-1",
 		},
 		clusterName + "-control-plane2": {
 			clusterDef.NodeRoleControlPlaneLabelKey: clusterDef.NodeRoleControlPlaneLabelValue,
-			clusterDef.NodeRegionLabelKey:            "region-1",
-			clusterDef.NodeZoneLabelKey:              "region-1-2",
+			clusterDef.NodeRegionLabelKey:           "region-1",
+			clusterDef.NodeZoneLabelKey:             "region-1-2",
 		},
 		clusterName + "-control-plane3": {
 			clusterDef.NodeRoleControlPlaneLabelKey: clusterDef.NodeRoleControlPlaneLabelValue,
-			clusterDef.NodeRegionLabelKey:            "region-1",
-			clusterDef.NodeZoneLabelKey:              "region-1-3",
+			clusterDef.NodeRegionLabelKey:           "region-1",
+			clusterDef.NodeZoneLabelKey:             "region-1-3",
 		},
 
 		clusterName + "-worker": {
@@ -103,6 +103,33 @@ func addNodeLabels(ctx *pulumi.Context, clusterName string, cluster *local.Comma
 			clusterDef.NodeZoneLabelKey:              "region-1-3",
 		},
 	}
+	nodesMultiZone := map[string]map[string]string{
+		clusterName + "-control-plane": {
+			clusterDef.NodeRoleControlPlaneLabelKey: clusterDef.NodeRoleControlPlaneLabelValue,
+			clusterDef.NodeRegionLabelKey:           "region-1",
+			clusterDef.NodeZoneLabelKey:             "region-1-1",
+		},
+
+		clusterName + "-worker": {
+			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
+			clusterDef.NodeRegionLabelKey:            "region-1",
+			clusterDef.NodeZoneLabelKey:              "region-1-1",
+		},
+		clusterName + "-worker2": {
+			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
+			clusterDef.NodeRegionLabelKey:            "region-1",
+			clusterDef.NodeZoneLabelKey:              "region-1-2",
+		},
+		clusterName + "-worker3": {
+			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
+			clusterDef.NodeRegionLabelKey:            "region-1",
+			clusterDef.NodeZoneLabelKey:              "region-1-3",
+		},
+	}
+	nodes := nodesMultiZone
+	if ha {
+		nodes = nodesMultiZoneHA
+	}
 	for name, node := range nodes {
 		_, err := corev1.NewNodePatch(ctx, name+"-patch", &corev1.NodePatchArgs{
 			Metadata: &metav1.ObjectMetaPatchArgs{
@@ -124,7 +151,12 @@ func addNodeLabels(ctx *pulumi.Context, clusterName string, cluster *local.Comma
 }
 
 // CreateKindCluster creates a kind cluster using the provided kind config path, and returns a command object and an error if any.
-func CreateKindCluster(ctx *pulumi.Context, kindConfigPath string) (*local.Command, error) {
+// ha is a boolean indicating whether the cluster is high availability or not, used in accordance with the kind config.
+func CreateKindCluster(
+	ctx *pulumi.Context,
+	kindConfigPath string,
+	ha bool,
+) (*local.Command, error) {
 	clusterName, err := GetClusterName(ctx, kindConfigPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cluster name: %w", err)
@@ -136,7 +168,7 @@ func CreateKindCluster(ctx *pulumi.Context, kindConfigPath string) (*local.Comma
 	if err != nil {
 		return nil, fmt.Errorf("failed to create cluster: %w", err)
 	}
-	err = addNodeLabels(ctx, clusterName, cluster)
+	err = addNodeLabels(ctx, clusterName, cluster, ha)
 	if err != nil {
 		return nil, fmt.Errorf("failed to apply node labels: %w", err)
 	}
