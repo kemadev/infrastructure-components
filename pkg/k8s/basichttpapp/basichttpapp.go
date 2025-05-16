@@ -512,7 +512,7 @@ password ` + gitToken),
 							MatchLabelKeys: pulumi.StringArray{
 								pulumi.String("pod-template-hash"),
 							},
-							TopologyKey:       pulumi.String("topology.kubernetes.io/region"),
+							TopologyKey:       pulumi.String(cluster.NodeRegionLabelKey),
 							WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
 						},
 						// Spread pods across zones, best effort
@@ -524,7 +524,7 @@ password ` + gitToken),
 							MatchLabelKeys: pulumi.StringArray{
 								pulumi.String("pod-template-hash"),
 							},
-							TopologyKey:       pulumi.String("topology.kubernetes.io/zone"),
+							TopologyKey:       pulumi.String(cluster.NodeZoneLabelKey),
 							WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
 						},
 						// Spread pods across nodes, best effort
@@ -536,7 +536,7 @@ password ` + gitToken),
 							MatchLabelKeys: pulumi.StringArray{
 								pulumi.String("pod-template-hash"),
 							},
-							TopologyKey:       pulumi.String("kubernetes.io/hostname"),
+							TopologyKey:       pulumi.String(cluster.NodeHostnameLabelKey),
 							WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
 						},
 					},

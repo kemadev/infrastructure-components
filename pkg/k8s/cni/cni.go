@@ -37,7 +37,7 @@ func DeployCNI(
 		Name:        pulumi.String(cniName),
 		Description: pulumi.String("Pretty much all the networking stuff"),
 		Namespace:   ns.Metadata.Name(),
-		Timeout:     pulumi.Int(120),
+		Timeout:     pulumi.Int(600),
 		RepositoryOpts: &helm.RepositoryOptsArgs{
 			Repo: pulumi.String("https://helm.cilium.io/"),
 		},
