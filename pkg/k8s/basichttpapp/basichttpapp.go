@@ -541,9 +541,9 @@ password ` + gitToken),
 						},
 					},
 					NodeSelector: pulumi.StringMap{
-						// Schedule on default workload nodes
-						"node-role.kubernetes.io/worker": pulumi.String(
-							cluster.NodeRoleWorkerDefault,
+						// Schedule on default workload nodes only
+						cluster.NodeRoleWorkerDefaultLabelKey: pulumi.String(
+							cluster.NodeRoleWorkerDefaultLabelValue,
 						),
 					},
 					Containers: corev1.ContainerArray{
