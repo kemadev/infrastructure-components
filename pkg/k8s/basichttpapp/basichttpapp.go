@@ -421,7 +421,8 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 
 	var gitSecret *corev1.Secret
 	if ctx.Stack() == config.Env_dev {
-		// TODO
+		// TODO(maintainers) get it from pulumi config, as secret, only in dev stack
+		
 		gitToken := ""
 		gitSecret, err = corev1.NewSecret(ctx, "gitSecret", &corev1.SecretArgs{
 			Type: pulumi.String("Opaque"),
