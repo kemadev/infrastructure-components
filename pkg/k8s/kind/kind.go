@@ -155,18 +155,21 @@ func addNodeLabels(ctx *pulumi.Context, clusterName string, cluster *local.Comma
 }
 
 // CreateKindCluster creates a kind cluster using the provided kind config path, and returns a command object and an error if any.
-// ha is a boolean indicating whether the cluster is high availability or not, used in accordance with the kind config.
+// kindConfigBasePath is the path kind config file, without the file name.
+// ha is a boolean indicating whether the cluster is high availability or not, used in accordance with the kind config, used to derive
+// the kind config file name (whether it is kind-config.yaml or kind-config-ha.yaml).
 func CreateKindCluster(
 	ctx *pulumi.Context,
-	kindConfigPath string,
+	kindConfigBasePath string,
 	ha bool,
 ) (*local.Command, error) {
-	clusterName, err := GetClusterName(ctx, kindConfigPath)
+	clusterName, err := GetClusterName(ctx, kindConfigBasePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cluster name: %w", err)
 	}
+	kindConfigPath := kindConfigBasePath + "/kind-config.yaml"
 	if ha {
-		kindConfigPath = kindConfigPath + "-ha"
+		kindConfigPath = kindConfigBasePath + "/kind-config-ha.yaml"
 	}
 	cluster, err := local.NewCommand(ctx, "cluster", &local.CommandArgs{
 		Create: pulumi.String("kind create cluster --config " + kindConfigPath),
