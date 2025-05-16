@@ -422,7 +422,7 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 	var gitSecret *corev1.Secret
 	if ctx.Stack() == config.Env_dev {
 		// TODO(maintainers) get it from pulumi config, as secret, only in dev stack
-		
+		// TODO document usage of structured git clone to work with go.work (we mount parent dir of repo)
 		gitToken := ""
 		gitSecret, err = corev1.NewSecret(ctx, "gitSecret", &corev1.SecretArgs{
 			Type: pulumi.String("Opaque"),
