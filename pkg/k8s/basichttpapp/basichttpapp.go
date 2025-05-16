@@ -501,6 +501,23 @@ password ` + gitToken),
 					Labels:    sharedLabels,
 				},
 				Spec: &corev1.PodSpecArgs{
+					TopologySpreadConstraints: corev1.TopologySpreadConstraintArray{
+						corev1.TopologySpreadConstraintArgs{
+							MaxSkew:           pulumi.Int(1),
+							TopologyKey:       pulumi.String("topology.kubernetes.io/region"),
+							WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
+						},
+						corev1.TopologySpreadConstraintArgs{
+							MaxSkew:           pulumi.Int(1),
+							TopologyKey:       pulumi.String("topology.kubernetes.io/zone"),
+							WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
+						},
+						corev1.TopologySpreadConstraintArgs{
+							MaxSkew:           pulumi.Int(1),
+							TopologyKey:       pulumi.String("kubernetes.io/hostname"),
+							WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
+						},
+					},
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
 							EnvFrom: corev1.EnvFromSourceArray{
