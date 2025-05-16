@@ -12,6 +12,7 @@ import (
 	"github.com/blang/semver"
 	"github.com/caarlos0/svu/pkg/svu"
 	"github.com/kemadev/framework-go/pkg/config"
+	"github.com/kemadev/imds/pkg/hardware/cluster"
 	"github.com/kemadev/infrastructure-components/pkg/private/businessunit"
 	"github.com/kemadev/infrastructure-components/pkg/private/complianceframework"
 	"github.com/kemadev/infrastructure-components/pkg/private/costcenter"
@@ -538,6 +539,12 @@ password ` + gitToken),
 							TopologyKey:       pulumi.String("kubernetes.io/hostname"),
 							WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
 						},
+					},
+					NodeSelector: pulumi.StringMap{
+						// Schedule on default workload nodes
+						"node-role.kubernetes.io/worker": pulumi.String(
+							cluster.NodeRoleWorkerDefault,
+						),
 					},
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{

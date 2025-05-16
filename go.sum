@@ -142,6 +142,8 @@ github.com/kemadev/framework-go v0.0.0-20250513132754-887f6d279f20 h1:+MGA/UBqBp
 github.com/kemadev/framework-go v0.0.0-20250513132754-887f6d279f20/go.mod h1:dP/9bySEUfOUyxQD9Lkp26i9OeC0n/q4W588KezHxZo=
 github.com/kemadev/framework-go v0.0.0-20250515194111-e58cc31646e8 h1:ngYIIaryL1ZbR3wWcYE2GttThRrZzZuFjxcWXNEiCic=
 github.com/kemadev/framework-go v0.0.0-20250515194111-e58cc31646e8/go.mod h1:dP/9bySEUfOUyxQD9Lkp26i9OeC0n/q4W588KezHxZo=
+github.com/kemadev/imds v0.0.0-20250516123701-1d86cdc45db3 h1:8fCe3feVMGcp9heLYHa3SC2WV8Rj/ZD9I11cAribafk=
+github.com/kemadev/imds v0.0.0-20250516123701-1d86cdc45db3/go.mod h1:YSnMnmswPwssR3LiavJfhwpCZWXkD8KvqPBKVW9xym0=
 github.com/kemadev/runner-tools v0.0.0-20250513133142-83dd3810da49 h1:u3HO9XNWbJ6+Y+mncmoWdGy2+qEUZymzZSntT/mrj6s=
 github.com/kemadev/runner-tools v0.0.0-20250513133142-83dd3810da49/go.mod h1:g5b/nSN98K9vh4qB0+jTwzzUzhwkzFS2yizv42YDgNc=
 github.com/kemadev/runner-tools v0.0.0-20250515193336-be988ad4ab13 h1:UMppps+MRX9Wg29tooPSt7Mq7wQzWHgmuF2DJsFMR4k=
