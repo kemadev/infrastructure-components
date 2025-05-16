@@ -308,14 +308,21 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 			t.Scheme = "https"
 			return t
 		}(),
-		Port:                 8080,
-		HTTPReadTimeout:      5,
-		HTTPWriteTimeout:     10,
-		CPURequestMiliCPU:    500,
-		MemoryRequestMiB:     500,
-		TargetCPUUtilization: 70,
-		MinReplicas:          1,
-		MaxReplicas:          10,
+		Port:                    8080,
+		HTTPReadTimeout:         5,
+		HTTPWriteTimeout:        10,
+		CPURequestMiliCPU:       500,
+		MemoryRequestMiB:        500,
+		TargetCPUUtilization:    70,
+		MinReplicas:             1,
+		MaxReplicas:             10,
+		ImagePullPolicy:         "IfNotPresent",
+		ProgressDeadlineSeconds: 180,
+		DevDnsAdditionalNameservers: []string{
+			"1.1.1.1",
+		},
+		DevVolumeMountPath: "/app",
+		DevGoPrivateString: "github.com/kemadev",
 	}
 	err = mergo.Merge(params, defParams)
 	if err != nil {
