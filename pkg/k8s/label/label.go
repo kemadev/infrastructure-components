@@ -65,3 +65,46 @@ const (
 	// NodeHostnameLabelKey is the label key for the hostname of the node, see https://kubernetes.io/docs/reference/labels-annotations-taints/#kubernetesiohostname.
 	LabelTopologyHostnameKey = "kubernetes.io/hostname"
 )
+
+// Node roles labels, see https://kubernetes.io/docs/reference/labels-annotations-taints/#node-role-kubernetes-io
+const (
+	// NodeRoleControlPlaneValue is the label key for control plane nodes.
+	NodeRoleControlPlaneLabelKey = "node-role.kubernetes.io/control-plane"
+	// NodeRoleControlPlaneLabelValue is the label value for control plane nodes. Empty value, following Kubernetes convention, see https://kubernetes.io/docs/reference/labels-annotations-taints/#node-role-kubernetes-io-control-plane.
+	NodeRoleControlPlaneLabelValue = ""
+
+	// NodeRoleComputeLabelKey is the label key for compute nodes.
+	NodeRoleComputeLabelKey = "node-role.kubernetes.io/compute"
+	// NodeRoleComputeGeneric is the label value for generic compute nodes.
+	NodeRoleComputeGeneric = "generic"
+
+	// NodeRoleCPUIntensiveLabelKey is the label key for cpu intensive compute nodes.
+	NodeRoleCPUIntensiveLabelKey = "node-role.kubernetes.io/compute-cpu-intensive"
+	// NodeRoleComputeGeneric is the label value for generic cpu intensive compute nodes.
+	NodeRoleComputeCPUIntensiveGeneric = "generic"
+
+	// NodeRoleMemoryIntensiveLabelKey is the label key for memory intensive compute nodes.
+	NodeRoleMemoryIntensiveLabelKey = "node-role.kubernetes.io/compute-memory-intensive"
+	// NodeRoleComputeMemoryIntensiveGeneric is the label value for generic memory intensive compute nodes.
+	NodeRoleComputeMemoryIntensiveGeneric = "generic"
+
+	// NodeRoleNetworkIntensiveLabelKey is the label key for network intensive compute nodes.
+	NodeRoleNetworkIntensiveLabelKey = "node-role.kubernetes.io/compute-network-intensive"
+	// NodeRoleComputeNetworkIntensiveGeneric is the label value for generic network intensive compute nodes.
+	NodeRoleComputeNetworkIntensiveGeneric = "generic"
+
+	// NodeRoleStorageLabelKey is the label key for storage nodes.
+	NodeRoleStorageLabelKey = "node-role.kubernetes.io/storage"
+	// NodeRoleStorageGeneric is the label value for generic storage nodes.
+	NodeRoleStorageGeneric = "generic"
+
+	// NodeRoleAcceleratedLabelKey is the label key for accelerated nodes (e.g. FPGA, TPU).
+	NodeRoleAcceleratedLabelKey = "node-role.kubernetes.io/accelerated"
+	// NodeRoleAcceleratedGeneric is the label value for generic accelerated nodes.
+	NodeRoleAcceleratedGeneric = "generic"
+
+	// NodeRoleGPUValue is the label key for GPU nodes.
+	NodeRoleGenericGPULabelKey = "node-role.kubernetes.io/gpu"
+	// NodeRoleGenericGPULabelValue is the label value for generic GPU nodes.
+	NodeRoleGenericGPULabelValue = "generic"
+)

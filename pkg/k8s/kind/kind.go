@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	clusterDef "github.com/kemadev/imds/pkg/hardware/cluster"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/label"
 	"github.com/pulumi/pulumi-command/sdk/go/command/local"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
@@ -45,90 +44,90 @@ func addNodeLabels(ctx *pulumi.Context, clusterName string, cluster *local.Comma
 	zone3 := "region-1-3"
 	nodesMultiZoneHA := map[string]map[string]string{
 		clusterName + "-control-plane": {
-			clusterDef.NodeRoleControlPlaneLabelKey: clusterDef.NodeRoleControlPlaneLabelValue,
-			label.LabelTopologyRegionKey:            region1,
-			label.LabelTopologyZoneKey:              zone1,
+			label.NodeRoleControlPlaneLabelKey: label.NodeRoleControlPlaneLabelValue,
+			label.LabelTopologyRegionKey:       region1,
+			label.LabelTopologyZoneKey:         zone1,
 		},
 		clusterName + "-control-plane2": {
-			clusterDef.NodeRoleControlPlaneLabelKey: clusterDef.NodeRoleControlPlaneLabelValue,
-			label.LabelTopologyRegionKey:            region1,
-			label.LabelTopologyZoneKey:              zone2,
+			label.NodeRoleControlPlaneLabelKey: label.NodeRoleControlPlaneLabelValue,
+			label.LabelTopologyRegionKey:       region1,
+			label.LabelTopologyZoneKey:         zone2,
 		},
 		clusterName + "-control-plane3": {
-			clusterDef.NodeRoleControlPlaneLabelKey: clusterDef.NodeRoleControlPlaneLabelValue,
-			label.LabelTopologyRegionKey:            region1,
-			label.LabelTopologyZoneKey:              zone3,
+			label.NodeRoleControlPlaneLabelKey: label.NodeRoleControlPlaneLabelValue,
+			label.LabelTopologyRegionKey:       region1,
+			label.LabelTopologyZoneKey:         zone3,
 		},
 
 		clusterName + "-worker": {
-			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			label.LabelTopologyRegionKey:             region1,
-			label.LabelTopologyZoneKey:               zone1,
+			label.NodeRoleComputeLabelKey: label.NodeRoleComputeGeneric,
+			label.LabelTopologyRegionKey:  region1,
+			label.LabelTopologyZoneKey:    zone1,
 		},
 		clusterName + "-worker2": {
-			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			label.LabelTopologyRegionKey:             region1,
-			label.LabelTopologyZoneKey:               zone1,
+			label.NodeRoleComputeLabelKey: label.NodeRoleComputeGeneric,
+			label.LabelTopologyRegionKey:  region1,
+			label.LabelTopologyZoneKey:    zone1,
 		},
 		clusterName + "-worker3": {
-			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			label.LabelTopologyRegionKey:             region1,
-			label.LabelTopologyZoneKey:               zone1,
+			label.NodeRoleComputeLabelKey: label.NodeRoleComputeGeneric,
+			label.LabelTopologyRegionKey:  region1,
+			label.LabelTopologyZoneKey:    zone1,
 		},
 
 		clusterName + "-worker4": {
-			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			label.LabelTopologyRegionKey:             region1,
-			label.LabelTopologyZoneKey:               zone2,
+			label.NodeRoleComputeLabelKey: label.NodeRoleComputeGeneric,
+			label.LabelTopologyRegionKey:  region1,
+			label.LabelTopologyZoneKey:    zone2,
 		},
 		clusterName + "-worker5": {
-			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			label.LabelTopologyRegionKey:             region1,
-			label.LabelTopologyZoneKey:               zone2,
+			label.NodeRoleComputeLabelKey: label.NodeRoleComputeGeneric,
+			label.LabelTopologyRegionKey:  region1,
+			label.LabelTopologyZoneKey:    zone2,
 		},
 		clusterName + "-worker6": {
-			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			label.LabelTopologyRegionKey:             region1,
-			label.LabelTopologyZoneKey:               zone2,
+			label.NodeRoleComputeLabelKey: label.NodeRoleComputeGeneric,
+			label.LabelTopologyRegionKey:  region1,
+			label.LabelTopologyZoneKey:    zone2,
 		},
 
 		clusterName + "-worker7": {
-			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			label.LabelTopologyRegionKey:             region1,
-			label.LabelTopologyZoneKey:               zone3,
+			label.NodeRoleComputeLabelKey: label.NodeRoleComputeGeneric,
+			label.LabelTopologyRegionKey:  region1,
+			label.LabelTopologyZoneKey:    zone3,
 		},
 		clusterName + "-worker8": {
-			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			label.LabelTopologyRegionKey:             region1,
-			label.LabelTopologyZoneKey:               zone3,
+			label.NodeRoleComputeLabelKey: label.NodeRoleComputeGeneric,
+			label.LabelTopologyRegionKey:  region1,
+			label.LabelTopologyZoneKey:    zone3,
 		},
 		clusterName + "-worker9": {
-			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			label.LabelTopologyRegionKey:             region1,
-			label.LabelTopologyZoneKey:               zone3,
+			label.NodeRoleComputeLabelKey: label.NodeRoleComputeGeneric,
+			label.LabelTopologyRegionKey:  region1,
+			label.LabelTopologyZoneKey:    zone3,
 		},
 	}
 	nodesMultiZone := map[string]map[string]string{
 		clusterName + "-control-plane": {
-			clusterDef.NodeRoleControlPlaneLabelKey: clusterDef.NodeRoleControlPlaneLabelValue,
-			label.LabelTopologyRegionKey:            region1,
-			label.LabelTopologyZoneKey:              zone1,
+			label.NodeRoleControlPlaneLabelKey: label.NodeRoleControlPlaneLabelValue,
+			label.LabelTopologyRegionKey:       region1,
+			label.LabelTopologyZoneKey:         zone1,
 		},
 
 		clusterName + "-worker": {
-			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			label.LabelTopologyRegionKey:             region1,
-			label.LabelTopologyZoneKey:               zone1,
+			label.NodeRoleComputeLabelKey: label.NodeRoleComputeGeneric,
+			label.LabelTopologyRegionKey:  region1,
+			label.LabelTopologyZoneKey:    zone1,
 		},
 		clusterName + "-worker2": {
-			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			label.LabelTopologyRegionKey:             region1,
-			label.LabelTopologyZoneKey:               zone2,
+			label.NodeRoleComputeLabelKey: label.NodeRoleComputeGeneric,
+			label.LabelTopologyRegionKey:  region1,
+			label.LabelTopologyZoneKey:    zone2,
 		},
 		clusterName + "-worker3": {
-			clusterDef.NodeRoleWorkerDefaultLabelKey: clusterDef.NodeRoleWorkerDefaultLabelValue,
-			label.LabelTopologyRegionKey:             region1,
-			label.LabelTopologyZoneKey:               zone3,
+			label.NodeRoleComputeLabelKey: label.NodeRoleComputeGeneric,
+			label.LabelTopologyRegionKey:  region1,
+			label.LabelTopologyZoneKey:    zone3,
 		},
 	}
 	nodes := nodesMultiZone

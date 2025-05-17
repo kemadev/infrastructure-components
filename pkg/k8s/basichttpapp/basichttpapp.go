@@ -12,7 +12,6 @@ import (
 	"github.com/blang/semver"
 	"github.com/caarlos0/svu/pkg/svu"
 	"github.com/kemadev/framework-go/pkg/config"
-	"github.com/kemadev/imds/pkg/hardware/cluster"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/label"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/priorityclass"
 	"github.com/kemadev/infrastructure-components/pkg/private/businessunit"
@@ -99,6 +98,8 @@ type AppParms struct {
 	ImagePullPolicy string
 	// PodAffinity is the pod affinity to use for the pod. Should be set when know pods communicate alot with the application.
 	PodAffinity corev1.AffinityPtrInput
+	// NodeSelectors is the node selectors to use for the pod.
+	NodeSelectors pulumi.StringMapInput
 	// PriorityClassName is the name of the priority class to use for the pod.
 	PriorityClassName string
 	// TopologySpreadConstraints is the list of topology spread constraints to use for the pod.
@@ -277,6 +278,9 @@ func validateParams(params *AppParms) error {
 	}
 	// if params.PodAffinity == nil {
 	// 	return fmt.Errorf("PodAffinity cannot be nil")
+	// }
+	// if params.NodeSelectors == nil {
+	// 	return fmt.Errorf("NodeSelectors cannot be nil")
 	// }
 	if params.PriorityClassName == "" {
 		return fmt.Errorf("PriorityClassName cannot be empty")
@@ -669,12 +673,7 @@ password ` + gitToken),
 				Spec: &corev1.PodSpecArgs{
 					PriorityClassName:         pulumi.String(params.PriorityClassName),
 					TopologySpreadConstraints: params.TopologySpreadConstraints,
-					NodeSelector: pulumi.StringMap{
-						// Schedule on default workload nodes only
-						cluster.NodeRoleWorkerDefaultLabelKey: pulumi.String(
-							cluster.NodeRoleWorkerDefaultLabelValue,
-						),
-					},
+					NodeSelector: params.NodeSelectors,
 					Affinity: params.PodAffinity,
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
