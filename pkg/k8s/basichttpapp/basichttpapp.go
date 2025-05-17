@@ -89,8 +89,6 @@ type AppParms struct {
 	// MemoryLimitMiB is the memory limit for the pod, in MiB (will be set as `strconv.Itoa(MemoryLimitMiB) + "MiB"`). It will also be used to
 	// set GOMEMLIMIT to 95% of this value.
 	MemoryLimitMiB int
-	// TargetCPUUtilization is the target CPU utilization for the pod, in percent. It is used to set the HPA target CPU utilization.
-	TargetCPUUtilization int
 	// MinReplicas is the minimum number of replicas for the pod, used for HPA
 	MinReplicas int
 	// MaxReplicas is the maximum number of replicas for the pod, used for HPA
@@ -105,6 +103,8 @@ type AppParms struct {
 	TopologySpreadConstraints corev1.TopologySpreadConstraintArray
 	// HorizontalPodAutoscalerBehavior is the behavior of the HPA.
 	HorizontalPodAutoscalerBehavior autoscalingv2.HorizontalPodAutoscalerBehaviorPtrInput
+	// HorizontalPodAutoscalerBehaviorMetricSpec is the metric spec for the HPA behavior.
+	HorizontalPodAutoscalerBehaviorMetricSpec autoscalingv2.MetricSpecArray
 	// DevDnsAdditionalNameservers is the list of additional nameservers use in pods (dev stack only).
 	DevDnsAdditionalNameservers []string
 	// DevGoPrivateString is the GOPRIVATE string to set (dev stack only).
@@ -261,9 +261,6 @@ func validateParams(params *AppParms) error {
 	// if params.MemoryLimit == 0 {
 	// 	return fmt.Errorf("MemoryLimit cannot be zero")
 	// }
-	if params.TargetCPUUtilization == 0 {
-		return fmt.Errorf("TargetCPUUtilization cannot be zero")
-	}
 	if params.MinReplicas == 0 {
 		return fmt.Errorf("MinReplicas cannot be zero")
 	}
@@ -283,7 +280,10 @@ func validateParams(params *AppParms) error {
 		return fmt.Errorf("TopologySpreadConstraints cannot be nil")
 	}
 	if params.HorizontalPodAutoscalerBehavior == nil {
-		return fmt.Errorf("PriorityClassName cannot be nil")
+		return fmt.Errorf("HorizontalPodAutoscalerBehavior cannot be nil")
+	}
+	if params.HorizontalPodAutoscalerBehaviorMetricSpec == nil {
+		return fmt.Errorf("HorizontalPodAutoscalerBehaviorMetricSpec cannot be nil")
 	}
 	// if len(params.DevDnsAdditionalNameservers) == 0 {
 	// 	return fmt.Errorf("DevDnsAdditionalNameservers cannot be empty")
@@ -333,7 +333,6 @@ func mergeParams(
 		HTTPWriteTimeout:        10,
 		CPURequestMiliCPU:       500,
 		MemoryRequestMiB:        500,
-		TargetCPUUtilization:    70,
 		MinReplicas:             1,
 		MaxReplicas:             10,
 		ImagePullPolicy:         "IfNotPresent",
@@ -405,6 +404,18 @@ func mergeParams(
 					},
 				},
 				SelectPolicy: pulumi.String("Max"),
+			},
+		},
+		HorizontalPodAutoscalerBehaviorMetricSpec: autoscalingv2.MetricSpecArray{
+			&autoscalingv2.MetricSpecArgs{
+				Type: pulumi.String("Resource"),
+				Resource: &autoscalingv2.ResourceMetricSourceArgs{
+					Name: pulumi.String("cpu"),
+					Target: &autoscalingv2.MetricTargetArgs{
+						Type:               pulumi.String("Utilization"),
+						AverageUtilization: pulumi.Int(70),
+					},
+				},
 			},
 		},
 		DevDnsAdditionalNameservers: []string{
@@ -823,18 +834,7 @@ password ` + gitToken),
 					Name:       deployment.Metadata.Name().Elem(),
 				},
 				Behavior: params.HorizontalPodAutoscalerBehavior,
-				Metrics: autoscalingv2.MetricSpecArray{
-					&autoscalingv2.MetricSpecArgs{
-						Type: pulumi.String("Resource"),
-						Resource: &autoscalingv2.ResourceMetricSourceArgs{
-							Name: pulumi.String("cpu"),
-							Target: &autoscalingv2.MetricTargetArgs{
-								Type:               pulumi.String("Utilization"),
-								AverageUtilization: pulumi.Int(params.TargetCPUUtilization),
-							},
-						},
-					},
-				},
+				Metrics:  params.HorizontalPodAutoscalerBehaviorMetricSpec,
 			},
 		},
 	)
