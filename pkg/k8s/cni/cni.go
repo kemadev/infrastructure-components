@@ -221,10 +221,6 @@ func DeployCNI(
 				// Enable L2 announcements (see https://docs.cilium.io/en/stable/network/l2-announcements/), enabling LB IPAM, see https://docs.cilium.io/en/stable/network/lb-ipam/
 				"enabled": pulumi.Bool(true),
 			},
-			// TODO "ipv6": pulumi.Map{
-			// 	// Enable IPv6
-			// 	"enabled": pulumi.Bool(true),
-			// },
 			"endpointRoutes": pulumi.Map{
 				// Enable use of per endpoint routes instead of routing via cilium_host interface
 				"enabled": pulumi.Bool(true),
@@ -232,7 +228,7 @@ func DeployCNI(
 			"bpf": pulumi.Map{
 				// Enable masquerading, see https://docs.cilium.io/en/stable/network/concepts/masquerading/
 				"masquerade": pulumi.Bool(true),
-				// Mode for Pod devices for the core datapath (veth, netkit, netkit-l2)
+				// Mode for Pod devices for the core datapath
 				"dataPathMode": pulumi.String("netkit"),
 				// Enables pre-allocation of eBPF map values
 				"preallocateMaps": pulumi.Bool(true),
@@ -265,14 +261,19 @@ func DeployCNI(
 			},
 			// Use packet forwarding instead of encapsulation, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
 			"routingMode": pulumi.String("native"),
-			// Set cluster network CIDR, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
-			"ipv4NativeRoutingCIDR": pulumi.String(nativeIPv4CIDR),
-			// TODO "ipv6NativeRoutingCIDR": pulumi.String(nativeIPv6CIDR),
 			// Load routes in Linux kernel, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
 			"autoDirectNodeRoutes": pulumi.Bool(true),
 			"ipv4":                 pulumi.Map{
 				// TODO Disable IPv4 (disable in kind too)
 				// "enabled": pulumi.Bool(false),
+			},
+			// Set cluster network CIDR, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
+			"ipv4NativeRoutingCIDR": pulumi.String(nativeIPv4CIDR),
+			// TODO Enable IPv6
+			// "ipv6NativeRoutingCIDR": pulumi.String(nativeIPv6CIDR),
+			"ipv6": pulumi.Map{
+				// TODO Enable IPv6
+				// "enabled": pulumi.Bool(true),
 			},
 			"nat46x64Gateway": pulumi.Map{
 				// TODO Enable NAT gateway, see https://isovalent.com/blog/post/cilium-release-112/#nat46-nat64
