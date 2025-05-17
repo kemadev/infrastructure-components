@@ -97,7 +97,7 @@ type AppParms struct {
 	ProgressDeadlineSeconds int
 	// DevImagePullPolicy is the image pull policy to use.
 	ImagePullPolicy string
-	// PodAffinity is the pod affinity to use for the pod.
+	// PodAffinity is the pod affinity to use for the pod. Should be set when know pods communicate alot with the application.
 	PodAffinity corev1.AffinityPtrInput
 	// PriorityClassName is the name of the priority class to use for the pod.
 	PriorityClassName string
