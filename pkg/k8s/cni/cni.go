@@ -18,7 +18,6 @@ func DeployCNI(
 	gwapiCrd *yamlv2.ConfigFile,
 	clusterName string,
 	nativeIPv4CIDR string,
-	nativeIPv6CIDR string,
 ) (*helm.Release, error) {
 	const cniName = "cilium"
 	const cniVersion = "1.17.2"
@@ -88,6 +87,10 @@ func DeployCNI(
 				"nodeEncryption": pulumi.Bool(true),
 				// Force pod-to-pod encrpytion in all case, see https://docs.cilium.io/en/stable/security/network/encryption/#egress-traffic-to-not-yet-discovered-remote-endpoints-may-be-unencrypted
 				// "strictMode":     pulumi.String("enabled"),
+			},
+			"externalIPs": pulumi.Map{
+				// Enable ExternalIPs, see https://docs.cilium.io/en/stable/network/kubernetes/external-ips/
+				"enabled": pulumi.Bool(true),
 			},
 			"gatewayAPI": pulumi.Map{
 				// Enable cilium Gateway API
@@ -218,10 +221,10 @@ func DeployCNI(
 				// Enable L2 announcements (see https://docs.cilium.io/en/stable/network/l2-announcements/), enabling LB IPAM, see https://docs.cilium.io/en/stable/network/lb-ipam/
 				"enabled": pulumi.Bool(true),
 			},
-			"ipv6": pulumi.Map{
-				// Enable IPv6
-				"enabled": pulumi.Bool(true),
-			},
+			// TODO "ipv6": pulumi.Map{
+			// 	// Enable IPv6
+			// 	"enabled": pulumi.Bool(true),
+			// },
 			"endpointRoutes": pulumi.Map{
 				// Enable use of per endpoint routes instead of routing via cilium_host interface
 				"enabled": pulumi.Bool(true),
@@ -264,7 +267,7 @@ func DeployCNI(
 			"routingMode": pulumi.String("native"),
 			// Set cluster network CIDR, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
 			"ipv4NativeRoutingCIDR": pulumi.String(nativeIPv4CIDR),
-			"ipv6NativeRoutingCIDR": pulumi.String(nativeIPv6CIDR),
+			// TODO "ipv6NativeRoutingCIDR": pulumi.String(nativeIPv6CIDR),
 			// Load routes in Linux kernel, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
 			"autoDirectNodeRoutes": pulumi.Bool(true),
 			"ipv4":                 pulumi.Map{
@@ -275,7 +278,6 @@ func DeployCNI(
 				// TODO Enable NAT gateway, see https://isovalent.com/blog/post/cilium-release-112/#nat46-nat64
 				// "enabled": pulumi.Bool(true),
 			},
-			// TODO https://medium.com/@nahelou.j/play-with-cilium-native-routing-in-kind-cluster-5a9e586a81ca
 		},
 	}, pulumi.DependsOn([]pulumi.Resource{gwapiCrd}))
 	if err != nil {
