@@ -830,7 +830,8 @@ password ` + gitToken),
 					Protocol:    pulumi.String("TCP"),
 				},
 			},
-			Selector:            basicSelector,
+			Selector: basicSelector,
+			// Prioritize close endpoints, best-effort, see https://kubernetes.io/docs/reference/networking/virtual-ips/#traffic-distribution
 			TrafficDistribution: pulumi.String("PreferClose"),
 		},
 	})
