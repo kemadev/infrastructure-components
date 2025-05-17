@@ -373,7 +373,7 @@ func mergeParams(
 				MatchLabelKeys: pulumi.StringArray{
 					pulumi.String("pod-template-hash"),
 				},
-				TopologyKey:       pulumi.String(label.LabelTopologyRegionKey),
+				TopologyKey:       pulumi.String(label.LabelTopologyZoneKey),
 				WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
 			},
 			// Spread pods across datacenters, best effort
@@ -673,8 +673,8 @@ password ` + gitToken),
 				Spec: &corev1.PodSpecArgs{
 					PriorityClassName:         pulumi.String(params.PriorityClassName),
 					TopologySpreadConstraints: params.TopologySpreadConstraints,
-					NodeSelector: params.NodeSelectors,
-					Affinity: params.PodAffinity,
+					NodeSelector:              params.NodeSelectors,
+					Affinity:                  params.PodAffinity,
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
 							EnvFrom: corev1.EnvFromSourceArray{
