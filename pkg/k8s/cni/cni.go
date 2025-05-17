@@ -53,6 +53,15 @@ func DeployCNI(
 		// TODO add renovate tracking
 		Version: pulumi.String(cniVersion),
 		Values: pulumi.Map{
+			"debug": func() pulumi.MapInput {
+				if ctx.Stack() != "dev" {
+					return pulumi.Map{
+						"enabled": pulumi.Bool(true),
+						"verbose": pulumi.String("flow kvstore envoy datapath policy"),
+					}
+				}
+				return nil
+			}(),
 			// Add labels to all resources
 			"commonLabels": sharedLabels,
 			"image": pulumi.Map{
@@ -60,11 +69,11 @@ func DeployCNI(
 				"pullPolicy": pulumi.String("IfNotPresent"),
 			},
 			// kind specific, permit initial operator deployment, use a nillable value to avoid including the Helm value when it is nil
-			"k8sServiceHost": func() pulumi.StringOutput {
+			"k8sServiceHost": func() pulumi.StringInput {
 				if ctx.Stack() != "dev" {
-					return pulumi.StringOutput{}
+					return nil
 				}
-				return pulumi.String(clusterName + "-control-plane").ToStringOutput()
+				return pulumi.String(clusterName + "-control-plane")
 			}(),
 			// kind specific, permit initial operator deployment, use a nillable value to avoid including the Helm value when it is nil
 			"k8sServicePort": *func() *pulumi.Int {
@@ -103,10 +112,6 @@ func DeployCNI(
 				"enableAlpn": pulumi.Bool(true),
 				// Enable appProtocol, see https://kubernetes.io/docs/concepts/services-networking/service/#application-protocol
 				"enableAppProtocol": pulumi.Bool(true),
-				"hostNetwork": pulumi.Map{
-					// Allow exposing Gateway API Gateway on host network
-					"enabled": pulumi.Bool(true),
-				},
 			},
 			"hubble": pulumi.Map{
 				// Enable Hubble
@@ -271,10 +276,9 @@ func DeployCNI(
 			"ipv4NativeRoutingCIDR": pulumi.String(nativeIPv4CIDR),
 			// TODO Enable IPv6
 			// "ipv6NativeRoutingCIDR": pulumi.String(nativeIPv6CIDR),
-			"ipv6": pulumi.Map{
-				// TODO Enable IPv6
-				// "enabled": pulumi.Bool(true),
-			},
+			// "ipv6": pulumi.Map{
+			// 	"enabled": pulumi.Bool(true),
+			// },
 			"nat46x64Gateway": pulumi.Map{
 				// TODO Enable NAT gateway, see https://isovalent.com/blog/post/cilium-release-112/#nat46-nat64
 				// "enabled": pulumi.Bool(true),
