@@ -20,7 +20,7 @@ func DeployCNI(
 	nativeIPv4CIDR string,
 ) (*helm.Release, error) {
 	const cniName = "cilium"
-	const cniVersion = "1.17.2"
+	const cniVersion = "1.17.4"
 
 	sharedLabels := label.DefaultLabels(
 		pulumi.String(cniName),
