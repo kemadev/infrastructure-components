@@ -507,6 +507,7 @@ password ` + gitToken),
 					Labels:    sharedLabels,
 				},
 				Spec: &corev1.PodSpecArgs{
+					PriorityClassName: pulumi.String(params.PriorityClassName),
 					TopologySpreadConstraints: corev1.TopologySpreadConstraintArray{
 						// Spread pods across regions, best effort
 						corev1.TopologySpreadConstraintArgs{
