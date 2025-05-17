@@ -101,6 +101,10 @@ type AppParms struct {
 	ImagePullPolicy string
 	// PriorityClassName is the name of the priority class to use for the pod.
 	PriorityClassName string
+	// TopologySpreadConstraints is the list of topology spread constraints to use for the pod.
+	TopologySpreadConstraints corev1.TopologySpreadConstraintArray
+	// HorizontalPodAutoscalerBehavior is the behavior of the HPA.
+	HorizontalPodAutoscalerBehavior autoscalingv2.HorizontalPodAutoscalerBehaviorPtrInput
 	// DevDnsAdditionalNameservers is the list of additional nameservers use in pods (dev stack only).
 	DevDnsAdditionalNameservers []string
 	// DevGoPrivateString is the GOPRIVATE string to set (dev stack only).
@@ -275,6 +279,12 @@ func validateParams(params *AppParms) error {
 	if params.PriorityClassName == "" {
 		return fmt.Errorf("PriorityClassName cannot be empty")
 	}
+	if params.TopologySpreadConstraints == nil {
+		return fmt.Errorf("TopologySpreadConstraints cannot be nil")
+	}
+	if params.HorizontalPodAutoscalerBehavior == nil {
+		return fmt.Errorf("PriorityClassName cannot be nil")
+	}
 	// if len(params.DevDnsAdditionalNameservers) == 0 {
 	// 	return fmt.Errorf("DevDnsAdditionalNameservers cannot be empty")
 	// }
@@ -288,11 +298,13 @@ func validateParams(params *AppParms) error {
 }
 
 // mergeParams merges the default parameters with the provided parameters, returning an error if any of them is invalid.
-func mergeParams(ctx *pulumi.Context, params *AppParms) error {
-	appName, repoUrl, err := getGitInfos()
-	if err != nil {
-		return fmt.Errorf("error getting git repository information: %w", err)
-	}
+func mergeParams(
+	params *AppParms,
+	appName string,
+	appInstance string,
+	repoUrl url.URL,
+	runtimeEnv string,
+) error {
 	appVersion, err := getVersionFromGit()
 	if err != nil {
 		return fmt.Errorf("error getting app version from git: %w", err)
@@ -304,7 +316,7 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 		AppVersion:          appVersion,
 		DataClassification:  dataclassification.DataClassificationNone,
 		ComplianceFramework: complianceframework.ComplianceFrameworkNone,
-		RuntimeEnv:          ctx.Stack(),
+		RuntimeEnv:          runtimeEnv,
 		OTelEndpointUrl: url.URL{
 			Scheme: "grpc",
 			Host:   "string",
@@ -327,6 +339,74 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 		ImagePullPolicy:         "IfNotPresent",
 		ProgressDeadlineSeconds: 180,
 		PriorityClassName:       priorityclass.PriorityClassNormal,
+		TopologySpreadConstraints: corev1.TopologySpreadConstraintArray{
+			// Spread pods across regions, best effort
+			corev1.TopologySpreadConstraintArgs{
+				MaxSkew: pulumi.Int(1),
+				LabelSelector: &metav1.LabelSelectorArgs{
+					MatchLabels: pulumi.StringMap{
+						"app.kubernetes.io/instance": pulumi.String(appInstance),
+					},
+				},
+				MatchLabelKeys: pulumi.StringArray{
+					pulumi.String("pod-template-hash"),
+				},
+				TopologyKey:       pulumi.String(cluster.NodeRegionLabelKey),
+				WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
+			},
+			// Spread pods across zones, best effort
+			corev1.TopologySpreadConstraintArgs{
+				MaxSkew: pulumi.Int(1),
+				LabelSelector: &metav1.LabelSelectorArgs{
+					MatchLabels: pulumi.StringMap{
+						"app.kubernetes.io/instance": pulumi.String(appInstance),
+					},
+				},
+				MatchLabelKeys: pulumi.StringArray{
+					pulumi.String("pod-template-hash"),
+				},
+				TopologyKey:       pulumi.String(cluster.NodeZoneLabelKey),
+				WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
+			},
+			// Spread pods across nodes, best effort
+			corev1.TopologySpreadConstraintArgs{
+				MaxSkew: pulumi.Int(1),
+				LabelSelector: &metav1.LabelSelectorArgs{
+					MatchLabels: pulumi.StringMap{
+						"app.kubernetes.io/instance": pulumi.String(appInstance),
+					},
+				},
+				MatchLabelKeys: pulumi.StringArray{
+					pulumi.String("pod-template-hash"),
+				},
+				TopologyKey:       pulumi.String(cluster.NodeHostnameLabelKey),
+				WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
+			},
+		},
+		HorizontalPodAutoscalerBehavior: &autoscalingv2.HorizontalPodAutoscalerBehaviorArgs{
+			ScaleDown: &autoscalingv2.HPAScalingRulesArgs{
+				// Downscale max 30%/minute
+				Policies: autoscalingv2.HPAScalingPolicyArray{
+					&autoscalingv2.HPAScalingPolicyArgs{
+						Type:          pulumi.String("Percent"),
+						PeriodSeconds: pulumi.Int(60),
+						Value:         pulumi.Int(30),
+					},
+				},
+				SelectPolicy: pulumi.String("Min"),
+			},
+			ScaleUp: &autoscalingv2.HPAScalingRulesArgs{
+				// Upscale max 30%/minute
+				Policies: autoscalingv2.HPAScalingPolicyArray{
+					&autoscalingv2.HPAScalingPolicyArgs{
+						Type:          pulumi.String("Percent"),
+						PeriodSeconds: pulumi.Int(60),
+						Value:         pulumi.Int(30),
+					},
+				},
+				SelectPolicy: pulumi.String("Max"),
+			},
+		},
 		DevDnsAdditionalNameservers: []string{
 			"1.1.1.1",
 		},
@@ -347,16 +427,21 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 // DeployBasicHTTPApp deploys a basic HTTP application to the Kubernetes cluster, using the provided parameters merged with the default ones,
 // and returns an error if any of the parameters is invalid or if the deployment fails.
 func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
-	err := mergeParams(ctx, &params)
+	appName, repoUrl, err := getGitInfos()
+	if err != nil {
+		return fmt.Errorf("error getting git repository information: %w", err)
+	}
+
+	// Runtime environment, i.e. Pulumi stack name
+	runtimeEnv := ctx.Stack()
+
+	// Application instance to use, using runtime env as suffix to distinguish different stacks, e.g. to distinguish review applications using their stack name (i.e. branch name)
+	appInstance := appName + "-" + runtimeEnv
+
+	err = mergeParams(&params, appName, appInstance, repoUrl, runtimeEnv)
 	if err != nil {
 		return fmt.Errorf("failed to apply default application parameters: %w", err)
 	}
-
-	// Application instance to use, using runtime env as suffix to distinguish different stacks, e.g. to distinguish review applications using their stack name (i.e. branch name)
-	appInstance := params.AppName + "-" + params.RuntimeEnv
-
-	// Namespace to deploy to
-	namespace := appInstance
 
 	sharedLabels := label.DefaultLabels(
 		pulumi.String(params.AppName),
@@ -369,6 +454,9 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		pulumi.String(appInstance),
 		sharedLabels,
 	)
+
+	// Namespace to deploy to
+	namespace := appInstance
 
 	// Where to mount organization's code, must match kind mount
 	orgCodeVolume := "/git-vcs-org"
@@ -507,45 +595,8 @@ password ` + gitToken),
 					Labels:    sharedLabels,
 				},
 				Spec: &corev1.PodSpecArgs{
-					PriorityClassName: pulumi.String(params.PriorityClassName),
-					TopologySpreadConstraints: corev1.TopologySpreadConstraintArray{
-						// Spread pods across regions, best effort
-						corev1.TopologySpreadConstraintArgs{
-							MaxSkew: pulumi.Int(1),
-							LabelSelector: &metav1.LabelSelectorArgs{
-								MatchLabels: basicSelector,
-							},
-							MatchLabelKeys: pulumi.StringArray{
-								pulumi.String("pod-template-hash"),
-							},
-							TopologyKey:       pulumi.String(cluster.NodeRegionLabelKey),
-							WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
-						},
-						// Spread pods across zones, best effort
-						corev1.TopologySpreadConstraintArgs{
-							MaxSkew: pulumi.Int(1),
-							LabelSelector: &metav1.LabelSelectorArgs{
-								MatchLabels: basicSelector,
-							},
-							MatchLabelKeys: pulumi.StringArray{
-								pulumi.String("pod-template-hash"),
-							},
-							TopologyKey:       pulumi.String(cluster.NodeZoneLabelKey),
-							WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
-						},
-						// Spread pods across nodes, best effort
-						corev1.TopologySpreadConstraintArgs{
-							MaxSkew: pulumi.Int(1),
-							LabelSelector: &metav1.LabelSelectorArgs{
-								MatchLabels: basicSelector,
-							},
-							MatchLabelKeys: pulumi.StringArray{
-								pulumi.String("pod-template-hash"),
-							},
-							TopologyKey:       pulumi.String(cluster.NodeHostnameLabelKey),
-							WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
-						},
-					},
+					PriorityClassName:         pulumi.String(params.PriorityClassName),
+					TopologySpreadConstraints: params.TopologySpreadConstraints,
 					NodeSelector: pulumi.StringMap{
 						// Schedule on default workload nodes only
 						cluster.NodeRoleWorkerDefaultLabelKey: pulumi.String(
@@ -771,30 +822,7 @@ password ` + gitToken),
 					ApiVersion: deployment.ApiVersion,
 					Name:       deployment.Metadata.Name().Elem(),
 				},
-				Behavior: &autoscalingv2.HorizontalPodAutoscalerBehaviorArgs{
-					ScaleDown: &autoscalingv2.HPAScalingRulesArgs{
-						// Downscale max 30%/minute
-						Policies: autoscalingv2.HPAScalingPolicyArray{
-							&autoscalingv2.HPAScalingPolicyArgs{
-								Type:          pulumi.String("Percent"),
-								PeriodSeconds: pulumi.Int(60),
-								Value:         pulumi.Int(30),
-							},
-						},
-						SelectPolicy: pulumi.String("Min"),
-					},
-					ScaleUp: &autoscalingv2.HPAScalingRulesArgs{
-						// Upscale max 30%/minute
-						Policies: autoscalingv2.HPAScalingPolicyArray{
-							&autoscalingv2.HPAScalingPolicyArgs{
-								Type:          pulumi.String("Percent"),
-								PeriodSeconds: pulumi.Int(60),
-								Value:         pulumi.Int(30),
-							},
-						},
-						SelectPolicy: pulumi.String("Max"),
-					},
-				},
+				Behavior: params.HorizontalPodAutoscalerBehavior,
 				Metrics: autoscalingv2.MetricSpecArray{
 					&autoscalingv2.MetricSpecArgs{
 						Type: pulumi.String("Resource"),
