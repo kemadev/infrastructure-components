@@ -97,6 +97,8 @@ type AppParms struct {
 	ProgressDeadlineSeconds int
 	// DevImagePullPolicy is the image pull policy to use.
 	ImagePullPolicy string
+	// PodAffinity is the pod affinity to use for the pod.
+	PodAffinity corev1.AffinityPtrInput
 	// PriorityClassName is the name of the priority class to use for the pod.
 	PriorityClassName string
 	// TopologySpreadConstraints is the list of topology spread constraints to use for the pod.
@@ -273,6 +275,9 @@ func validateParams(params *AppParms) error {
 	if params.ImagePullPolicy == "" {
 		return fmt.Errorf("ImagePullPolicy cannot be empty")
 	}
+	// if params.PodAffinity == nil {
+	// 	return fmt.Errorf("PodAffinity cannot be nil")
+	// }
 	if params.PriorityClassName == "" {
 		return fmt.Errorf("PriorityClassName cannot be empty")
 	}
@@ -614,6 +619,7 @@ password ` + gitToken),
 							cluster.NodeRoleWorkerDefaultLabelValue,
 						),
 					},
+					Affinity: params.PodAffinity,
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
 							EnvFrom: corev1.EnvFromSourceArray{
