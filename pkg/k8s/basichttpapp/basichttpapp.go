@@ -615,6 +615,7 @@ password ` + gitToken),
 								}
 								return pulumi.Bool(false)
 							}(),
+							// HACK Enable colorful output for air, remove once https://github.com/air-verse/air/pull/768 is merged
 							Tty: func() pulumi.Bool {
 								if ctx.Stack() == config.Env_dev {
 									return pulumi.Bool(true)
