@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/kemadev/infrastructure-components/pkg/k8s/label"
+	"github.com/kemadev/infrastructure-components/pkg/k8s/priorityclass"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/helm/v3"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
@@ -112,12 +113,16 @@ func DeployCNI(
 					"enabled": pulumi.Bool(true),
 					// Rollout pods on ConfigMap change
 					"rollOutPods": pulumi.Bool(true),
+					// Set Hubble as moderate priority
+					"priorityClassName": pulumi.String(priorityclass.PriorityClassModerate),
 				},
 				"ui": pulumi.Map{
 					// Enable Hubble UI
 					"enabled": pulumi.Bool(true),
 					// Rollout pods on ConfigMap change
 					"rollOutPods": pulumi.Bool(true),
+					// Set Hubble as moderate priority
+					"priorityClassName": pulumi.String(priorityclass.PriorityClassModerate),
 				},
 				"metrics": pulumi.Map{
 					// Expose Hubble metrics

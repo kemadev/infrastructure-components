@@ -8,97 +8,124 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
+const (
+	PriorityClassEventual = "eventual"
+	PriorityClassLow      = "low"
+	PriorityClassDefault  = "default"
+	PriorityClassNormal   = "normal"
+	PriorityClassModerate = "moderate"
+	PriorityClassHigh     = "high"
+)
+
 func CreateDefaultPriorityClasses(ctx *pulumi.Context) error {
 	_, err := schedulingv1.NewPriorityClass(
 		ctx,
-		"eventual",
+		PriorityClassEventual,
 		&schedulingv1.PriorityClassArgs{
 			Value: pulumi.Int(-1000000),
 			Description: pulumi.String(
-				"Low priority class, lower than low, default, normal or high, do not preempts other pods",
+				"Very low priority class, lower than low, does not preempt other pods",
 			),
 			Metadata: &metav1.ObjectMetaArgs{
-				Name:   pulumi.String("eventual"),
+				Name:   pulumi.String(PriorityClassEventual),
 				Labels: pulumi.StringMap{},
 			},
 			PreemptionPolicy: pulumi.String("Never"),
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create eventual priority class: %v", err)
+		return fmt.Errorf("failed to create "+PriorityClassEventual+" priority class: %v", err)
 	}
 
 	_, err = schedulingv1.NewPriorityClass(
 		ctx,
-		"low",
+		PriorityClassLow,
 		&schedulingv1.PriorityClassArgs{
 			Value: pulumi.Int(-1000),
 			Description: pulumi.String(
-				"Low priority class, lower than default, normal or high, preempts other pods",
+				"Low priority class, lower than default, higher than eventual, preempts other pods",
 			),
 			Metadata: &metav1.ObjectMetaArgs{
-				Name:   pulumi.String("low"),
+				Name:   pulumi.String(PriorityClassLow),
 				Labels: pulumi.StringMap{},
 			},
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create low priority class: %v", err)
+		return fmt.Errorf("failed to create "+PriorityClassLow+" priority class: %v", err)
 	}
 
 	_, err = schedulingv1.NewPriorityClass(
 		ctx,
-		"default",
+		PriorityClassDefault,
 		&schedulingv1.PriorityClassArgs{
 			Value: pulumi.Int(0),
 			Description: pulumi.String(
-				"Default priority class, lower than normal or high, to be used by pods that do not specify a priority class",
+				"Default priority class, lower than normal, higher than low, preempts other pods, to be used by pods that do not specify a priority class",
 			),
 			GlobalDefault: pulumi.Bool(true),
 			Metadata: &metav1.ObjectMetaArgs{
-				Name:   pulumi.String("default"),
+				Name:   pulumi.String(PriorityClassDefault),
 				Labels: pulumi.StringMap{},
 			},
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create default priority class: %v", err)
+		return fmt.Errorf("failed to create "+PriorityClassDefault+" priority class: %v", err)
 	}
 
 	_, err = schedulingv1.NewPriorityClass(
 		ctx,
-		"normal",
+		PriorityClassNormal,
 		&schedulingv1.PriorityClassArgs{
 			Value: pulumi.Int(1000),
 			Description: pulumi.String(
-				"Normal priority, higher than default, preempts other pods",
+				"Normal priority, lower than moderate, higher than default, preempts other pods",
 			),
 			Metadata: &metav1.ObjectMetaArgs{
-				Name:   pulumi.String("normal"),
+				Name:   pulumi.String(PriorityClassNormal),
 				Labels: pulumi.StringMap{},
 			},
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create normal priority class: %v", err)
+		return fmt.Errorf("failed to create "+PriorityClassNormal+" priority class: %v", err)
 	}
 
 	_, err = schedulingv1.NewPriorityClass(
 		ctx,
-		"high",
+		PriorityClassModerate,
 		&schedulingv1.PriorityClassArgs{
-			Value: pulumi.Int(1000000),
+			Value: pulumi.Int(500000),
 			Description: pulumi.String(
-				"High priority, higher normal, preempts other pods",
+				"Moderate priority, lower than high, higher than normal, preempts other pods",
 			),
 			Metadata: &metav1.ObjectMetaArgs{
-				Name:   pulumi.String("high"),
+				Name:   pulumi.String(PriorityClassModerate),
 				Labels: pulumi.StringMap{},
 			},
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create high priority class: %v", err)
+		return fmt.Errorf("failed to create "+PriorityClassModerate+" priority class: %v", err)
+	}
+
+	_, err = schedulingv1.NewPriorityClass(
+		ctx,
+		PriorityClassHigh,
+		&schedulingv1.PriorityClassArgs{
+			Value: pulumi.Int(1000000),
+			Description: pulumi.String(
+				"High priority, higher than moderate, preempts other pods",
+			),
+			Metadata: &metav1.ObjectMetaArgs{
+				Name:   pulumi.String(PriorityClassHigh),
+				Labels: pulumi.StringMap{},
+			},
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create "+PriorityClassHigh+" priority class: %v", err)
 	}
 
 	return nil
