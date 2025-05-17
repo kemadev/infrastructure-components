@@ -9,12 +9,18 @@ import (
 )
 
 const (
+	// Very low priority class, lower than low, does not preempt other pods
 	PriorityClassEventual = "eventual"
-	PriorityClassLow      = "low"
-	PriorityClassDefault  = "default"
-	PriorityClassNormal   = "normal"
+	// Low priority class, lower than default, higher than eventual, preempts other pods
+	PriorityClassLow = "low"
+	// Default priority class, lower than normal, higher than low, preempts other pods, used by pods that do not specify a priority class, should be used explicitly
+	PriorityClassDefault = "default"
+	// Normal priority, lower than moderate, higher than default, preempts other pods, should be used as a default
+	PriorityClassNormal = "normal"
+	// Moderate priority, lower than high, higher than normal, preempts other pods
 	PriorityClassModerate = "moderate"
-	PriorityClassHigh     = "high"
+	// High priority, higher than moderate, preempts other pods
+	PriorityClassHigh = "high"
 )
 
 func CreateDefaultPriorityClasses(ctx *pulumi.Context) error {
@@ -61,7 +67,7 @@ func CreateDefaultPriorityClasses(ctx *pulumi.Context) error {
 		&schedulingv1.PriorityClassArgs{
 			Value: pulumi.Int(0),
 			Description: pulumi.String(
-				"Default priority class, lower than normal, higher than low, preempts other pods, to be used by pods that do not specify a priority class",
+				"Default priority class, lower than normal, higher than low, preempts other pods, used by pods that do not specify a priority class, should be used explicitly",
 			),
 			GlobalDefault: pulumi.Bool(true),
 			Metadata: &metav1.ObjectMetaArgs{
@@ -80,7 +86,7 @@ func CreateDefaultPriorityClasses(ctx *pulumi.Context) error {
 		&schedulingv1.PriorityClassArgs{
 			Value: pulumi.Int(1000),
 			Description: pulumi.String(
-				"Normal priority, lower than moderate, higher than default, preempts other pods",
+				"Normal priority, lower than moderate, higher than default, preempts other pods, should be used as a default",
 			),
 			Metadata: &metav1.ObjectMetaArgs{
 				Name:   pulumi.String(PriorityClassNormal),

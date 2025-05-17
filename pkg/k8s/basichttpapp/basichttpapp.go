@@ -14,6 +14,7 @@ import (
 	"github.com/kemadev/framework-go/pkg/config"
 	"github.com/kemadev/imds/pkg/hardware/cluster"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/label"
+	"github.com/kemadev/infrastructure-components/pkg/k8s/priorityclass"
 	"github.com/kemadev/infrastructure-components/pkg/private/businessunit"
 	"github.com/kemadev/infrastructure-components/pkg/private/complianceframework"
 	"github.com/kemadev/infrastructure-components/pkg/private/costcenter"
@@ -98,6 +99,8 @@ type AppParms struct {
 	ProgressDeadlineSeconds int
 	// DevImagePullPolicy is the image pull policy to use.
 	ImagePullPolicy string
+	// PriorityClassName is the name of the priority class to use for the pod.
+	PriorityClassName string
 	// DevDnsAdditionalNameservers is the list of additional nameservers use in pods (dev stack only).
 	DevDnsAdditionalNameservers []string
 	// DevGoPrivateString is the GOPRIVATE string to set (dev stack only).
@@ -269,6 +272,9 @@ func validateParams(params *AppParms) error {
 	if params.ImagePullPolicy == "" {
 		return fmt.Errorf("ImagePullPolicy cannot be empty")
 	}
+	if params.PriorityClassName == "" {
+		return fmt.Errorf("PriorityClassName cannot be empty")
+	}
 	// if len(params.DevDnsAdditionalNameservers) == 0 {
 	// 	return fmt.Errorf("DevDnsAdditionalNameservers cannot be empty")
 	// }
@@ -320,6 +326,7 @@ func mergeParams(ctx *pulumi.Context, params *AppParms) error {
 		MaxReplicas:             10,
 		ImagePullPolicy:         "IfNotPresent",
 		ProgressDeadlineSeconds: 180,
+		PriorityClassName:       priorityclass.PriorityClassNormal,
 		DevDnsAdditionalNameservers: []string{
 			"1.1.1.1",
 		},
