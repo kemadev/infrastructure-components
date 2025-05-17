@@ -274,13 +274,14 @@ func DeployCNI(
 			},
 			// Set cluster network CIDR, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
 			"ipv4NativeRoutingCIDR": pulumi.String(nativeIPv4CIDR),
-			"ipv6NativeRoutingCIDR": pulumi.String("fd12:3456:789a::/48"),
-			"ipv6": pulumi.Map{
-				"enabled": pulumi.Bool(true),
-			},
+			// TODO Enable IPv6
+			// "ipv6": pulumi.Map{
+			// 	"enabled": pulumi.Bool(true),
+			// },
+			// "ipv6NativeRoutingCIDR": pulumi.String("fd12:3456:789a::/48"),
 			// "nat46x64Gateway": pulumi.Map{
 			// 	// TODO Enable NAT gateway, see https://isovalent.com/blog/post/cilium-release-112/#nat46-nat64
-			// 	// "enabled": pulumi.Bool(true),
+			// 	"enabled": pulumi.Bool(true),
 			// },
 		},
 	}, pulumi.DependsOn([]pulumi.Resource{gwapiCrd}))
