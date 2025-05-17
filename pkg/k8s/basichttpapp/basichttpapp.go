@@ -355,7 +355,7 @@ func mergeParams(
 				MatchLabelKeys: pulumi.StringArray{
 					pulumi.String("pod-template-hash"),
 				},
-				TopologyKey:       pulumi.String(cluster.NodeRegionLabelKey),
+				TopologyKey:       pulumi.String(label.LabelTopologyRegionKey),
 				WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
 			},
 			// Spread pods across zones, best effort
@@ -369,7 +369,63 @@ func mergeParams(
 				MatchLabelKeys: pulumi.StringArray{
 					pulumi.String("pod-template-hash"),
 				},
-				TopologyKey:       pulumi.String(cluster.NodeZoneLabelKey),
+				TopologyKey:       pulumi.String(label.LabelTopologyRegionKey),
+				WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
+			},
+			// Spread pods across datacenters, best effort
+			corev1.TopologySpreadConstraintArgs{
+				MaxSkew: pulumi.Int(1),
+				LabelSelector: &metav1.LabelSelectorArgs{
+					MatchLabels: pulumi.StringMap{
+						"app.kubernetes.io/instance": pulumi.String(appInstance),
+					},
+				},
+				MatchLabelKeys: pulumi.StringArray{
+					pulumi.String("pod-template-hash"),
+				},
+				TopologyKey:       pulumi.String(label.LabelTopologyDatacenterKey),
+				WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
+			},
+			// Spread pods across datacenter zones, best effort
+			corev1.TopologySpreadConstraintArgs{
+				MaxSkew: pulumi.Int(1),
+				LabelSelector: &metav1.LabelSelectorArgs{
+					MatchLabels: pulumi.StringMap{
+						"app.kubernetes.io/instance": pulumi.String(appInstance),
+					},
+				},
+				MatchLabelKeys: pulumi.StringArray{
+					pulumi.String("pod-template-hash"),
+				},
+				TopologyKey:       pulumi.String(label.LabelTopologyDatacenterZoneKey),
+				WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
+			},
+			// Spread pods across aisles, best effort
+			corev1.TopologySpreadConstraintArgs{
+				MaxSkew: pulumi.Int(1),
+				LabelSelector: &metav1.LabelSelectorArgs{
+					MatchLabels: pulumi.StringMap{
+						"app.kubernetes.io/instance": pulumi.String(appInstance),
+					},
+				},
+				MatchLabelKeys: pulumi.StringArray{
+					pulumi.String("pod-template-hash"),
+				},
+				TopologyKey:       pulumi.String(label.LabelTopologyDatacenterAisleKey),
+				WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
+			},
+			// Spread pods across racks, best effort
+			corev1.TopologySpreadConstraintArgs{
+				MaxSkew: pulumi.Int(1),
+				LabelSelector: &metav1.LabelSelectorArgs{
+					MatchLabels: pulumi.StringMap{
+						"app.kubernetes.io/instance": pulumi.String(appInstance),
+					},
+				},
+				MatchLabelKeys: pulumi.StringArray{
+					pulumi.String("pod-template-hash"),
+				},
+				TopologyKey:       pulumi.String(label.LabelTopologyDatacenterRackKey),
 				WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
 			},
 			// Spread pods across nodes, best effort
@@ -383,7 +439,7 @@ func mergeParams(
 				MatchLabelKeys: pulumi.StringArray{
 					pulumi.String("pod-template-hash"),
 				},
-				TopologyKey:       pulumi.String(cluster.NodeHostnameLabelKey),
+				TopologyKey:       pulumi.String(label.LabelTopologyHostnameKey),
 				WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
 			},
 		},
