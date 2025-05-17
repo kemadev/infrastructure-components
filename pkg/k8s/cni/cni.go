@@ -3,6 +3,7 @@ package cni
 import (
 	"fmt"
 
+	"github.com/kemadev/infrastructure-components/pkg/k8s/label"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/helm/v3"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
@@ -19,14 +20,21 @@ func DeployCNI(
 	nativeIPv6CIDR string,
 ) (*helm.Release, error) {
 	const cniName = "cilium"
+	const cniVersion = "1.17.2"
+
+	sharedLabels := label.DefaultLabels(
+		pulumi.String(cniName),
+		pulumi.String(cniName),
+		pulumi.String(cniVersion),
+		pulumi.String("cni"),
+		pulumi.String("network"),
+	)
 
 	const cniNsName = cniName
 	ns, err := corev1.NewNamespace(ctx, cniNsName, &corev1.NamespaceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Namespace: pulumi.String(cniNsName),
-			Labels: pulumi.StringMap{
-				"app": pulumi.String(cniNsName),
-			},
+			Labels:    sharedLabels,
 		},
 	})
 	if err != nil {
@@ -43,8 +51,10 @@ func DeployCNI(
 		},
 		Chart: pulumi.String(cniName),
 		// TODO add renovate tracking
-		Version: pulumi.String("1.17.2"),
+		Version: pulumi.String(cniVersion),
 		Values: pulumi.Map{
+			// Add labels to all resources
+			"commonLabels": sharedLabels,
 			"image": pulumi.Map{
 				// Don't pull if image already present
 				"pullPolicy": pulumi.String("IfNotPresent"),
@@ -178,6 +188,10 @@ func DeployCNI(
 				},
 				// Use native mode XDP acceleration on devices that support it, see https://docs.cilium.io/en/stable/operations/performance/tuning/#xdp-acceleration
 				"acceleration": pulumi.String("best-effort"),
+				// Use hybrid DSR / SNAT, see https://docs.cilium.io/en/stable/network/kubernetes/kubeproxy-free/#hybrid-dsr-and-snat-mode
+				"mode": pulumi.String("hybrid"),
+				// Use Maglev consistent hashing, see https://docs.cilium.io/en/stable/network/kubernetes/kubeproxy-free/#maglev-consistent-hashing
+				"algorithm": pulumi.String("maglev"),
 			},
 			"authentication": pulumi.Map{
 				"mutual": pulumi.Map{

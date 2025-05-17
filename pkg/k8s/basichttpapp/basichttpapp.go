@@ -13,6 +13,7 @@ import (
 	"github.com/caarlos0/svu/pkg/svu"
 	"github.com/kemadev/framework-go/pkg/config"
 	"github.com/kemadev/imds/pkg/hardware/cluster"
+	"github.com/kemadev/infrastructure-components/pkg/k8s/label"
 	"github.com/kemadev/infrastructure-components/pkg/private/businessunit"
 	"github.com/kemadev/infrastructure-components/pkg/private/complianceframework"
 	"github.com/kemadev/infrastructure-components/pkg/private/costcenter"
@@ -350,20 +351,17 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 	// Namespace to deploy to
 	namespace := appInstance
 
-	sharedLabels := pulumi.StringMap{
-		// Application common labels under `app.kubernetes.io`, see https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/#labels
-		"app.kubernetes.io/name":       pulumi.String(params.AppName),
-		"app.kubernetes.io/instance":   pulumi.String(appInstance),
-		"app.kubernetes.io/version":    pulumi.String(params.AppVersion.String()),
-		"app.kubernetes.io/component":  pulumi.String(params.AppComponent),
-		"app.kubernetes.io/part-of":    pulumi.String(params.AppNamespace),
-		"app.kubernetes.io/managed-by": pulumi.String("pulumi"),
-	}
-
-	// Select components of application instance
-	basicSelector := pulumi.StringMap{
-		"app.kubernetes.io/instance": sharedLabels["app.kubernetes.io/instance"],
-	}
+	sharedLabels := label.DefaultLabels(
+		pulumi.String(params.AppName),
+		pulumi.String(appInstance),
+		pulumi.String(params.AppVersion.String()),
+		pulumi.String(params.AppComponent),
+		pulumi.String(params.AppNamespace),
+	)
+	basicSelector := label.DefaultSelector(
+		pulumi.String(appInstance),
+		sharedLabels,
+	)
 
 	// Where to mount organization's code, must match kind mount
 	orgCodeVolume := "/git-vcs-org"
