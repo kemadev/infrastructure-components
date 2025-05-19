@@ -913,7 +913,7 @@ password ` + gitToken),
 		Spec: &corev1.ServiceSpecArgs{
 			Ports: corev1.ServicePortArray{
 				&corev1.ServicePortArgs{
-					AppProtocol: pulumi.String("http"),
+					AppProtocol: pulumi.String("kubernetes.io/h2c"),
 					Port:        pulumi.Int(params.Port),
 					TargetPort:  pulumi.Any(params.Port),
 					Protocol:    pulumi.String("TCP"),

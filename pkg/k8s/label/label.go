@@ -108,3 +108,9 @@ const (
 	// NodeRoleGenericGPULabelValue is the label value for generic GPU nodes.
 	NodeRoleGenericGPULabelValue = "generic"
 )
+
+// Labels for shared gateway access, enabling the usage of the shared gateway
+const (
+	SharedGatewayAccessLabelKey   = "shared-gateway-access"
+	SharedGatewayAccessLabelValue = "true"
+)

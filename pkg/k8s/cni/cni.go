@@ -2,6 +2,7 @@ package cni
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/kemadev/infrastructure-components/pkg/k8s/label"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/priorityclass"
@@ -17,9 +18,14 @@ func DeployCNI(
 	ctx *pulumi.Context,
 	gwapiCrd *yamlv2.ConfigFile,
 	clusterName string,
-	nativeIPv4CIDR string,
+	nativeIPv4CIDR net.IPNet,
+	lbPoolCIDR net.IPNet,
+	gatewayIPs []net.IP,
+	domains []string,
+	certIssuerName string,
 ) (*helm.Release, error) {
 	const cniName = "cilium"
+	// TODO add renovate tracking
 	const cniVersion = "1.17.4"
 
 	sharedLabels := label.DefaultLabels(
@@ -49,8 +55,7 @@ func DeployCNI(
 		RepositoryOpts: &helm.RepositoryOptsArgs{
 			Repo: pulumi.String("https://helm.cilium.io/"),
 		},
-		Chart: pulumi.String(cniName),
-		// TODO add renovate tracking
+		Chart:   pulumi.String(cniName),
 		Version: pulumi.String(cniVersion),
 		Values: pulumi.Map{
 			"debug": func() pulumi.MapInput {
@@ -273,7 +278,7 @@ func DeployCNI(
 				"enabled": pulumi.Bool(true),
 			},
 			// Set cluster network CIDR, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
-			"ipv4NativeRoutingCIDR": pulumi.String(nativeIPv4CIDR),
+			"ipv4NativeRoutingCIDR": pulumi.String(nativeIPv4CIDR.String()),
 			// TODO Enable IPv6
 			// "ipv6": pulumi.Map{
 			// 	"enabled": pulumi.Bool(true),
@@ -289,5 +294,157 @@ func DeployCNI(
 		return nil, fmt.Errorf("failed to deploy cni: %w", err)
 	}
 
+	err = deployGatewayResources(
+		ctx,
+		ns.Metadata.Name(),
+		sharedLabels,
+		certIssuerName,
+		lbPoolCIDR,
+		gatewayIPs,
+		domains,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to deploy gateway resources: %w", err)
+	}
+
 	return release, nil
+}
+
+// deployGatewayResources deploys the Gateway and LB-IPAM resources for all domains, creating setting
+// up TLS termination and wildcard certificates for each domain.
+func deployGatewayResources(
+	ctx *pulumi.Context,
+	namespace pulumi.StringPtrInput,
+	sharedLabels pulumi.StringMapInput,
+	certIssuerName string,
+	lbPoolCIDR net.IPNet,
+	gatewayIPs []net.IP,
+	domains []string,
+) error {
+	_, err := yamlv2.NewConfigGroup(ctx, "lb-pool-1", &yamlv2.ConfigGroupArgs{
+		Objs: pulumi.Array{
+			pulumi.Map{
+				"apiVersion": pulumi.String("cilium.io/v2alpha1"),
+				"kind":       pulumi.String("CiliumLoadBalancerIPPool"),
+				"metadata": pulumi.Map{
+					"name":      pulumi.String("lb-pool-1"),
+					"namespace": namespace,
+					"labels":    sharedLabels,
+				},
+				"spec": pulumi.Map{
+					"blocks": pulumi.Array{
+						pulumi.Map{
+							"cidr": pulumi.String(lbPoolCIDR.String()),
+						},
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to deploy CiliumLoadBalancerIPPool: %w", err)
+	}
+
+	_, err = yamlv2.NewConfigGroup(ctx, "announcement-policy-1", &yamlv2.ConfigGroupArgs{
+		Objs: pulumi.Array{
+			pulumi.Map{
+				"apiVersion": pulumi.String("cilium.io/v2alpha1"),
+				"kind":       pulumi.String("CiliumL2AnnouncementPolicy"),
+				"metadata": pulumi.Map{
+					"name":      pulumi.String("announcement-policy-1"),
+					"namespace": namespace,
+					"labels":    sharedLabels,
+				},
+				"spec": pulumi.Map{
+					"externalIPs":     pulumi.Bool(true),
+					"loadBalancerIPs": pulumi.Bool(true),
+					"nodeSelector": pulumi.Map{
+						"matchExpressions": pulumi.Array{
+							pulumi.Map{
+								"key":      pulumi.String("node-role.kubernetes.io/control-plane"),
+								"operator": pulumi.String("DoesNotExist"),
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to deploy CiliumL2AnnouncementPolicy: %w", err)
+	}
+
+	_, err = yamlv2.NewConfigGroup(ctx, "Gateway", &yamlv2.ConfigGroupArgs{
+		Objs: pulumi.Array{
+			pulumi.Map{
+				"apiVersion": pulumi.String("gateway.networking.k8s.io/v1"),
+				"kind":       pulumi.String("Gateway"),
+				"metadata": pulumi.Map{
+					"name":      pulumi.String("cilium-shared-gateway"),
+					"namespace": namespace,
+					"labels":    sharedLabels,
+					"annotations": pulumi.Map{
+						// Integrate with cert-manager
+						"cert-manager.io/issuer": pulumi.String(certIssuerName),
+					},
+				},
+				"spec": pulumi.Map{
+					"addresses": func() pulumi.ArrayInput {
+						if len(gatewayIPs) == 0 {
+							return nil
+						}
+						addrs := make(pulumi.Array, len(gatewayIPs))
+						for i, ip := range gatewayIPs {
+							addrs[i] = pulumi.Map{
+								"type":  pulumi.String("IPAddress"),
+								"value": pulumi.String(ip.String()),
+							}
+						}
+						return addrs
+					}(),
+					"gatewayClassName": pulumi.String("cilium"),
+					"listeners": func() pulumi.ArrayInput {
+						if len(domains) == 0 {
+							return nil
+						}
+						listeners := make(pulumi.Array, len(domains))
+						for i, domain := range domains {
+							listeners[i] = pulumi.Map{
+								"name":     pulumi.String(domain),
+								"port":     pulumi.Int(443),
+								"protocol": pulumi.String("HTTPS"),
+								"tls": pulumi.Map{
+									"mode": pulumi.String("Terminate"),
+									"certificateRefs": pulumi.Array{
+										pulumi.Map{
+											"kind": pulumi.String("Secret"),
+											"name": pulumi.String("wildcard-cert-" + domain),
+										},
+									},
+								},
+								"allowedRoutes": pulumi.Map{
+									"namespaces": pulumi.Map{
+										"from": pulumi.String("Selector"),
+										"selector": pulumi.Map{
+											"matchLabels": pulumi.Map{
+												label.SharedGatewayAccessLabelKey: pulumi.String(
+													label.SharedGatewayAccessLabelValue,
+												),
+											},
+										},
+									},
+								},
+							}
+						}
+						return listeners
+					}(),
+				},
+			},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to deploy Gateway: %w", err)
+	}
+
+	return nil
 }
