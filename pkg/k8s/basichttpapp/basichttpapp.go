@@ -558,6 +558,13 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 					"pod-security.kubernetes.io/warn-version":    pulumi.String("latest"),
 				}
 				maps.Copy(labels, sharedLabels)
+				// Allow shared gateway access to this namespace
+				gatewayAttachmentEnableLabel := pulumi.StringMap{
+					label.SharedGatewayAccessLabelKey: pulumi.String(
+						label.SharedGatewayAccessLabelValue,
+					),
+				}
+				maps.Copy(labels, gatewayAttachmentEnableLabel)
 				return labels
 			}(),
 		},
