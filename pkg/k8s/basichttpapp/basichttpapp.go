@@ -98,8 +98,8 @@ type AppParms struct {
 	ImagePullPolicy string
 	// PodAffinity is the pod affinity to use for the pod. Should be set when know pods communicate alot with the application.
 	PodAffinity corev1.AffinityPtrInput
-	// Tolerations is the tolerations to use for the pod.
-	Tolerations corev1.TolerationArrayInput
+	// PodTolerations is the tolerations to use for the pod.
+	PodTolerations corev1.TolerationArrayInput
 	// NodeSelectors is the node selectors to use for the pod.
 	NodeSelectors pulumi.StringMapInput
 	// PriorityClassName is the name of the priority class to use for the pod.
@@ -351,7 +351,7 @@ func mergeParams(
 		MaxReplicas:             10,
 		ImagePullPolicy:         "IfNotPresent",
 		ProgressDeadlineSeconds: 180,
-		Tolerations: corev1.TolerationArray{
+		PodTolerations: corev1.TolerationArray{
 			corev1.TolerationArgs{
 				Key:      pulumi.String(label.NodeTaintNotReadyKey),
 				Operator: pulumi.String("Exists"),
@@ -734,7 +734,7 @@ password ` + gitToken),
 					TopologySpreadConstraints: params.TopologySpreadConstraints,
 					NodeSelector:              params.NodeSelectors,
 					Affinity:                  params.PodAffinity,
-					Tolerations:               params.Tolerations,
+					Tolerations:               params.PodTolerations,
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
 							EnvFrom: corev1.EnvFromSourceArray{
