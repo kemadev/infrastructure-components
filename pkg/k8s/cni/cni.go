@@ -23,10 +23,6 @@ func DeployCNI(
 	gwapiCrd *yamlv2.ConfigFile,
 	clusterName string,
 	nativeIPv4CIDR net.IPNet,
-	lbPoolCIDR net.IPNet,
-	gatewayIPs []net.IP,
-	domains []string,
-	certIssuerName string,
 ) (*helm.Release, error) {
 	const cniName = "cilium"
 	// TODO add renovate tracking
