@@ -1008,7 +1008,7 @@ password ` + gitToken),
 				&corev1.ServicePortArgs{
 					AppProtocol: pulumi.String("kubernetes.io/h2c"),
 					Port:        pulumi.Int(params.Port),
-					TargetPort:  pulumi.Any(params.Port),
+					TargetPort:  pulumi.Int(params.Port),
 					Protocol:    pulumi.String("TCP"),
 				},
 			},
