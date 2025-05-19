@@ -406,6 +406,7 @@ func deployGatewayResources(
 					"listeners": func() pulumi.ArrayInput {
 						var listeners pulumi.Array = nil
 						if ctx.Stack() == "dev" {
+							// Let HTTP traffic through for dev
 							listeners = append(listeners, pulumi.Map{
 								"name":     pulumi.String("http-dev"),
 								"port":     pulumi.Int(80),
