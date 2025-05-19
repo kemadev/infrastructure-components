@@ -5,6 +5,8 @@ import (
 	"net"
 
 	"github.com/kemadev/infrastructure-components/pkg/k8s/label"
+	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
+	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	yamlv2 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/yaml/v2"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
@@ -33,7 +35,18 @@ func DeployGatewayResources(
 		pulumi.String("network"),
 	)
 
-	_, err := yamlv2.NewConfigGroup(ctx, "lb-pool-1", &yamlv2.ConfigGroupArgs{
+	_, err := corev1.NewNamespace(ctx, SharedGatewayNamespace, &corev1.NamespaceArgs{
+		Metadata: &metav1.ObjectMetaArgs{
+			Name:      pulumi.String(SharedGatewayNamespace),
+			Namespace: pulumi.String(SharedGatewayNamespace),
+			Labels:    sharedLabels,
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create namespace %s: %w", SharedGatewayName, err)
+	}
+
+	_, err = yamlv2.NewConfigGroup(ctx, "lb-pool-1", &yamlv2.ConfigGroupArgs{
 		Objs: pulumi.Array{
 			pulumi.Map{
 				"apiVersion": pulumi.String("cilium.io/v2alpha1"),
