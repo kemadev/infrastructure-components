@@ -12,6 +12,7 @@ import (
 	"github.com/blang/semver"
 	"github.com/caarlos0/svu/pkg/svu"
 	"github.com/kemadev/framework-go/pkg/config"
+	"github.com/kemadev/infrastructure-components/pkg/k8s/gateway"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/label"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/priorityclass"
 	"github.com/kemadev/infrastructure-components/pkg/private/businessunit"
@@ -1045,9 +1046,8 @@ password ` + gitToken),
 				"spec": pulumi.Map{
 					"parentRefs": pulumi.Array{
 						pulumi.Map{
-							// TODO
-							"name":      pulumi.String("shared-gateway"),
-							"namespace": pulumi.String("shared-gateway"),
+							"name":      pulumi.String(gateway.SharedGatewayName),
+							"namespace": pulumi.String(gateway.SharedGatewayNamespace),
 						},
 					},
 					"hotnames": hostnames,
