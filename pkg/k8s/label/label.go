@@ -114,3 +114,25 @@ const (
 	SharedGatewayAccessLabelKey   = "shared-gateway-access"
 	SharedGatewayAccessLabelValue = "true"
 )
+
+// Node taints
+const (
+	// NodeTaintNotReadyKey is the taint key for nodes that are not ready.
+	NodeTaintNotReadyKey = "node.kubernetes.io/not-ready"
+	// NodeTaintUnreachableKey is the taint key for nodes that are unreachable.
+	NodeTaintUnreachableKey = "node.kubernetes.io/unreachable"
+	// NodeTaintDiskPressureKey is the taint key for nodes that are under disk pressure.
+	NodeTaintDiskPressureKey = "node.kubernetes.io/disk-pressure"
+	// NodeTaintMemoryPressureKey is the taint key for nodes that are under memory pressure.
+	NodeTaintMemoryPressureKey = "node.kubernetes.io/memory-pressure"
+	// NodeTaintPIDPressureKey is the taint key for nodes that are under PID pressure.
+	NodeTaintPIDPressureKey = "node.kubernetes.io/pid-pressure"
+	// NodeTaintUnschedulableKey is the taint key for nodes that are unschedulable.
+	NodeTaintUnschedulableKey = "node.kubernetes.io/unschedulable"
+	// NodeTaintNetworkUnavailableKey is the taint key for nodes that are under network pressure.
+	NodeTaintNetworkUnavailableKey = "node.kubernetes.io/network-unavailable"
+	// NodeTaintUninitializedKey is the taint key for nodes that are uninitialized.
+	NodeTaintUninitializedKey = "node.cloudprovider.kubernetes.io/uninitialized"
+	// NodeTaintControlPlaneKey is the taint key for control plane nodes.
+	NodeTaintControlPlaneKey = NodeRoleControlPlaneLabelKey
+)

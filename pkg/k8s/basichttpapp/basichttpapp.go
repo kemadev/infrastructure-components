@@ -98,6 +98,8 @@ type AppParms struct {
 	ImagePullPolicy string
 	// PodAffinity is the pod affinity to use for the pod. Should be set when know pods communicate alot with the application.
 	PodAffinity corev1.AffinityPtrInput
+	// Tolerations is the tolerations to use for the pod.
+	Tolerations corev1.TolerationArrayInput
 	// NodeSelectors is the node selectors to use for the pod.
 	NodeSelectors pulumi.StringMapInput
 	// PriorityClassName is the name of the priority class to use for the pod.
@@ -279,6 +281,9 @@ func validateParams(params *AppParms) error {
 	// if params.PodAffinity == nil {
 	// 	return fmt.Errorf("PodAffinity cannot be nil")
 	// }
+	// if params.Tolerations == nil {
+	// 	return fmt.Errorf("Tolerations cannot be nil")
+	// }
 	// if params.NodeSelectors == nil {
 	// 	return fmt.Errorf("NodeSelectors cannot be nil")
 	// }
@@ -346,7 +351,54 @@ func mergeParams(
 		MaxReplicas:             10,
 		ImagePullPolicy:         "IfNotPresent",
 		ProgressDeadlineSeconds: 180,
-		PriorityClassName:       priorityclass.PriorityClassNormal,
+		Tolerations: corev1.TolerationArray{
+			corev1.TolerationArgs{
+				Key:      pulumi.String(label.NodeTaintNotReadyKey),
+				Operator: pulumi.String("Exists"),
+				Effect:   pulumi.String("NoExecute"),
+			},
+			corev1.TolerationArgs{
+				Key:      pulumi.String(label.NodeTaintUnreachableKey),
+				Operator: pulumi.String("Exists"),
+				Effect:   pulumi.String("NoExecute"),
+			},
+			corev1.TolerationArgs{
+				Key:      pulumi.String(label.NodeTaintDiskPressureKey),
+				Operator: pulumi.String("Exists"),
+				Effect:   pulumi.String("NoSchedule"),
+			},
+			corev1.TolerationArgs{
+				Key:      pulumi.String(label.NodeTaintMemoryPressureKey),
+				Operator: pulumi.String("Exists"),
+				Effect:   pulumi.String("NoSchedule"),
+			},
+			corev1.TolerationArgs{
+				Key:      pulumi.String(label.NodeTaintPIDPressureKey),
+				Operator: pulumi.String("Exists"),
+				Effect:   pulumi.String("NoSchedule"),
+			},
+			corev1.TolerationArgs{
+				Key:      pulumi.String(label.NodeTaintUnschedulableKey),
+				Operator: pulumi.String("Exists"),
+				Effect:   pulumi.String("NoSchedule"),
+			},
+			corev1.TolerationArgs{
+				Key:      pulumi.String(label.NodeTaintNetworkUnavailableKey),
+				Operator: pulumi.String("Exists"),
+				Effect:   pulumi.String("NoSchedule"),
+			},
+			corev1.TolerationArgs{
+				Key:      pulumi.String(label.NodeTaintUninitializedKey),
+				Operator: pulumi.String("Exists"),
+				Effect:   pulumi.String("NoSchedule"),
+			},
+			corev1.TolerationArgs{
+				Key:      pulumi.String(label.NodeTaintControlPlaneKey),
+				Operator: pulumi.String("Exists"),
+				Effect:   pulumi.String("NoSchedule"),
+			},
+		},
+		PriorityClassName: priorityclass.PriorityClassNormal,
 		TopologySpreadConstraints: corev1.TopologySpreadConstraintArray{
 			// Spread pods across regions, best effort
 			corev1.TopologySpreadConstraintArgs{
@@ -682,6 +734,7 @@ password ` + gitToken),
 					TopologySpreadConstraints: params.TopologySpreadConstraints,
 					NodeSelector:              params.NodeSelectors,
 					Affinity:                  params.PodAffinity,
+					Tolerations:               params.Tolerations,
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
 							EnvFrom: corev1.EnvFromSourceArray{
