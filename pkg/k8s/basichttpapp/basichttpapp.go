@@ -20,6 +20,7 @@ import (
 	"github.com/kemadev/infrastructure-components/pkg/private/costcenter"
 	"github.com/kemadev/infrastructure-components/pkg/private/customer"
 	"github.com/kemadev/infrastructure-components/pkg/private/dataclassification"
+	"github.com/kemadev/infrastructure-components/pkg/private/host"
 	"github.com/kemadev/runner-tools/pkg/git"
 	appsv1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/apps/v1"
 	autoscalingv2 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/autoscaling/v2"
@@ -362,8 +363,19 @@ func mergeParams(
 					pulumi.Map{
 						"path": pulumi.Map{
 							"type": pulumi.String("PathPrefix"),
-							// TODO check if matching correct pre path convention (/api/servce/version or w/e, take a look to defined version)
-							"value": pulumi.String("/"),
+							"value": pulumi.String(
+								strings.Replace(
+									strings.Replace(
+										host.URLMainApi.PathPattern,
+										"{entity}",
+										appName,
+										-1,
+									),
+									"{version}",
+									appVersion.String(),
+									-1,
+								),
+							),
 						},
 					},
 				},
@@ -1006,15 +1018,16 @@ password ` + gitToken),
 		Spec: &corev1.ServiceSpecArgs{
 			Ports: corev1.ServicePortArray{
 				&corev1.ServicePortArgs{
-					AppProtocol: pulumi.String("kubernetes.io/h2c"),
-					Port:        pulumi.Int(params.Port),
-					TargetPort:  pulumi.Int(params.Port),
-					Protocol:    pulumi.String("TCP"),
+					Name: pulumi.String("http"),
+					// AppProtocol: pulumi.String("kubernetes.io/h2c"),
+					Port: pulumi.Int(params.Port),
+					// TargetPort:  pulumi.Int(params.Port),
+					// Protocol:    pulumi.String("TCP"),
 				},
 			},
 			Selector: basicSelector,
 			// Prioritize close endpoints, best-effort, see https://kubernetes.io/docs/reference/networking/virtual-ips/#traffic-distribution
-			TrafficDistribution: pulumi.String("PreferClose"),
+			// TrafficDistribution: pulumi.String("PreferClose"),
 		},
 	})
 	if err != nil {
