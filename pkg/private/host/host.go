@@ -114,13 +114,16 @@ var (
 		Host:   "api." + domain.DomainKemaDotInternal.String(),
 	})
 
+	// ServiceNamePathPattern is the path pattern for service name, to be replaced by the service name in path matching.
+	ServiceNamePathPattern    = "{service}"
+	// ServiceVersionPathPattern is the path pattern for service version, to be replaced by the service version (major) in path matching.
+	ServiceVersionPathPattern = "{version}"
 	// URLMainApi is the URL for conventional [net/http.ServeMux] matching pattern every application / service should use,
 	// providing a common structure for all applications / services.
-	// All applications / services should use this pattern, `entity` being the service, i.e. the application's
-	// name, and `version` its SemVer version, without prefix `v`.
+	// All applications / services should use this pattern.
 	URLMainApi URL = URL{
 		BaseHost:    HostMainApi,
-		PathPattern: "{entity}/{version}/",
+		PathPattern: "/" + ServiceNamePathPattern + "/" + ServiceVersionPathPattern + "/",
 	}
 	// URLSecurityGuidelines is the URL for company's security guidelines & responsible disclosure procedure
 	URLSecurityGuidelines URL = URL{

@@ -337,6 +337,17 @@ func mergeParams(
 		return fmt.Errorf("error getting app version from git: %w", err)
 	}
 	defPort := 8080
+	pathPrefix := strings.Replace(
+		strings.Replace(
+			host.URLMainApi.PathPattern,
+			host.ServiceNamePathPattern,
+			appName,
+			-1,
+		),
+		host.ServiceVersionPathPattern,
+		strconv.Itoa(int(appVersion.Major)),
+		-1,
+	)
 	defParams := AppParms{
 		AppName:             appName,
 		ImageRef:            repoUrl,
@@ -347,8 +358,9 @@ func mergeParams(
 		RuntimeEnv:          runtimeEnv,
 		OTelEndpointUrl: url.URL{
 			Scheme: "grpc",
-			Host:   "string",
-			Path:   "string",
+			// TODO
+			Host: "string",
+			Path: "string",
 		},
 		OtelExporterCompression: "gzip",
 		ProjectUrl: func() url.URL {
@@ -362,20 +374,19 @@ func mergeParams(
 				"matches": pulumi.Array{
 					pulumi.Map{
 						"path": pulumi.Map{
-							"type": pulumi.String("PathPrefix"),
-							"value": pulumi.String(
-								strings.Replace(
-									strings.Replace(
-										host.URLMainApi.PathPattern,
-										"{entity}",
-										appName,
-										-1,
-									),
-									"{version}",
-									appVersion.String(),
-									-1,
-								),
-							),
+							"type":  pulumi.String("PathPrefix"),
+							"value": pulumi.String(pathPrefix),
+						},
+					},
+				},
+				"filters": pulumi.Array{
+					pulumi.Map{
+						"type": pulumi.String("URLRewrite"),
+						"urlRewrite": pulumi.Map{
+							"path": pulumi.Map{
+								"type":               pulumi.String("ReplacePrefixMatch"),
+								"replacePrefixMatch": pulumi.String("/"),
+							},
 						},
 					},
 				},
