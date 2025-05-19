@@ -10,22 +10,29 @@ import (
 )
 
 const (
-	// SharedGatewayName is the name of the namespace where the shared gateway resources are deployed.
-	SharedGatewayName = "cilium-shared-gateway"
+	// SharedGatewayName is the name of the shared gateway.
+	SharedGatewayName = "shared-gateway"
+	// SharedGatewayNamespace is the namespace where the shared gateway resources are deployed.
+	SharedGatewayNamespace = "shared-gateway"
 )
-
 
 // deployGatewayResources deploys the Gateway and LB-IPAM resources for all domains, creating setting
 // up TLS termination and wildcard certificates for each domain.
-func deployGatewayResources(
+func DeployGatewayResources(
 	ctx *pulumi.Context,
-	namespace pulumi.StringPtrInput,
-	sharedLabels pulumi.StringMapInput,
 	certIssuerName string,
 	lbPoolCIDR net.IPNet,
 	gatewayIPs []net.IP,
 	domains []string,
 ) error {
+	sharedLabels := label.DefaultLabels(
+		pulumi.String("shared-gateway"),
+		pulumi.String("shared-gateway"),
+		pulumi.String("1"),
+		pulumi.String("gateway"),
+		pulumi.String("network"),
+	)
+
 	_, err := yamlv2.NewConfigGroup(ctx, "lb-pool-1", &yamlv2.ConfigGroupArgs{
 		Objs: pulumi.Array{
 			pulumi.Map{
@@ -33,7 +40,7 @@ func deployGatewayResources(
 				"kind":       pulumi.String("CiliumLoadBalancerIPPool"),
 				"metadata": pulumi.Map{
 					"name":      pulumi.String("lb-pool-1"),
-					"namespace": namespace,
+					"namespace": pulumi.String(SharedGatewayNamespace),
 					"labels":    sharedLabels,
 				},
 				"spec": pulumi.Map{
@@ -57,7 +64,7 @@ func deployGatewayResources(
 				"kind":       pulumi.String("CiliumL2AnnouncementPolicy"),
 				"metadata": pulumi.Map{
 					"name":      pulumi.String("announcement-policy-1"),
-					"namespace": namespace,
+					"namespace": pulumi.String(SharedGatewayNamespace),
 					"labels":    sharedLabels,
 				},
 				"spec": pulumi.Map{
@@ -86,7 +93,7 @@ func deployGatewayResources(
 				"kind":       pulumi.String("Gateway"),
 				"metadata": pulumi.Map{
 					"name":      pulumi.String(SharedGatewayName),
-					"namespace": namespace,
+					"namespace": pulumi.String(SharedGatewayNamespace),
 					"labels":    sharedLabels,
 					"annotations": pulumi.Map{
 						// Integrate with cert-manager

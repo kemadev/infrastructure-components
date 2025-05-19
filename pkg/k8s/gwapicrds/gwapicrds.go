@@ -1,4 +1,4 @@
-package gwapi
+package gwapicrds
 
 import (
 	"fmt"
