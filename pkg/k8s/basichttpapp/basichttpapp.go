@@ -24,6 +24,7 @@ import (
 	autoscalingv2 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/autoscaling/v2"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
+	yamlv2 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/yaml/v2"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -74,6 +75,10 @@ type AppParms struct {
 	MonitoringUrl url.URL
 	// Port is the port on which the application is listening.
 	Port int
+	// HTTPHostnames is the list of hostnames the application is listening on.
+	HTTPHostnames []string
+	// HTTPRules is the list of HTTPRoute rules to use for the application.
+	HTTPRules pulumi.ArrayInput
 	// HTTPReadTimeout is the HTTP read timeout, in seconds.
 	HTTPReadTimeout int
 	// HTTPWriteTimeout is the HTTP write timeout, in seconds.
@@ -248,6 +253,12 @@ func validateParams(params *AppParms) error {
 	if params.Port == 0 {
 		return fmt.Errorf("Port cannot be zero")
 	}
+	// if len(params.HTTPHostnames) == 0 {
+	// 	return fmt.Errorf("HTTPHostnames cannot be empty")
+	// }
+	if params.HTTPRules == nil {
+		return fmt.Errorf("HTTPRules cannot be nil")
+	}
 	if params.HTTPReadTimeout == 0 {
 		return fmt.Errorf("HTTPReadTimeout cannot be zero")
 	}
@@ -323,6 +334,7 @@ func mergeParams(
 	if err != nil {
 		return fmt.Errorf("error getting app version from git: %w", err)
 	}
+	defPort := 8080
 	defParams := AppParms{
 		AppName:             appName,
 		ImageRef:            repoUrl,
@@ -342,7 +354,27 @@ func mergeParams(
 			t.Scheme = "https"
 			return t
 		}(),
-		Port:                    8080,
+		Port: defPort,
+		HTTPRules: pulumi.Array{
+			pulumi.Map{
+				"matches": pulumi.Array{
+					pulumi.Map{
+						"path": pulumi.Map{
+							"type": pulumi.String("PathPrefix"),
+							// TODO check if matching correct pre path convention (/api/servce/version or w/e, take a look to defined version)
+							"value": pulumi.String("/"),
+						},
+					},
+				},
+				"backendRefs": pulumi.Array{
+					pulumi.Map{
+						"name":   pulumi.String(appInstance),
+						"port":   pulumi.Int(defPort),
+						"weight": pulumi.Int(100),
+					},
+				},
+			},
+		},
 		HTTPReadTimeout:         5,
 		HTTPWriteTimeout:        10,
 		CPURequestMiliCPU:       500,
@@ -987,5 +1019,46 @@ password ` + gitToken),
 	if err != nil {
 		return err
 	}
+
+	// Application HTTP route
+	hostnames := make(
+		pulumi.StringArray,
+		len(params.HTTPHostnames),
+	)
+	if len(params.HTTPHostnames) == 0 {
+		hostnames = nil
+	} else {
+		for i, host := range params.HTTPHostnames {
+			hostnames[i] = pulumi.String(host)
+		}
+	}
+	_, err = yamlv2.NewConfigGroup(ctx, "http-route", &yamlv2.ConfigGroupArgs{
+		Objs: pulumi.Array{
+			pulumi.Map{
+				"apiVersion": pulumi.String("gateway.networking.k8s.io/v1"),
+				"kind":       pulumi.String("HTTPRoute"),
+				"metadata": pulumi.Map{
+					"name":      pulumi.String("http-route"),
+					"namespace": pulumi.String(namespace),
+					"labels":    sharedLabels,
+				},
+				"spec": pulumi.Map{
+					"parentRefs": pulumi.Array{
+						pulumi.Map{
+							// TODO
+							"name":      pulumi.String("shared-gateway"),
+							"namespace": pulumi.String("shared-gateway"),
+						},
+					},
+					"hotnames": hostnames,
+					"rules":    params.HTTPRules,
+				},
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

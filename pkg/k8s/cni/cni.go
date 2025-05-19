@@ -13,6 +13,11 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
+const (
+	SharedGatewayName = "cilium-shared-gateway"
+	Namespace         = "cilium"
+)
+
 // DeployCNI deploys the Cilium CNI using Helm, returning the corresponding Release object and an error if any.
 func DeployCNI(
 	ctx *pulumi.Context,
@@ -36,10 +41,10 @@ func DeployCNI(
 		pulumi.String("network"),
 	)
 
-	const cniNsName = cniName
-	ns, err := corev1.NewNamespace(ctx, cniNsName, &corev1.NamespaceArgs{
+	ns, err := corev1.NewNamespace(ctx, Namespace, &corev1.NamespaceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
-			Namespace: pulumi.String(cniNsName),
+			Name:      pulumi.String(Namespace),
+			Namespace: pulumi.String(Namespace),
 			Labels:    sharedLabels,
 		},
 	})
@@ -380,7 +385,7 @@ func deployGatewayResources(
 				"apiVersion": pulumi.String("gateway.networking.k8s.io/v1"),
 				"kind":       pulumi.String("Gateway"),
 				"metadata": pulumi.Map{
-					"name":      pulumi.String("cilium-shared-gateway"),
+					"name":      pulumi.String(SharedGatewayName),
 					"namespace": namespace,
 					"labels":    sharedLabels,
 					"annotations": pulumi.Map{
