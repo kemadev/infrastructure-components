@@ -419,9 +419,10 @@ func deployGatewayResources(
 						}
 						for _, domain := range domains {
 							l := pulumi.Map{
-								"name":     pulumi.String(domain),
+								"name":     pulumi.String(domain + "-wildcard"),
 								"port":     pulumi.Int(443),
 								"protocol": pulumi.String("HTTPS"),
+								"hostname": pulumi.String("*." + domain),
 								"tls": pulumi.Map{
 									"mode": pulumi.String("Terminate"),
 									"certificateRefs": pulumi.Array{
