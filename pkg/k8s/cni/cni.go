@@ -404,12 +404,21 @@ func deployGatewayResources(
 					}(),
 					"gatewayClassName": pulumi.String("cilium"),
 					"listeners": func() pulumi.ArrayInput {
-						if len(domains) == 0 {
-							return nil
+						var listeners pulumi.Array = nil
+						if ctx.Stack() == "dev" {
+							listeners = append(listeners, pulumi.Map{
+								"name":     pulumi.String("http"),
+								"port":     pulumi.Int(80),
+								"protocol": pulumi.String("HTTP"),
+								"allowedRoutes": pulumi.Map{
+									"namespaces": pulumi.Map{
+										"from": pulumi.String("All"),
+									},
+								},
+							})
 						}
-						listeners := make(pulumi.Array, len(domains))
-						for i, domain := range domains {
-							listeners[i] = pulumi.Map{
+						for _, domain := range domains {
+							l := pulumi.Map{
 								"name":     pulumi.String(domain),
 								"port":     pulumi.Int(443),
 								"protocol": pulumi.String("HTTPS"),
@@ -435,6 +444,7 @@ func deployGatewayResources(
 									},
 								},
 							}
+							listeners = append(listeners, l)
 						}
 						return listeners
 					}(),
