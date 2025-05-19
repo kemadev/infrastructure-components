@@ -413,7 +413,14 @@ func deployGatewayResources(
 								"protocol": pulumi.String("HTTP"),
 								"allowedRoutes": pulumi.Map{
 									"namespaces": pulumi.Map{
-										"from": pulumi.String("All"),
+										"from": pulumi.String("Selector"),
+										"selector": pulumi.Map{
+											"matchLabels": pulumi.Map{
+												label.SharedGatewayAccessLabelKey: pulumi.String(
+													label.SharedGatewayAccessLabelValue,
+												),
+											},
+										},
 									},
 								},
 							})
