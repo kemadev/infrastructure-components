@@ -76,6 +76,10 @@ type AppParms struct {
 	ProjectUrl url.URL
 	// MonitoringUrl is the URL of the monitoring system, e.g. the URL of the APM.
 	MonitoringUrl url.URL
+	// Capabilities is the list of capabilities to add to the container.
+	Capabilities corev1.CapabilitiesPtrInput
+	// RunAsRoot is a boolean indicating if the container should run as root.
+	RunAsRoot bool
 	// Port is the port on which the application is listening.
 	Port int
 	// HTTPHostnames is the list of hostnames the application is listening on.
@@ -253,6 +257,12 @@ func validateParams(params *AppParms) error {
 	if params.MonitoringUrl.String() == "" {
 		return fmt.Errorf("MonitoringUrl cannot be empty")
 	}
+	if params.Capabilities == nil {
+		return fmt.Errorf("Capabilities cannot be nil")
+	}
+	// if params.RunAsRoot {
+	// 	return fmt.Errorf("RunAsRoot cannot be true")
+	// }
 	if params.Port == 0 {
 		return fmt.Errorf("Port cannot be zero")
 	}
@@ -369,7 +379,13 @@ func mergeParams(
 			t.Scheme = "https"
 			return t
 		}(),
-		Port: defPort,
+		Capabilities: corev1.CapabilitiesArgs{
+			Drop: pulumi.StringArray{
+				pulumi.String("ALL"),
+			},
+		},
+		RunAsRoot: false,
+		Port:      defPort,
 		HTTPRules: pulumi.Array{
 			pulumi.Map{
 				"matches": pulumi.Array{
@@ -883,9 +899,16 @@ password ` + gitToken),
 										// Mountnetrc file volume in dev
 										&corev1.VolumeMountArgs{
 											Name: gitSecret.Metadata.Name().Elem(),
-											MountPath: pulumi.String(
-												"/home/nonroot/" + netRcFileName,
-											),
+											MountPath: func() pulumi.String {
+												if params.RunAsRoot {
+													return pulumi.String(
+														"/root/" + netRcFileName,
+													)
+												}
+												return pulumi.String(
+													"/home/nonroot/" + netRcFileName,
+												)
+											}(),
 											SubPath: pulumi.String(netRcFileName),
 										},
 									}
@@ -894,15 +917,11 @@ password ` + gitToken),
 							}(),
 							SecurityContext: corev1.SecurityContextArgs{
 								AllowPrivilegeEscalation: pulumi.Bool(false),
-								RunAsNonRoot:             pulumi.Bool(true),
+								RunAsNonRoot:             pulumi.Bool(!params.RunAsRoot),
 								SeccompProfile: corev1.SeccompProfileArgs{
 									Type: pulumi.String("RuntimeDefault"),
 								},
-								Capabilities: corev1.CapabilitiesArgs{
-									Drop: pulumi.StringArray{
-										pulumi.String("ALL"),
-									},
-								},
+								Capabilities: params.Capabilities,
 							},
 							ImagePullPolicy: pulumi.String(params.ImagePullPolicy),
 							Resources: corev1.ResourceRequirementsArgs{
