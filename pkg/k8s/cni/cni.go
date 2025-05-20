@@ -184,6 +184,7 @@ func DeployCNI(
 					// Expose envoy metrics
 					"enabled": pulumi.Bool(true),
 				},
+				"idleTimeoutDurationSeconds": pulumi.Int(1),
 				"log": pulumi.Map{
 					// Enable Envoy structured logging, see https://www.envoyproxy.io/docs/envoy/latest/operations/cli#cmdoption-log-format & https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/bootstrap/v3/bootstrap.proto#envoy-v3-api-field-config-bootstrap-v3-bootstrap-applicationlogconfig-logformat-json-format
 					// Inspired from OpenTelemetry format

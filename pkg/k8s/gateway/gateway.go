@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/kemadev/framework-go/pkg/config"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/label"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
@@ -130,7 +131,7 @@ func DeployGatewayResources(
 					"gatewayClassName": pulumi.String("cilium"),
 					"listeners": func() pulumi.ArrayInput {
 						var listeners pulumi.Array = nil
-						if ctx.Stack() == "dev" {
+						if ctx.Stack() == config.Env_dev {
 							// Let HTTP traffic through for dev
 							listeners = append(listeners, pulumi.Map{
 								"name":     pulumi.String("http-dev"),
