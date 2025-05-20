@@ -1,7 +1,5 @@
 package label
 
-import "github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-
 // Application labels
 const (
 	// LabelAppNameKey is the label key for the name of the application, see https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/#labels.
@@ -18,35 +16,35 @@ const (
 	LabelAppMangedByKey = "app.kubernetes.io/managed-by"
 )
 
-// DefaultLabels returns a set of default labels for the application instance as per Kubernetes convention,
-// see https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/#labels
-func DefaultLabels(
-	appName pulumi.StringInput,
-	appInstance pulumi.StringInput,
-	appVersion pulumi.StringInput,
-	appComponent pulumi.StringInput,
-	appNamespace pulumi.StringInput,
-) pulumi.StringMap {
-	return pulumi.StringMap{
-		LabelAppNameKey:      appName,
-		LabelAppInstanceKey:  appInstance,
-		LabelAppVersionKey:   appVersion,
-		LabelAppComponentKey: appComponent,
-		LabelAppNamespaceKey: appNamespace,
-		LabelAppMangedByKey:  pulumi.String("pulumi"),
-	}
-}
+// // DefaultLabels returns a set of default labels for the application instance as per Kubernetes convention,
+// // see https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/#labels
+// func DefaultLabels(
+// 	appName pulumi.StringInput,
+// 	appInstance pulumi.StringInput,
+// 	appVersion pulumi.StringInput,
+// 	appComponent pulumi.StringInput,
+// 	appNamespace pulumi.StringInput,
+// ) pulumi.StringMap {
+// 	return pulumi.StringMap{
+// 		LabelAppNameKey:      appName,
+// 		LabelAppInstanceKey:  appInstance,
+// 		LabelAppVersionKey:   appVersion,
+// 		LabelAppComponentKey: appComponent,
+// 		LabelAppNamespaceKey: appNamespace,
+// 		LabelAppMangedByKey:  pulumi.String("pulumi"),
+// 	}
+// }
 
-// DefaultLabels returns a set of default labels for the application instance as per Kubernetes convention,
-// see https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/#labels
-func DefaultSelector(
-	appInstance pulumi.StringInput,
-	defaultLabels pulumi.StringMap,
-) pulumi.StringMap {
-	return pulumi.StringMap{
-		LabelAppInstanceKey: defaultLabels[LabelAppInstanceKey],
-	}
-}
+// // DefaultLabels returns a set of default labels for the application instance as per Kubernetes convention,
+// // see https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/#labels
+// func DefaultSelector(
+// 	appInstance pulumi.StringInput,
+// 	defaultLabels pulumi.StringMap,
+// ) pulumi.StringMap {
+// 	return pulumi.StringMap{
+// 		LabelAppInstanceKey: defaultLabels[LabelAppInstanceKey],
+// 	}
+// }
 
 // Topology labels
 const (

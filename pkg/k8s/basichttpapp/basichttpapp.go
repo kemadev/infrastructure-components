@@ -15,6 +15,7 @@ import (
 	"github.com/kemadev/infrastructure-components/pkg/k8s/gateway"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/label"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/priorityclass"
+	"github.com/kemadev/infrastructure-components/pkg/k8s/pulumilabel"
 	"github.com/kemadev/infrastructure-components/pkg/private/businessunit"
 	"github.com/kemadev/infrastructure-components/pkg/private/complianceframework"
 	"github.com/kemadev/infrastructure-components/pkg/private/costcenter"
@@ -627,14 +628,14 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		return fmt.Errorf("failed to apply default application parameters: %w", err)
 	}
 
-	sharedLabels := label.DefaultLabels(
+	sharedLabels := pulumilabel.DefaultLabels(
 		pulumi.String(params.AppName),
 		pulumi.String(appInstance),
 		pulumi.String(params.AppVersion.String()),
 		pulumi.String(params.AppComponent),
 		pulumi.String(params.AppNamespace),
 	)
-	basicSelector := label.DefaultSelector(
+	basicSelector := pulumilabel.DefaultSelector(
 		pulumi.String(appInstance),
 		sharedLabels,
 	)

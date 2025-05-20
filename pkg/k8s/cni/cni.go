@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/kemadev/infrastructure-components/pkg/k8s/label"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/priorityclass"
+	"github.com/kemadev/infrastructure-components/pkg/k8s/pulumilabel"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/helm/v3"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
@@ -29,7 +29,7 @@ func DeployCNI(
 	// TODO add renovate tracking
 	const cniVersion = "1.17.4"
 
-	sharedLabels := label.DefaultLabels(
+	sharedLabels := pulumilabel.DefaultLabels(
 		pulumi.String(cniName),
 		pulumi.String(cniName),
 		pulumi.String(cniVersion),

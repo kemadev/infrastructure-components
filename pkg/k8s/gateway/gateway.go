@@ -6,6 +6,7 @@ import (
 
 	"github.com/kemadev/framework-go/pkg/config"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/label"
+	"github.com/kemadev/infrastructure-components/pkg/k8s/pulumilabel"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	yamlv2 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/yaml/v2"
@@ -28,7 +29,7 @@ func DeployGatewayResources(
 	gatewayIPs []net.IP,
 	domains []string,
 ) error {
-	sharedLabels := label.DefaultLabels(
+	sharedLabels := pulumilabel.DefaultLabels(
 		pulumi.String("shared-gateway"),
 		pulumi.String("shared-gateway"),
 		pulumi.String("1"),
