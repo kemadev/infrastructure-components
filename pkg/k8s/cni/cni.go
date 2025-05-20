@@ -11,6 +11,7 @@ import (
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	yamlv2 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/yaml/v2"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
 const (
@@ -187,14 +188,14 @@ func DeployCNI(
 					// Enable Envoy structured logging, see https://www.envoyproxy.io/docs/envoy/latest/operations/cli#cmdoption-log-format & https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/bootstrap/v3/bootstrap.proto#envoy-v3-api-field-config-bootstrap-v3-bootstrap-applicationlogconfig-logformat-json-format
 					// Inspired from OpenTelemetry format
 					"format_json": pulumi.Map{
-						"Timestamp":          pulumi.String("%Y-%m-%dT%T.%e%z"),
-						"SeverityText":       pulumi.String("%l"),
-						"Resource":           pulumi.String("%n"),
-						"Body":               pulumi.String("%j"),
-						"code.file.path":     pulumi.String("%g"),
-						"code.line.number":   pulumi.String("%#"),
-						"code.function.name": pulumi.String("%!"),
-						"thread.id":          pulumi.String("%t"),
+						"Timestamp":                       pulumi.String("%Y-%m-%dT%T.%e%z"),
+						"SeverityText":                    pulumi.String("%l"),
+						"Resource":                        pulumi.String("%n"),
+						"Body":                            pulumi.String("%j"),
+						string(semconv.CodeFilepathKey):   pulumi.String("%g"),
+						string(semconv.CodeLineNumberKey): pulumi.String("%#"),
+						string(semconv.CodeFunctionKey):   pulumi.String("%!"),
+						string(semconv.ThreadIDKey):       pulumi.String("%t"),
 					},
 					"format": nil,
 				},
