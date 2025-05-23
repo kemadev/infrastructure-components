@@ -44,17 +44,17 @@ func addNodeLabels(ctx *pulumi.Context, clusterName string, cluster *local.Comma
 	zone3 := "region-1-3"
 	nodesMultiZoneHA := map[string]map[string]string{
 		clusterName + "-control-plane": {
-			label.NodeRoleControlPlaneLabelKey: label.NodeRoleControlPlaneLabelValue,
+			label.NodeRoleControlPlaneLabelKey: label.NodeRoleControlPlane,
 			label.LabelTopologyRegionKey:       region1,
 			label.LabelTopologyZoneKey:         zone1,
 		},
 		clusterName + "-control-plane2": {
-			label.NodeRoleControlPlaneLabelKey: label.NodeRoleControlPlaneLabelValue,
+			label.NodeRoleControlPlaneLabelKey: label.NodeRoleControlPlane,
 			label.LabelTopologyRegionKey:       region1,
 			label.LabelTopologyZoneKey:         zone2,
 		},
 		clusterName + "-control-plane3": {
-			label.NodeRoleControlPlaneLabelKey: label.NodeRoleControlPlaneLabelValue,
+			label.NodeRoleControlPlaneLabelKey: label.NodeRoleControlPlane,
 			label.LabelTopologyRegionKey:       region1,
 			label.LabelTopologyZoneKey:         zone3,
 		},
@@ -109,7 +109,7 @@ func addNodeLabels(ctx *pulumi.Context, clusterName string, cluster *local.Comma
 	}
 	nodesMultiZone := map[string]map[string]string{
 		clusterName + "-control-plane": {
-			label.NodeRoleControlPlaneLabelKey: label.NodeRoleControlPlaneLabelValue,
+			label.NodeRoleControlPlaneLabelKey: label.NodeRoleControlPlane,
 			label.LabelTopologyRegionKey:       region1,
 			label.LabelTopologyZoneKey:         zone1,
 		},

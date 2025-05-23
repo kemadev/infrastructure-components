@@ -68,8 +68,8 @@ const (
 const (
 	// NodeRoleControlPlaneValue is the label key for control plane nodes.
 	NodeRoleControlPlaneLabelKey = "node-role.kubernetes.io/control-plane"
-	// NodeRoleControlPlaneLabelValue is the label value for control plane nodes. Empty value, following Kubernetes convention, see https://kubernetes.io/docs/reference/labels-annotations-taints/#node-role-kubernetes-io-control-plane.
-	NodeRoleControlPlaneLabelValue = ""
+	// NodeRoleControlPlane is the label value for control plane nodes. Empty value, following Kubernetes convention, see https://kubernetes.io/docs/reference/labels-annotations-taints/#node-role-kubernetes-io-control-plane.
+	NodeRoleControlPlane = ""
 
 	// NodeRoleComputeLabelKey is the label key for compute nodes.
 	NodeRoleComputeLabelKey = "node-role.kubernetes.io/compute"
@@ -103,8 +103,8 @@ const (
 
 	// NodeRoleGPUValue is the label key for GPU nodes.
 	NodeRoleGenericGPULabelKey = "node-role.kubernetes.io/gpu"
-	// NodeRoleGenericGPULabelValue is the label value for generic GPU nodes.
-	NodeRoleGenericGPULabelValue = "generic"
+	// NodeRoleGenericGPU is the label value for generic GPU nodes.
+	NodeRoleGenericGPU = "generic"
 )
 
 // Labels for shared gateway access, enabling the usage of the shared gateway
