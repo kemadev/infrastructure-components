@@ -222,6 +222,7 @@ func DeployCNI(
 				// Use Maglev consistent hashing, see https://docs.cilium.io/en/stable/network/kubernetes/kubeproxy-free/#maglev-consistent-hashing
 				"algorithm": pulumi.String("maglev"),
 			},
+			// TODO enable mTLS
 			// "authentication": pulumi.Map{
 			// 	"mutual": pulumi.Map{
 			// 		"spire": pulumi.Map{
