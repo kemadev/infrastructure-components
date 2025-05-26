@@ -2,6 +2,7 @@ package cni
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/kemadev/infrastructure-components/pkg/k8s/priorityclass"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/pulumilabel"
@@ -22,10 +23,20 @@ func DeployCNI(
 	ctx *pulumi.Context,
 	gwapiCrd *yamlv2.ConfigFile,
 	clusterName string,
+	ipv6NativeCIDR net.IPNet,
 ) (*helm.Release, error) {
 	const cniName = "cilium"
 	// TODO add renovate tracking
 	const cniVersion = "1.17.4"
+
+	maskSize, _ := ipv6NativeCIDR.Mask.Size()
+	if maskSize > 64 {
+		return nil, fmt.Errorf(
+			"invalid IPv6 native CIDR %s, must have 64 bits mask at most, got %d bits",
+			ipv6NativeCIDR.String(),
+			maskSize,
+		)
+	}
 
 	sharedLabels := pulumilabel.DefaultLabels(
 		pulumi.String(cniName),
@@ -291,12 +302,12 @@ func DeployCNI(
 				"requireIPv6PodCIDR": pulumi.Bool(true),
 			},
 			// Set cluster network CIDR, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
-			"ipv6NativeRoutingCIDR": pulumi.String("fd00:3::/64"),
+			"ipv6NativeRoutingCIDR": pulumi.String(ipv6NativeCIDR.String()),
 			"ipam": pulumi.Map{
 				"operator": pulumi.Map{
 					// Use cilium managed native routing
 					"clusterPoolIPv6PodCIDRList": pulumi.StringArray{
-						pulumi.String("fd00:3::/104"),
+						pulumi.String(ipv6NativeCIDR.IP.String() + "/104"),
 					},
 				},
 			},
