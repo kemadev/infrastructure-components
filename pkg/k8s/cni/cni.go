@@ -2,7 +2,6 @@ package cni
 
 import (
 	"fmt"
-	"net"
 
 	"github.com/kemadev/infrastructure-components/pkg/k8s/priorityclass"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/pulumilabel"
@@ -23,7 +22,6 @@ func DeployCNI(
 	ctx *pulumi.Context,
 	gwapiCrd *yamlv2.ConfigFile,
 	clusterName string,
-	nativeIPv4CIDR net.IPNet,
 ) (*helm.Release, error) {
 	const cniName = "cilium"
 	// TODO add renovate tracking
@@ -100,7 +98,7 @@ func DeployCNI(
 				"type": pulumi.String("wireguard"),
 				// Encrypt pure node-to-node traffic
 				"nodeEncryption": pulumi.Bool(true),
-				// Force pod-to-pod encrpytion in all case, see https://docs.cilium.io/en/stable/security/network/encryption/#egress-traffic-to-not-yet-discovered-remote-endpoints-may-be-unencrypted
+				// TODO Force pod-to-pod encrpytion in all case, see https://docs.cilium.io/en/stable/security/network/encryption/#egress-traffic-to-not-yet-discovered-remote-endpoints-may-be-unencrypted (IPv6 not supported)
 				// "strictMode":     pulumi.String("enabled"),
 			},
 			"externalIPs": pulumi.Map{
@@ -129,6 +127,10 @@ func DeployCNI(
 					"rollOutPods": pulumi.Bool(true),
 					// Set Hubble as moderate priority
 					"priorityClassName": pulumi.String(priorityclass.PriorityClassModerate),
+					"prometheus": pulumi.Map{
+						// Expose Hubble relay metrics
+						"enabled": pulumi.Bool(true),
+					},
 				},
 				"ui": pulumi.Map{
 					// Enable Hubble UI
@@ -137,6 +139,14 @@ func DeployCNI(
 					"rollOutPods": pulumi.Bool(true),
 					// Set Hubble as moderate priority
 					"priorityClassName": pulumi.String(priorityclass.PriorityClassModerate),
+					"livenessProbe": pulumi.Map{
+						// Enable Hubble UI liveness probe
+						"enabled": pulumi.Bool(true),
+					},
+					"readinessProbe": pulumi.Map{
+						// Enable Hubble UI readiness probe
+						"enabled": pulumi.Bool(true),
+					},
 				},
 				"metrics": pulumi.Map{
 					// Expose Hubble metrics
@@ -212,33 +222,29 @@ func DeployCNI(
 				// Use Maglev consistent hashing, see https://docs.cilium.io/en/stable/network/kubernetes/kubeproxy-free/#maglev-consistent-hashing
 				"algorithm": pulumi.String("maglev"),
 			},
-			"authentication": pulumi.Map{
-				"mutual": pulumi.Map{
-					"spire": pulumi.Map{
-						// Enable SPIRE integration for mTLS, see https://docs.cilium.io/en/stable/security/network/encryption-wireguard/
-						"enabled": pulumi.Bool(true),
-						"install": pulumi.Map{
-							"server": pulumi.Map{
-								"ca": pulumi.Map{
-									// Set CA key algorithm, see https://spiffe.io/docs/latest/deploying/spire_server/#server-configuration-file
-									"keyType": pulumi.String("ec-p384"),
-								},
-							},
-						},
-					},
-				},
-			},
+			// "authentication": pulumi.Map{
+			// 	"mutual": pulumi.Map{
+			// 		"spire": pulumi.Map{
+			// 			// Enable SPIRE integration for mTLS, see https://docs.cilium.io/en/stable/security/network/encryption-wireguard/
+			// 			"enabled": pulumi.Bool(true),
+			// 			"install": pulumi.Map{
+			// 				"server": pulumi.Map{
+			// 					"ca": pulumi.Map{
+			// 						// Set CA key algorithm, see https://spiffe.io/docs/latest/deploying/spire_server/#server-configuration-file
+			// 						"keyType": pulumi.String("ec-p384"),
+			// 					},
+			// 				},
+			// 			},
+			// 		},
+			// 	},
+			// },
 			"l2announcements": pulumi.Map{
 				// Enable L2 announcements (see https://docs.cilium.io/en/stable/network/l2-announcements/), enabling LB IPAM, see https://docs.cilium.io/en/stable/network/lb-ipam/
 				"enabled": pulumi.Bool(true),
 			},
-			"endpointRoutes": pulumi.Map{
-				// Enable use of per endpoint routes instead of routing via cilium_host interface
-				"enabled": pulumi.Bool(true),
-			},
 			"bpf": pulumi.Map{
 				// Enable masquerading, see https://docs.cilium.io/en/stable/network/concepts/masquerading/
-				"masquerade": pulumi.Bool(true),
+				// "masquerade": pulumi.Bool(true),
 				// Mode for Pod devices for the core datapath
 				"dataPathMode": pulumi.String("netkit"),
 				// Enables pre-allocation of eBPF map values
@@ -266,29 +272,33 @@ func DeployCNI(
 				// Set Maglev table size, see https://docs.cilium.io/en/latest/network/kubernetes/kubeproxy-free/#maglev-consistent-hashing
 				"tableSize": pulumi.Int(16381),
 			},
-			"ipam": pulumi.Map{
-				// Let cilium assign per-node PodCIDRs, see https://docs.cilium.io/en/stable/network/concepts/ipam/cluster-pool/
-				"mode": pulumi.String("cluster-pool"),
-			},
 			// Use packet forwarding instead of encapsulation, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
 			"routingMode": pulumi.String("native"),
 			// Load routes in Linux kernel, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
 			"autoDirectNodeRoutes": pulumi.Bool(true),
-			// TODO Disable IPv4 (disable in kind too)
 			"ipv4": pulumi.Map{
+				// Disable IPv4
+				"enabled": pulumi.Bool(false),
+			},
+			// "ipv4NativeRoutingCIDR": pulumi.String(nativeIPv4CIDR.String()),
+			"ipv6": pulumi.Map{
+				// Enable IPv6
 				"enabled": pulumi.Bool(true),
 			},
+			"k8s": pulumi.Map{
+				// Wait for PodCIDR allocation
+				"requireIPv6PodCIDR": pulumi.Bool(true),
+			},
 			// Set cluster network CIDR, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
-			"ipv4NativeRoutingCIDR": pulumi.String(nativeIPv4CIDR.String()),
-			// TODO Enable IPv6
-			// "ipv6": pulumi.Map{
-			// 	"enabled": pulumi.Bool(true),
-			// },
-			// "ipv6NativeRoutingCIDR": pulumi.String("fd12:3456:789a::/48"),
-			// "nat46x64Gateway": pulumi.Map{
-			// 	// TODO Enable NAT gateway, see https://isovalent.com/blog/post/cilium-release-112/#nat46-nat64
-			// 	"enabled": pulumi.Bool(true),
-			// },
+			"ipv6NativeRoutingCIDR": pulumi.String("fd00:3::/64"),
+			"ipam": pulumi.Map{
+				"operator": pulumi.Map{
+					// Use cilium managed native routing
+					"clusterPoolIPv6PodCIDRList": pulumi.StringArray{
+						pulumi.String("fd00:3::/104"),
+					},
+				},
+			},
 		},
 	}, pulumi.DependsOn([]pulumi.Resource{gwapiCrd}))
 	if err != nil {
