@@ -65,6 +65,7 @@ func DeployCNI(
 		Values: pulumi.All(
 			clusterNativeRoutingCIDR,
 		).ApplyT(func(args []interface{}) pulumi.Map {
+			nativeRoutingSubnet := args[0].(string)
 			return pulumi.Map{
 				"debug": func() pulumi.MapInput {
 					if ctx.Stack() != "dev" {
@@ -300,12 +301,12 @@ func DeployCNI(
 					"requireIPv6PodCIDR": pulumi.Bool(true),
 				},
 				// Set cluster network CIDR, see https://docs.cilium.io/en/stable/network/concepts/routing/#native-routing
-				"ipv6NativeRoutingCIDR": pulumi.String(args[0].(string) + "::/64"),
+				"ipv6NativeRoutingCIDR": pulumi.String(nativeRoutingSubnet + "::/64"),
 				"ipam": pulumi.Map{
 					"operator": pulumi.Map{
 						// Use cilium managed native routing
 						"clusterPoolIPv6PodCIDRList": pulumi.StringArray{
-							pulumi.String(args[0].(string) + "::/104"),
+							pulumi.String(nativeRoutingSubnet + "::/104"),
 						},
 					},
 				},
