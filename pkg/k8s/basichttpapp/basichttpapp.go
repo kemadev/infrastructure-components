@@ -350,7 +350,7 @@ func mergeParams(
 	defPort := 8080
 	pathPrefix := strings.Replace(
 		strings.Replace(
-			host.URLMainApi.PathPattern,
+			host.URLMainApi(appName, appVersion.String()).String(),
 			host.ServiceNamePathPattern,
 			appName,
 			-1,
