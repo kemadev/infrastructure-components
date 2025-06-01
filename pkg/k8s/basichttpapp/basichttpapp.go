@@ -625,8 +625,8 @@ func mergeParams(
 	return nil
 }
 
+// checkChangemeParams checks if any of the parameters is set to default changeme-like value, returning true if any of them is, false otherwise.
 func checkChangemeParams(params AppParms) bool {
-	// Check if any of the parameters is set to the default "changeme" value
 	return params.AppName == "changeme" ||
 		params.AppNamespace == "changeme" ||
 		params.AppComponent == "changeme" ||
