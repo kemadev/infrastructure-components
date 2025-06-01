@@ -23,7 +23,7 @@ import (
 // placed in main package for ease of demo purpose only
 
 // Name for telemetry, should reflect go import structure.
-const name = "github.com/kemadev/framework-go/cmd/main"
+const name = "github.com/kemadev/infrastructure-components/cmd/main"
 
 // Telemetry components should be package-scoped.
 var (

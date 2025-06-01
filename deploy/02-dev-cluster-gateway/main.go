@@ -1,7 +1,9 @@
 package main
 
 import (
-	"github.com/kemadev/infrastructure-components/pkg/k8s/kind"
+	"net"
+
+	"github.com/kemadev/infrastructure-components/pkg/k8s/gateway"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -11,11 +13,21 @@ func main() {
 		if ctx.Stack() != "dev" {
 			return nil
 		}
-		cluster, err := kind.CreateKindCluster(ctx, "../../config/kind/", false)
+		err := gateway.DeployGatewayResources(
+			ctx,
+			"",
+			net.IPNet{
+				IP:   net.IPv4(172, 18, 250, 0),
+				Mask: net.CIDRMask(24, 32),
+			},
+			[]net.IP{
+				net.IPv4(172, 18, 250, 10),
+			},
+			[]string{},
+		)
 		if err != nil {
 			return err
 		}
-		_ = cluster
 		return nil
 	})
 }

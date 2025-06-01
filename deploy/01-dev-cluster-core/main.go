@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
-	"net"
 
 	"github.com/kemadev/infrastructure-components/pkg/k8s/cni"
-	"github.com/kemadev/infrastructure-components/pkg/k8s/gwapi"
+	"github.com/kemadev/infrastructure-components/pkg/k8s/gwapicrds"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/kind"
-	"github.com/pulumi/pulumi-docker/sdk/v4/go/docker"
+	"github.com/kemadev/infrastructure-components/pkg/k8s/priorityclass"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -17,42 +16,29 @@ func main() {
 		if ctx.Stack() != "dev" {
 			return nil
 		}
-		network, err := docker.LookupNetwork(ctx, &docker.LookupNetworkArgs{
-			Name: "kind",
-		}, nil)
-		if err != nil {
-			return fmt.Errorf("failed to get docker network: %w", err)
-		}
-		var ipv4Subnet, ipv6Subnet string
-		for _, ipam := range network.IpamConfigs {
-			ip, subnet, err := net.ParseCIDR(*ipam.Subnet)
-			if err != nil {
-				return fmt.Errorf("failed to parse docker network subnet: %w", err)
-			}
-			if ip.To4() != nil {
-				ipv4Subnet = subnet.String()
-			} else if ip.To16() != nil {
-				ipv6Subnet = subnet.String()
-			} else {
-				return fmt.Errorf("failed to parse docker network ip")
-			}
-		}
 		clusterName, err := kind.GetClusterName(ctx, "../../config/kind/kind-config.yaml")
 		if err != nil {
 			return fmt.Errorf("failed to get cluster name: %w", err)
 		}
-		gwapiCrd, err := gwapi.DeployGatewayAPICRDs(ctx)
+
+		gwapiCrd, err := gwapicrds.DeployGatewayAPICRDs(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to deploy gateway api crds: %w", err)
 		}
-		cni, err := cni.DeployCNI(
+
+		_, err = cni.DeployCNI(
 			ctx,
 			gwapiCrd,
 			clusterName,
-			ipv4Subnet,
-			ipv6Subnet,
 		)
-		_ = cni
+		if err != nil {
+			return fmt.Errorf("failed to deploy cni: %w", err)
+		}
+
+		err = priorityclass.CreateDefaultPriorityClasses(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to deploy priority classes: %w", err)
+		}
 		return nil
 	})
 }
