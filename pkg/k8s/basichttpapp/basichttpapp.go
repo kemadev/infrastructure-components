@@ -625,9 +625,27 @@ func mergeParams(
 	return nil
 }
 
+func checkChangemeParams(params AppParms) bool {
+	// Check if any of the parameters is set to the default "changeme" value
+	return params.AppName == "changeme" ||
+		params.AppNamespace == "changeme" ||
+		params.AppComponent == "changeme" ||
+		params.BusinessUnitId == "changeme" ||
+		params.CustomerId == "changeme" ||
+		params.CostCenter == "changeme" ||
+		params.CostAllocationOwner == "changeme" ||
+		params.OperationsOwner == "changeme" ||
+		params.Rpo == 0*time.Second ||
+		params.MonitoringUrl.String() == ""
+}
+
 // DeployBasicHTTPApp deploys a basic HTTP application to the Kubernetes cluster, using the provided parameters merged with the default ones,
 // and returns an error if any of the parameters is invalid or if the deployment fails.
 func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
+	if checkChangemeParams(params) {
+		return fmt.Errorf("please set all parameters to valid values, not 'changeme'")
+	}
+
 	appName, repoUrl, err := getGitInfos()
 	if err != nil {
 		return fmt.Errorf("error getting git repository information: %w", err)
