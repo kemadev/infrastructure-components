@@ -1,5 +1,8 @@
 package label
 
+// OrgNs is the namespace for the Kema organization labels.
+const OrgNs = "kema.dev"
+
 // Application labels
 const (
 	// LabelAppNameKey is the label key for the name of the application, see https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/#labels.
@@ -53,13 +56,13 @@ const (
 	// LabelTopologyZoneKey is the label key for the zone of the node, see https://kubernetes.io/docs/reference/labels-annotations-taints/#topologykubernetesiozone.
 	LabelTopologyZoneKey = "topology.kubernetes.io/zone"
 	// LabelTopologyDatacenterKey is the label key for the datacenter hosting the node.
-	LabelTopologyDatacenterKey = "topology.kema.dev/dc"
+	LabelTopologyDatacenterKey = "topology." + OrgNs + "/dc"
 	// LabelTopologyDatacenterZoneKey is the label key for the datacenter zone hosting the node.
-	LabelTopologyDatacenterZoneKey = "topology.kema.dev/dc-zone"
+	LabelTopologyDatacenterZoneKey = "topology." + OrgNs + "/dc-zone"
 	// LabelTopologyDatacenterAisleKey is the label key for the datacenter aisle hosting the node.
-	LabelTopologyDatacenterAisleKey = "topology.kema.dev/dc-aisle"
+	LabelTopologyDatacenterAisleKey = "topology." + OrgNs + "/dc-aisle"
 	// LabelTopologyDatacenterRackKey is the label key for the datacenter rack hosting the node.
-	LabelTopologyDatacenterRackKey = "topology.kema.dev/dc-rack"
+	LabelTopologyDatacenterRackKey = "topology." + OrgNs + "/dc-rack"
 	// NodeHostnameLabelKey is the label key for the hostname of the node, see https://kubernetes.io/docs/reference/labels-annotations-taints/#kubernetesiohostname.
 	LabelTopologyHostnameKey = "kubernetes.io/hostname"
 )
@@ -102,9 +105,26 @@ const (
 	NodeRoleAcceleratedGeneric = "generic"
 
 	// NodeRoleGPUValue is the label key for GPU nodes.
-	NodeRoleGenericGPULabelKey = "node-role.kubernetes.io/gpu"
+	NodeRoleGPULabelKey = "node-role.kubernetes.io/gpu"
 	// NodeRoleGenericGPU is the label value for generic GPU nodes.
 	NodeRoleGenericGPU = "generic"
+)
+
+// Node labels for operating system and architecture
+const (
+	// NodeOSLabelKey is the label key for the operating system of the node.
+	NodeOSLabelKey = "kubernetes.io/os"
+	// NodeOSLinux is the label value for Linux operating system.
+	NodeOSLinux = "linux"
+	// NodeOSWindows is the label value for Windows operating system.
+	NodeOSWindows = "windows"
+
+	// NodeArchLabelKey is the label key for the architecture of the node.
+	NodeArchLabelKey = "kubernetes.io/arch"
+	// NodeArchAMD64 is the label value for AMD64 architecture.
+	NodeArchAMD64 = "amd64"
+	// NodeArchARM64 is the label value for ARM64 architecture.
+	NodeArchARM64 = "arm64"
 )
 
 // Labels for shared gateway access, enabling the usage of the shared gateway
@@ -113,7 +133,7 @@ const (
 	SharedGatewayAccessLabelValue = "true"
 )
 
-// Node taints
+// Node classic taints
 const (
 	// NodeTaintNotReadyKey is the taint key for nodes that are not ready.
 	NodeTaintNotReadyKey = "node.kubernetes.io/not-ready"
@@ -133,4 +153,30 @@ const (
 	NodeTaintUninitializedKey = "node.cloudprovider.kubernetes.io/uninitialized"
 	// NodeTaintControlPlaneKey is the taint key for control plane nodes.
 	NodeTaintControlPlaneKey = NodeRoleControlPlaneLabelKey
+)
+
+// Node custom taints
+const (
+	// NodeTaintGPUKey is the taint key for nodes that are dedicated to GPU workloads.
+	NodeTaintGPUKey = "nodepurpose." + OrgNs + "/gpu"
+	// NodeTaintAcceleratedKey is the taint key for nodes that are dedicated to accelerated workloads (e.g. FPGA, TPU).
+	NodeTaintAcceleratedKey = "nodepurpose." + OrgNs + "/accelerated"
+	// NodeTaintCPUIntensiveKey is the taint key for nodes that are specialized for cpu-intensive workloads.
+	NodeTaintCPUIntensiveKey = "nodepurpose." + OrgNs + "/high-cpu"
+	// NodeTaintMemoryIntensiveKey is the taint key for nodes that are specialized for memory-intensive workloads.
+	NodeTaintMemoryIntensiveKey = "nodepurpose." + OrgNs + "/high-memory"
+	// NodeTaintStorageIntensiveKey is the taint key for nodes that are specialized for disk-intensive workloads.
+	NodeTaintStorageIntensiveKey = "nodepurpose." + OrgNs + "/high-storage"
+	// NodeTaintNetworkIntensiveKey is the taint key for nodes that are specialized for network-intensive workloads.
+	NodeTaintNetworkIntensiveKey = "nodepurpose." + OrgNs + "/high-network"
+)
+
+// Taints effects
+const (
+	// TaintEffectNoSchedule is the taint effect for nodes that should not schedule any pods.
+	TaintEffectNoSchedule = "NoSchedule"
+	// TaintEffectPreferNoSchedule is the taint effect for nodes that should prefer not to schedule any pods.
+	TaintEffectPreferNoSchedule = "PreferNoSchedule"
+	// TaintEffectNoExecute is the taint effect for nodes that should not execute any pods.
+	TaintEffectNoExecute = "NoExecute"
 )
