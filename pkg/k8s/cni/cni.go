@@ -64,8 +64,8 @@ func DeployCNI(
 		Version: pulumi.String(cniVersion),
 		Values: pulumi.All(
 			clusterNativeRoutingCIDR,
-		).ApplyT(func(args []interface{}) pulumi.Map {
-			nativeRoutingSubnet := args[0].(string)
+		).ApplyT(func(cidr interface{}) pulumi.Map {
+			nativeRoutingSubnet := cidr.(string)
 			return pulumi.Map{
 				"debug": func() pulumi.MapInput {
 					if ctx.Stack() != "dev" {
