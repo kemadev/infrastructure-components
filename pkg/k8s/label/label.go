@@ -133,6 +133,12 @@ const (
 	SharedGatewayAccessLabelValue = "true"
 )
 
+type Taint struct {
+	Key    string
+	Value  string
+	Effect string
+}
+
 // Node classic taints
 const (
 	// NodeTaintNotReadyKey is the taint key for nodes that are not ready.
