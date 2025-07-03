@@ -358,7 +358,7 @@ func createIssues(
 		Title:           pulumi.String("Repository initialization tasks :pencil:"),
 		Body: pulumi.String(`## Welcome to the repository! :wave:
 
-- [ ] Create the project's wiki. Actually, just clone it and update the content! :spiral_notepad:
+- [ ] Pull repository template, using ` + "`copier copy https://github.com/kemadev/repo-template .`" + ` :spiral_notepad:
 - [ ] Modify the project's README. A basic template is provided, feel the blanks! :handshake:
 - [ ] Add a social image preview for the repository. It's what people see when previewing links, make it catchy! :link:
 `),
