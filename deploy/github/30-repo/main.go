@@ -42,13 +42,6 @@ var repositories = []repo.WrapperArgs{
 	},
 	{
 		Repository: repo.RepositoryArgs{
-			Name:        "ci-cd",
-			Description: "CI/CD for repositories",
-			Topics:      []string{"ci", "cd", "go", "runner"},
-		},
-	},
-	{
-		Repository: repo.RepositoryArgs{
 			Name:        "go-framework",
 			Description: "Go framework, ensuring best practices and security",
 			Topics:      []string{"go", "framework", "best-practices", "security"},
