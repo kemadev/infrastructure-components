@@ -48,13 +48,13 @@ var (
 		Host:   domain.DomainKemaDotCloud.String(),
 	}
 	// BaseHostInternalInternetFacingService is the base host for internet-facing internal services. This is where internal
-	// services are hosted, service meaning a service for internal use such as VCS, chat, ... , not a microservice.
+	// services are hosted, service meaning a service for internal use such as preview app, chat, ... , not a microservice.
 	BaseHostInternalInternetFacingService url.URL = url.URL{
 		Scheme: SchemeHTTPS,
 		Host:   domain.DomainKemaDotRun.String(),
 	}
 	// BaseHostInternalPrivateService is the base host for internal private services. This is where internal services are hosted, such as
-	// Kubernetes control planes, preview applications, ...
+	// Kubernetes control planes, ...
 	BaseHostInternalPrivateService url.URL = url.URL{
 		Scheme: SchemeHTTPS,
 		Host:   domain.DomainKemaDotInternal.String(),
@@ -62,36 +62,32 @@ var (
 	// BaseHostPrivatePreview is the base host for private preview applications.
 	BaseHostPrivatePreview url.URL = url.URL{
 		Scheme: SchemeHTTPS,
-		Host:   "preview" + BaseHostInternalPrivateService.Host,
+		Host:   "preview." + BaseHostInternalInternetFacingService.Host,
 	}
 
 	// HostVCS is the host for company's VCS.
 	HostVCS url.URL = url.URL{
 		Scheme: SchemeHTTPS,
-		Host:   "vcs." + BaseHostInternalInternetFacingService.Host,
+		Host:   "github.com",
 	}
 	// HostChat is the host for company's chat.
 	HostChat url.URL = url.URL{
 		Scheme: SchemeHTTPS,
-		Host:   "chat." + BaseHostInternalInternetFacingService.Host,
+		Host:   "github.com",
 	}
+
 	// HostMainWebsite is the host for company's main website.
 	HostMainWebsite url.URL = url.URL{
 		Scheme: SchemeHTTPS,
 		Host:   "www." + domain.DomainKemaDotDev.String(),
 	}
+
 	// HostForum is the host for company's forum.
 	HostForum url.URL = url.URL{
 		Scheme: SchemeHTTPS,
-		Host:   "discuss." + domain.DomainKemaDotDev.String(),
+		Host:   "github.com",
 	}
-	// HostKubeControlePlane is the host for Kubernetes control planes (kube-apiserver access)
-	HostKubeControlPlane = func(clusterName string) url.URL {
-		return url.URL{
-			Scheme: SchemeHTTPS,
-			Host:   "kube." + clusterName + "." + BaseHostInternalPrivateService.Host + ":6443",
-		}
-	}
+
 	// HostReviewApp is the host for preview applications.
 	HostReviewApp = func(repo url.URL, prNumber int) url.URL {
 		repoNoDot := strings.ReplaceAll(
