@@ -12,15 +12,15 @@ type SettingsArgs struct {
 	// BillingEmail is the email address for billing notifications.
 	BillingEmail string
 	// Blog is the URL of the organization's blog.
-	Blog         string
+	Blog string
 	// Company is the name of the comany running the organization.
-	Company      string
+	Company string
 	// Description is a short description of the organization.
-	Description  string
+	Description string
 	// Email is the email address for the organization.
-	Email        string
+	Email string
 	// Location is the location of the organization.
-	Location     string
+	Location string
 }
 
 var SettingsDefaultArgs = SettingsArgs{}
@@ -47,7 +47,11 @@ func createSettingsSetDefaults(args *SettingsArgs) error {
 	return nil
 }
 
-func createSettings(ctx *pulumi.Context, provider *github.Provider, argsSettings SettingsArgs) error {
+func createSettings(
+	ctx *pulumi.Context,
+	provider *github.Provider,
+	argsSettings SettingsArgs,
+) error {
 	err := createSettingsSetDefaults(&argsSettings)
 	if err != nil {
 		return err

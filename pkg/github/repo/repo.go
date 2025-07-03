@@ -80,9 +80,9 @@ func createRepo(
 	provider *github.Provider,
 	argsRepo RepositoryArgs,
 	enablePaidFeatures bool,
-	suffix string,
+	prefix string,
 ) (*github.Repository, error) {
-	repoName := util.FormatResourceName(ctx, "Repository"+suffix)
+	repoName := util.FormatResourceName(ctx, prefix+"Repository")
 	repo, err := github.NewRepository(ctx, repoName, &github.RepositoryArgs{
 		Name:        pulumi.String(argsRepo.Name),
 		Description: pulumi.String(argsRepo.Description),
@@ -137,7 +137,7 @@ func createRepo(
 	if err != nil {
 		return nil, err
 	}
-	defaulBranchName := util.FormatResourceName(ctx, "Repository default branch"+suffix)
+	defaulBranchName := util.FormatResourceName(ctx, prefix+"Repository default branch")
 	_, err = github.NewBranch(ctx, defaulBranchName, &github.BranchArgs{
 		Repository: repo.Name,
 		Branch:     pulumi.String(argsRepo.defaultBranch),
@@ -145,7 +145,7 @@ func createRepo(
 	if err != nil {
 		return nil, err
 	}
-	branchDefaultName := util.FormatResourceName(ctx, "Repository default branch"+suffix)
+	branchDefaultName := util.FormatResourceName(ctx, prefix+"Repository default branch")
 	_, err = github.NewBranchDefault(ctx, branchDefaultName, &github.BranchDefaultArgs{
 		Repository: repo.Name,
 		Branch:     pulumi.String(argsRepo.defaultBranch),
@@ -154,7 +154,7 @@ func createRepo(
 		return nil, err
 	}
 
-	repoCollaboratorsName := util.FormatResourceName(ctx, "Repository collaborators"+suffix)
+	repoCollaboratorsName := util.FormatResourceName(ctx, prefix+"Repository collaborators")
 	_, err = github.NewRepositoryCollaborators(
 		ctx,
 		repoCollaboratorsName,

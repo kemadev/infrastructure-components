@@ -6,7 +6,7 @@ require (
 	dario.cat/mergo v1.0.2
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/caarlos0/svu v1.12.0
-	github.com/kemadev/framework-go v0.0.0-20250601112229-97531a864408
+	github.com/kemadev/go-framework v0.0.0-20250601112229-97531a864408
 	github.com/kemadev/runner-tools v0.0.0-20250520150427-714562570c88
 	github.com/pulumi/pulumi-command/sdk v1.1.0
 	github.com/pulumi/pulumi-github/sdk/v6 v6.7.2

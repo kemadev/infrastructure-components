@@ -12,14 +12,14 @@ type User struct {
 	// Role is the role of the user in the organization. List of available roles can be found in the [documentation].
 	//
 	// [documentation]: https://www.pulumi.com/registry/packages/github/api-docs/membership/#state_role_go
-	Role     string
+	Role string
 }
 
 type MembersArgs struct {
 	// Members is a list of users to add to the organization.
 	Members []User
 	// Admins is a list of users to add as admins to the organization.
-	Admins  []User
+	Admins []User
 }
 
 func createMembers(ctx *pulumi.Context, provider *github.Provider, argsMembers MembersArgs) error {

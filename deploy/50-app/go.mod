@@ -43,7 +43,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.22.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
-	github.com/kemadev/framework-go v0.0.0-20250513132754-887f6d279f20 // indirect
+	github.com/kemadev/go-framework v0.0.0-20250513132754-887f6d279f20 // indirect
 	github.com/kemadev/runner-tools v0.0.0-20250513133142-83dd3810da49 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect

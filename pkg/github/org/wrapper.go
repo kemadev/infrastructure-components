@@ -11,11 +11,11 @@ type WrapperArgs struct {
 	// Settings contains the settings for the organization.
 	Settings SettingsArgs
 	// Teams contains the teams to create in the organization.
-	Teams    TeamsArgs
+	Teams TeamsArgs
 	// Actions contains the GitHub Actions patterns that are allowed to run in the organization.
-	Actions  ActionsArgs
+	Actions ActionsArgs
 	// Members contains the members to add to the organization.
-	Members  MembersArgs
+	Members MembersArgs
 }
 
 func setDefaultArgs(args *WrapperArgs) {

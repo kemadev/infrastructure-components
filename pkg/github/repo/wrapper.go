@@ -53,26 +53,26 @@ func Wrapper(ctx *pulumi.Context, args WrapperArgs) error {
 		}
 		provider = prov
 	}
-	suffix := " " + args.Repository.Name
-	repo, err := createRepo(ctx, provider, args.Repository, enablePaidFeatures, suffix)
+	prefix := args.Repository.Name + " "
+	repo, err := createRepo(ctx, provider, args.Repository, enablePaidFeatures, prefix)
 	if err != nil {
 		return err
 	}
-	_, err = createEnvironments(ctx, provider, repo, args.Envs, suffix)
+	_, err = createEnvironments(ctx, provider, repo, args.Envs, prefix)
 	if err != nil {
 		return err
 	}
 	if enablePaidFeatures {
-		err = createRulesets(ctx, provider, repo, args.Rulesets, args.Envs, suffix)
+		err = createRulesets(ctx, provider, repo, args.Rulesets, args.Envs, prefix)
 		if err != nil {
 			return err
 		}
 	}
-	err = createDependabot(ctx, provider, repo, suffix)
+	err = createDependabot(ctx, provider, repo, prefix)
 	if err != nil {
 		return err
 	}
-	err = createIssues(ctx, provider, repo, suffix)
+	err = createIssues(ctx, provider, repo, prefix)
 	if err != nil {
 		return err
 	}

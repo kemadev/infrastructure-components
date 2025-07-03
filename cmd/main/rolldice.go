@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strconv"
 
-	khttp "github.com/kemadev/framework-go/pkg/http"
+	khttp "github.com/kemadev/go-framework/pkg/http"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"

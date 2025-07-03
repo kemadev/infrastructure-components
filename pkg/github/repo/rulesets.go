@@ -10,7 +10,7 @@ type RulesetsArgs struct {
 	// RequiredReviewersMain is the number of required reviewers for the main branch.
 	RequiredReviewersMain int
 	// RequiredStatusChecks is a list of required status checks that must pass before merging.
-	RequiredStatusChecks  []string
+	RequiredStatusChecks []string
 }
 
 var RulesetsDefaultArgs = RulesetsArgs{
@@ -31,43 +31,58 @@ func createRulesetsSetDefaults(args *RulesetsArgs) {
 	}
 }
 
-func createRulesets(ctx *pulumi.Context, provider *github.Provider, repo *github.Repository, argsRulesets RulesetsArgs, argsEnvs EnvsArgs, suffix string) error {
-	rulesetBranchGlobalName := util.FormatResourceName(ctx, "Repository branch ruleset global"+suffix)
-	_, err := github.NewRepositoryRuleset(ctx, rulesetBranchGlobalName, &github.RepositoryRulesetArgs{
-		Repository:  repo.Name,
-		Name:        pulumi.String("branch-global"),
-		Target:      pulumi.String("branch"),
-		Enforcement: pulumi.String("active"),
-		// @ref https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_ruleset#bypass_actors
-		BypassActors: github.RepositoryRulesetBypassActorArray{
-			// Organization Admin
-			github.RepositoryRulesetBypassActorArgs{
-				ActorType:  pulumi.String("OrganizationAdmin"),
-				ActorId:    pulumi.Int(1),
-				BypassMode: pulumi.String("always"),
+func createRulesets(
+	ctx *pulumi.Context,
+	provider *github.Provider,
+	repo *github.Repository,
+	argsRulesets RulesetsArgs,
+	argsEnvs EnvsArgs,
+	prefix string,
+) error {
+	rulesetBranchGlobalName := util.FormatResourceName(
+		ctx,
+		prefix+"Repository branch ruleset global",
+	)
+	_, err := github.NewRepositoryRuleset(
+		ctx,
+		rulesetBranchGlobalName,
+		&github.RepositoryRulesetArgs{
+			Repository:  repo.Name,
+			Name:        pulumi.String("branch-global"),
+			Target:      pulumi.String("branch"),
+			Enforcement: pulumi.String("active"),
+			// @ref https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_ruleset#bypass_actors
+			BypassActors: github.RepositoryRulesetBypassActorArray{
+				// Organization Admin
+				github.RepositoryRulesetBypassActorArgs{
+					ActorType:  pulumi.String("OrganizationAdmin"),
+					ActorId:    pulumi.Int(1),
+					BypassMode: pulumi.String("always"),
+				},
+				// Repository Admin
+				github.RepositoryRulesetBypassActorArgs{
+					ActorType:  pulumi.String("RepositoryRole"),
+					ActorId:    pulumi.Int(5),
+					BypassMode: pulumi.String("always"),
+				},
 			},
-			// Repository Admin
-			github.RepositoryRulesetBypassActorArgs{
-				ActorType:  pulumi.String("RepositoryRole"),
-				ActorId:    pulumi.Int(5),
-				BypassMode: pulumi.String("always"),
+			Conditions: github.RepositoryRulesetConditionsArgs{
+				RefName: github.RepositoryRulesetConditionsRefNameArgs{
+					Includes: pulumi.ToStringArray([]string{"~ALL"}),
+					Excludes: pulumi.ToStringArray([]string{}),
+				},
+			},
+			Rules: github.RepositoryRulesetRulesArgs{
+				RequiredSignatures: pulumi.Bool(true),
 			},
 		},
-		Conditions: github.RepositoryRulesetConditionsArgs{
-			RefName: github.RepositoryRulesetConditionsRefNameArgs{
-				Includes: pulumi.ToStringArray([]string{"~ALL"}),
-				Excludes: pulumi.ToStringArray([]string{}),
-			},
-		},
-		Rules: github.RepositoryRulesetRulesArgs{
-			RequiredSignatures: pulumi.Bool(true),
-		},
-	}, pulumi.Provider(provider))
+		pulumi.Provider(provider),
+	)
 	if err != nil {
 		return err
 	}
 
-	rulesetTagGlobalName := util.FormatResourceName(ctx, "Repository tag ruleset global"+suffix)
+	rulesetTagGlobalName := util.FormatResourceName(ctx, prefix+"Repository tag ruleset global")
 	_, err = github.NewRepositoryRuleset(ctx, rulesetTagGlobalName, &github.RepositoryRulesetArgs{
 		Repository:  repo.Name,
 		Name:        pulumi.String("tag-global"),
@@ -87,7 +102,10 @@ func createRulesets(ctx *pulumi.Context, provider *github.Provider, repo *github
 		return err
 	}
 
-	rulesetBranchEnvMain := util.FormatResourceName(ctx, "Repository ruleset branch env main"+suffix)
+	rulesetBranchEnvMain := util.FormatResourceName(
+		ctx,
+		prefix+"Repository ruleset branch env main",
+	)
 	_, err = github.NewRepositoryRuleset(ctx, rulesetBranchEnvMain, &github.RepositoryRulesetArgs{
 		Repository:  repo.Name,
 		Name:        pulumi.String("branch-env-main"),
@@ -144,9 +162,12 @@ func createRulesets(ctx *pulumi.Context, provider *github.Provider, repo *github
 				RequiredChecks: func() github.RepositoryRulesetRulesRequiredStatusChecksRequiredCheckArray {
 					var checks github.RepositoryRulesetRulesRequiredStatusChecksRequiredCheckArray
 					for _, check := range argsRulesets.RequiredStatusChecks {
-						checks = append(checks, github.RepositoryRulesetRulesRequiredStatusChecksRequiredCheckArgs{
-							Context: pulumi.String(check),
-						})
+						checks = append(
+							checks,
+							github.RepositoryRulesetRulesRequiredStatusChecksRequiredCheckArgs{
+								Context: pulumi.String(check),
+							},
+						)
 					}
 					return checks
 				}(),

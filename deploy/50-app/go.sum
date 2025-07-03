@@ -98,8 +98,8 @@ github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
-github.com/kemadev/framework-go v0.0.0-20250513132754-887f6d279f20 h1:+MGA/UBqBpIRrPFaw7Nutt0e2J9nWgyjRHlqpH2yj0Q=
-github.com/kemadev/framework-go v0.0.0-20250513132754-887f6d279f20/go.mod h1:dP/9bySEUfOUyxQD9Lkp26i9OeC0n/q4W588KezHxZo=
+github.com/kemadev/go-framework v0.0.0-20250513132754-887f6d279f20 h1:+MGA/UBqBpIRrPFaw7Nutt0e2J9nWgyjRHlqpH2yj0Q=
+github.com/kemadev/go-framework v0.0.0-20250513132754-887f6d279f20/go.mod h1:dP/9bySEUfOUyxQD9Lkp26i9OeC0n/q4W588KezHxZo=
 github.com/kemadev/infrastructure-components v0.0.0-20250515183329-d01c09599daf h1:8GU/NUNrBwec4B3AHAHo2MuV10tVTkWcHFiQSyLeOLk=
 github.com/kemadev/infrastructure-components v0.0.0-20250515183329-d01c09599daf/go.mod h1:j/00sFgJaas9+maO1cyj3kPYe24yZpGALmZu3BOTGSU=
 github.com/kemadev/runner-tools v0.0.0-20250513133142-83dd3810da49 h1:u3HO9XNWbJ6+Y+mncmoWdGy2+qEUZymzZSntT/mrj6s=

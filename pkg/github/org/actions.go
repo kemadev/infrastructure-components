@@ -54,22 +54,30 @@ func createActionsSetDefaults(args *ActionsArgs) {
 }
 
 func createActions(ctx *pulumi.Context, provider *github.Provider, args ActionsArgs) error {
-	actionsOrganizationPermissionsName := util.FormatResourceName(ctx, "Actions organization permissions")
-	_, err := github.NewActionsOrganizationPermissions(ctx, actionsOrganizationPermissionsName, &github.ActionsOrganizationPermissionsArgs{
-		AllowedActions:      pulumi.String("selected"),
-		EnabledRepositories: pulumi.String("all"),
-		AllowedActionsConfig: &github.ActionsOrganizationPermissionsAllowedActionsConfigArgs{
-			GithubOwnedAllowed: pulumi.Bool(false),
-			VerifiedAllowed:    pulumi.Bool(false),
-			PatternsAlloweds: func() pulumi.StringArray {
-				var patterns pulumi.StringArray
-				for _, action := range args.Actions {
-					patterns = append(patterns, pulumi.String(action))
-				}
-				return patterns
-			}(),
+	actionsOrganizationPermissionsName := util.FormatResourceName(
+		ctx,
+		"Actions organization permissions",
+	)
+	_, err := github.NewActionsOrganizationPermissions(
+		ctx,
+		actionsOrganizationPermissionsName,
+		&github.ActionsOrganizationPermissionsArgs{
+			AllowedActions:      pulumi.String("selected"),
+			EnabledRepositories: pulumi.String("all"),
+			AllowedActionsConfig: &github.ActionsOrganizationPermissionsAllowedActionsConfigArgs{
+				GithubOwnedAllowed: pulumi.Bool(false),
+				VerifiedAllowed:    pulumi.Bool(false),
+				PatternsAlloweds: func() pulumi.StringArray {
+					var patterns pulumi.StringArray
+					for _, action := range args.Actions {
+						patterns = append(patterns, pulumi.String(action))
+					}
+					return patterns
+				}(),
+			},
 		},
-	}, pulumi.Provider(provider))
+		pulumi.Provider(provider),
+	)
 	if err != nil {
 		return err
 	}

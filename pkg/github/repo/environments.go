@@ -44,11 +44,11 @@ func createEnvironments(
 	provider *github.Provider,
 	repo *github.Repository,
 	argsEnvs EnvsArgs,
-	suffix string,
+	prefix string,
 ) (TEnvironmentsCreated, error) {
 	deploymentEnvironmentDevName := util.FormatResourceName(
 		ctx,
-		"Deployment environment dev"+suffix,
+		prefix+"Deployment environment dev",
 	)
 	deploymentEnvironmentDev, err := github.NewRepositoryEnvironment(
 		ctx,
@@ -74,7 +74,7 @@ func createEnvironments(
 
 	deploymentEnvironmentNextName := util.FormatResourceName(
 		ctx,
-		"Deployment environment next"+suffix,
+		prefix+"Deployment environment next",
 	)
 	deploymentEnvironmentNext, err := github.NewRepositoryEnvironment(
 		ctx,
@@ -100,7 +100,7 @@ func createEnvironments(
 
 	deploymentEnvironmentProdName := util.FormatResourceName(
 		ctx,
-		"Deployment environment prod"+suffix,
+		prefix+"Deployment environment prod",
 	)
 	deploymentEnvironmentProd, err := github.NewRepositoryEnvironment(
 		ctx,
@@ -126,7 +126,7 @@ func createEnvironments(
 
 	repositoryEnvironmentDeploymentPolicyDevName := util.FormatResourceName(
 		ctx,
-		"Repository environment deployment policy dev"+suffix)
+		prefix+"Repository environment deployment policy dev")
 	_, err = github.NewRepositoryEnvironmentDeploymentPolicy(
 		ctx,
 		repositoryEnvironmentDeploymentPolicyDevName,
@@ -143,7 +143,7 @@ func createEnvironments(
 
 	repositoryEnvironmentDeploymentPolicyNextName := util.FormatResourceName(
 		ctx,
-		"Repository environment deployment policy next"+suffix)
+		prefix+"Repository environment deployment policy next")
 	_, err = github.NewRepositoryEnvironmentDeploymentPolicy(
 		ctx,
 		repositoryEnvironmentDeploymentPolicyNextName,
@@ -160,7 +160,7 @@ func createEnvironments(
 
 	repositoryEnvironmentDeploymentPolicyProdName := util.FormatResourceName(
 		ctx,
-		"Repository environment deployment policy prod"+suffix)
+		prefix+"Repository environment deployment policy prod")
 	_, err = github.NewRepositoryEnvironmentDeploymentPolicy(
 		ctx,
 		repositoryEnvironmentDeploymentPolicyProdName,

@@ -317,11 +317,11 @@ func createIssues(
 	ctx *pulumi.Context,
 	provider *github.Provider,
 	repo *github.Repository,
-	suffix string,
+	prefix string,
 ) error {
 	// github.NewIssueLabels is too inconsistent, thus creation is done one by one
 	for _, issueLabel := range IssuesDefaultArgs {
-		issueLabelName := util.FormatResourceName(ctx, "Issue label "+issueLabel.Name+suffix)
+		issueLabelName := util.FormatResourceName(ctx, prefix+"Issue label "+issueLabel.Name)
 		_, err := github.NewIssueLabel(ctx, issueLabelName, &github.IssueLabelArgs{
 			Repository:  repo.Name,
 			Name:        pulumi.String(issueLabel.Name),
@@ -333,7 +333,7 @@ func createIssues(
 		}
 	}
 
-	repoInitMilestoneName := util.FormatResourceName(ctx, "Repository milestone initial"+suffix)
+	repoInitMilestoneName := util.FormatResourceName(ctx, prefix+"Repository milestone initial")
 	milestone, err := github.NewRepositoryMilestone(
 		ctx,
 		repoInitMilestoneName,
@@ -351,7 +351,7 @@ func createIssues(
 		return err
 	}
 
-	repoInitIssueName := util.FormatResourceName(ctx, "Repository issue initial"+suffix)
+	repoInitIssueName := util.FormatResourceName(ctx, prefix+"Repository issue initial")
 	_, err = github.NewIssue(ctx, repoInitIssueName, &github.IssueArgs{
 		Repository:      repo.Name,
 		MilestoneNumber: milestone.Number,

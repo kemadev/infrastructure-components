@@ -11,7 +11,7 @@ import (
 	"dario.cat/mergo"
 	"github.com/blang/semver"
 	"github.com/caarlos0/svu/pkg/svu"
-	"github.com/kemadev/framework-go/pkg/config"
+	"github.com/kemadev/go-framework/pkg/config"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/gateway"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/label"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/priorityclass"
@@ -39,7 +39,7 @@ type AppParms struct {
 	// is automatically set to AppVersion.
 	ImageTag semver.Version
 	// RuntimeEnv is the runtime environment, i.e. Pulumi stack name. It is used as a suffix to the application name
-	// in application instance name, ensuring uniqueness across environments. Please note that [github.com/kemadev/framework-go/pkg/config.Env_dev]
+	// in application instance name, ensuring uniqueness across environments. Please note that [github.com/kemadev/go-framework/pkg/config.Env_dev]
 	// is a special case, tweaking the application deployment to ease local development.
 	RuntimeEnv string
 	// OTelEndpointUrl is the OpenTelemetry collector endpoint URL.

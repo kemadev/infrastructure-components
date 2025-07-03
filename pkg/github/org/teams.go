@@ -14,22 +14,22 @@ type TeamMemberArgs struct {
 	// Role is the role of the team member in the team. List of available roles can be found in the [documentation].
 	//
 	// [documentation]: https://www.pulumi.com/registry/packages/github/api-docs/membership/#state_role_go
-	Role     string
+	Role string
 }
 
 type TeamArgs struct {
 	// Name is the name of the team.
-	Name        string
+	Name string
 	// Description is a short description of the team.
 	Description string
 	// Privacy is the privacy setting of the team. List of available privacy settings can be found in the [documentation].
 	//
 	// [documentation]: https://www.pulumi.com/registry/packages/github/api-docs/team/#privacy_go
-	Privacy     string
+	Privacy string
 	// ParentTeam is the ID or slug of the parent team. If not set, the team will be a top-level team.
-	ParentTeam  string
+	ParentTeam string
 	// Members is a list of team members.
-	Members     []TeamMemberArgs
+	Members []TeamMemberArgs
 }
 
 type TeamsArgs struct {
@@ -39,11 +39,11 @@ type TeamsArgs struct {
 
 const (
 	// AdminTeamName is the name of the team with full access everywhere.
-	AdminTeamName       = "admins"
+	AdminTeamName = "admins"
 	// MaintainersTeamName is the name of the team that maintains permissions on all repositories.
 	MaintainersTeamName = "maintainers"
 	// DevelopersTeamName is the name of the parent team for all developers.
-	DevelopersTeamName  = "developers"
+	DevelopersTeamName = "developers"
 )
 
 var TeamsDefaultArgs = TeamsArgs{
@@ -104,7 +104,11 @@ func checkTeamMembersAreMembers(argsTeams TeamsArgs, argsMembers MembersArgs) er
 					}
 				}
 				if !found {
-					return fmt.Errorf("Team member %s in team %s is not also set to be an organization member", m.Username, t.Name)
+					return fmt.Errorf(
+						"Team member %s in team %s is not also set to be an organization member",
+						m.Username,
+						t.Name,
+					)
 				}
 			}
 		}
@@ -112,7 +116,12 @@ func checkTeamMembersAreMembers(argsTeams TeamsArgs, argsMembers MembersArgs) er
 	return nil
 }
 
-func createTeams(ctx *pulumi.Context, provider *github.Provider, argsTeams TeamsArgs, argsMembers MembersArgs) error {
+func createTeams(
+	ctx *pulumi.Context,
+	provider *github.Provider,
+	argsTeams TeamsArgs,
+	argsMembers MembersArgs,
+) error {
 	err := checkTeamMembersAreMembers(argsTeams, argsMembers)
 	if err != nil {
 		return err

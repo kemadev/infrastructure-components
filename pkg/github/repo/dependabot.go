@@ -10,11 +10,11 @@ func createDependabot(
 	ctx *pulumi.Context,
 	provider *github.Provider,
 	repo *github.Repository,
-	suffix string,
+	prefix string,
 ) error {
 	repoDependabotSecurityUpdateName := util.FormatResourceName(
 		ctx,
-		"Dependabot security updates"+suffix,
+		prefix+"Dependabot security updates",
 	)
 	_, err := github.NewRepositoryDependabotSecurityUpdates(
 		ctx,

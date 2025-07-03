@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/kemadev/framework-go/pkg/config"
+	"github.com/kemadev/go-framework/pkg/config"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/label"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/pulumilabel"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"

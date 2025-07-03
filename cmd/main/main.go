@@ -8,9 +8,9 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/kemadev/framework-go/pkg/config"
-	"github.com/kemadev/framework-go/pkg/http"
-	"github.com/kemadev/framework-go/pkg/log"
+	"github.com/kemadev/go-framework/pkg/config"
+	"github.com/kemadev/go-framework/pkg/http"
+	"github.com/kemadev/go-framework/pkg/log"
 )
 
 func main() {
