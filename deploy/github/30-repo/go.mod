@@ -1,11 +1,11 @@
 module github.com/kemadev/iac-components/pkg/pulumi/stack-template
 
-go 1.24.0
+go 1.24.2
 
 toolchain go1.24.3
 
 require (
-	github.com/kemadev/iac-components v0.0.0-20250702201325-b2ef93cafd2f
+	github.com/kemadev/infrastructure-components v0.0.0-20250703072511-56c738217a01
 	github.com/pulumi/pulumi/sdk/v3 v3.181.0
 )
 
@@ -94,4 +94,5 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/frand v1.5.1 // indirect
+	pgregory.net/rapid v0.6.1 // indirect
 )

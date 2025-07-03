@@ -1,9 +1,11 @@
 module github.com/kemadev/kemadev/iac-components/deploy/github/20-org
 
-go 1.24.0
+go 1.24.2
+
+toolchain go1.24.3
 
 require (
-	github.com/kemadev/iac-components v0.0.0-20250702205905-2213109ab122
+	github.com/kemadev/infrastructure-components v0.0.0-20250703072511-56c738217a01
 	github.com/pulumi/pulumi/sdk/v3 v3.181.0
 )
 
@@ -30,7 +32,6 @@ require (
 	github.com/djherbis/times v1.6.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
-	github.com/fatih/color v1.16.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.6.2 // indirect
 	github.com/go-git/go-git/v5 v5.16.2 // indirect
@@ -71,7 +72,6 @@ require (
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/spf13/cobra v1.9.1 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
-	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/texttheater/golang-levenshtein v1.0.1 // indirect
 	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
