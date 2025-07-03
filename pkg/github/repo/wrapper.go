@@ -17,6 +17,8 @@ type WrapperArgs struct {
 	Repository RepositoryArgs
 	// Provider is the GitHub provider to use for the repository. If provided, ProviderOpts will be ignored.
 	Provider *github.Provider
+	// GitHubPlan is the GitHub plan subscribed for the organization. It is used to determine whether to create resources for paid features. Default to "free".
+	GitHubPlan string
 }
 
 func setDefaultArgs(args *WrapperArgs) error {
@@ -32,6 +34,9 @@ func setDefaultArgs(args *WrapperArgs) error {
 
 // Wrapper creates a GitHub repository with the provided settings, environments, rulesets, codeowners, and files.
 func Wrapper(ctx *pulumi.Context, args WrapperArgs) error {
+	if args.GitHubPlan == "" {
+		args.GitHubPlan = "free"
+	}
 	// targetBranch := "repo-as-code-update"
 	err := setDefaultArgs(&args)
 	if err != nil {
@@ -56,9 +61,11 @@ func Wrapper(ctx *pulumi.Context, args WrapperArgs) error {
 	if err != nil {
 		return err
 	}
-	err = createRulesets(ctx, provider, repo, args.Rulesets, args.Envs, suffix)
-	if err != nil {
-		return err
+	if args.GitHubPlan != "free" || args.Repository.Visibility == "public" {
+		err = createRulesets(ctx, provider, repo, args.Rulesets, args.Envs, suffix)
+		if err != nil {
+			return err
+		}
 	}
 	err = createDependabot(ctx, provider, repo, suffix)
 	if err != nil {

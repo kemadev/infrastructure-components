@@ -26,6 +26,38 @@ var repositories = []repo.WrapperArgs{
 			Topics:      []string{"github", "organization", "discussions"},
 		},
 	},
+	{
+		Repository: repo.RepositoryArgs{
+			Name:        "server-bootstrap",
+			Description: "Server boostrapping, from PXE to Ignition",
+			Visibility:  "private",
+			Topics:      []string{"server", "bootstrap", "pxe", "ignition", "bare-metal"},
+		},
+	},
+	{
+		Repository: repo.RepositoryArgs{
+			Name:        "repo-template",
+			Description: "Repository template",
+			Visibility:  "private",
+			Topics:      []string{"repository", "template", "github", "pulumi", "go", "copier"},
+		},
+	},
+	{
+		Repository: repo.RepositoryArgs{
+			Name:        "ci-cd",
+			Description: "CI/CD for repositories",
+			Visibility:  "private",
+			Topics:      []string{"ci", "cd", "go", "runner"},
+		},
+	},
+	{
+		Repository: repo.RepositoryArgs{
+			Name:        "go-framework",
+			Description: "Go framework, ensuring best practices and security",
+			Visibility:  "private",
+			Topics:      []string{"go", "framework", "best-practices", "security"},
+		},
+	},
 }
 
 func main() {
