@@ -112,6 +112,12 @@ var (
 		}
 	}
 
+	HostKubeControlPlane = func(clusterName string) url.URL {
+		return url.URL{
+			Scheme: SchemeHTTPS,
+			Host:   clusterName + "." + BaseHostInternalPrivateService.Host,
+		}
+	}
 	// HostServiceConsole is the host for service consoles.
 	HostServiceConsole = func(serviceName string) url.URL {
 		return url.URL{

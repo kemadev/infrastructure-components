@@ -102,8 +102,8 @@ github.com/kemadev/go-framework v0.0.0-20250513132754-887f6d279f20 h1:+MGA/UBqBp
 github.com/kemadev/go-framework v0.0.0-20250513132754-887f6d279f20/go.mod h1:dP/9bySEUfOUyxQD9Lkp26i9OeC0n/q4W588KezHxZo=
 github.com/kemadev/infrastructure-components v0.0.0-20250515183329-d01c09599daf h1:8GU/NUNrBwec4B3AHAHo2MuV10tVTkWcHFiQSyLeOLk=
 github.com/kemadev/infrastructure-components v0.0.0-20250515183329-d01c09599daf/go.mod h1:j/00sFgJaas9+maO1cyj3kPYe24yZpGALmZu3BOTGSU=
-github.com/kemadev/runner-tools v0.0.0-20250513133142-83dd3810da49 h1:u3HO9XNWbJ6+Y+mncmoWdGy2+qEUZymzZSntT/mrj6s=
-github.com/kemadev/runner-tools v0.0.0-20250513133142-83dd3810da49/go.mod h1:g5b/nSN98K9vh4qB0+jTwzzUzhwkzFS2yizv42YDgNc=
+github.com/kemadev/ci-cd v0.0.0-20250513133142-83dd3810da49 h1:u3HO9XNWbJ6+Y+mncmoWdGy2+qEUZymzZSntT/mrj6s=
+github.com/kemadev/ci-cd v0.0.0-20250513133142-83dd3810da49/go.mod h1:g5b/nSN98K9vh4qB0+jTwzzUzhwkzFS2yizv42YDgNc=
 github.com/kevinburke/ssh_config v1.2.0 h1:x584FjTGwHzMwvHx18PXxbBVzfnxogHaAReU4gf13a4=
 github.com/kevinburke/ssh_config v1.2.0/go.mod h1:CT57kijsi8u/K/BOFA39wgDQJ9CxiF4nAY/ojJ6r6mM=
 github.com/kisielk/errcheck v1.2.0/go.mod h1:/BMXB+zMLi60iA8Vv6Ksmxu/1UDYcXs4uQLJ+jE2L00=
