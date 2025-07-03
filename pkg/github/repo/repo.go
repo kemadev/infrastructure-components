@@ -79,6 +79,7 @@ func createRepo(
 	ctx *pulumi.Context,
 	provider *github.Provider,
 	argsRepo RepositoryArgs,
+	enablePaidFeatures bool,
 	suffix string,
 ) (*github.Repository, error) {
 	repoName := util.FormatResourceName(ctx, "Repository"+suffix)
@@ -107,24 +108,17 @@ func createRepo(
 		AllowMergeCommit:         pulumi.Bool(false),
 		AllowRebaseMerge:         pulumi.Bool(false),
 		AllowUpdateBranch:        pulumi.Bool(true),
-		AllowAutoMerge:           pulumi.Bool(true),
+		AllowAutoMerge:           pulumi.Bool(enablePaidFeatures),
 		DeleteBranchOnMerge:      pulumi.Bool(true),
 		HasDiscussions:           pulumi.Bool(true),
 		HasIssues:                pulumi.Bool(true),
 		HasProjects:              pulumi.Bool(true),
-		HasWiki:                  pulumi.Bool(true),
+		HasWiki:                  pulumi.Bool(enablePaidFeatures),
 		HasDownloads:             pulumi.Bool(false),
 		Archived:                 pulumi.Bool(argsRepo.Archived),
 		WebCommitSignoffRequired: pulumi.Bool(false),
 		AutoInit:                 pulumi.Bool(true),
-
-		VulnerabilityAlerts: func() pulumi.Bool {
-			if argsRepo.Visibility == "public" {
-				return pulumi.Bool(true)
-			}
-			// Advanced Security is required for private repositories
-			return pulumi.Bool(false)
-		}(),
+		VulnerabilityAlerts:      pulumi.Bool(true),
 		SecurityAndAnalysis: func() *github.RepositorySecurityAndAnalysisArgs {
 			if argsRepo.Visibility == "public" {
 				return &github.RepositorySecurityAndAnalysisArgs{

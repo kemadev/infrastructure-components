@@ -54,6 +54,7 @@ var repositories = []repo.WrapperArgs{
 			Topics:      []string{"go", "framework", "best-practices", "security"},
 		},
 	},
+	// NOTE This one has been initially imported using `pulumi import 'github:index/repository:Repository' '<resource id>' <repo name> --provider '<provider urn>'`
 	{
 		Repository: repo.RepositoryArgs{
 			Name:        "infrastructure-components",

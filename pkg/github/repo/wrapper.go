@@ -37,6 +37,7 @@ func Wrapper(ctx *pulumi.Context, args WrapperArgs) error {
 	if args.GitHubPlan == "" {
 		args.GitHubPlan = "free"
 	}
+	enablePaidFeatures := args.GitHubPlan != "free" || args.Repository.Visibility == "public"
 	// targetBranch := "repo-as-code-update"
 	err := setDefaultArgs(&args)
 	if err != nil {
@@ -53,7 +54,7 @@ func Wrapper(ctx *pulumi.Context, args WrapperArgs) error {
 		provider = prov
 	}
 	suffix := " " + args.Repository.Name
-	repo, err := createRepo(ctx, provider, args.Repository, suffix)
+	repo, err := createRepo(ctx, provider, args.Repository, enablePaidFeatures, suffix)
 	if err != nil {
 		return err
 	}
@@ -61,7 +62,7 @@ func Wrapper(ctx *pulumi.Context, args WrapperArgs) error {
 	if err != nil {
 		return err
 	}
-	if args.GitHubPlan != "free" || args.Repository.Visibility == "public" {
+	if enablePaidFeatures {
 		err = createRulesets(ctx, provider, repo, args.Rulesets, args.Envs, suffix)
 		if err != nil {
 			return err
