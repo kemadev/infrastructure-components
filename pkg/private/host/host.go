@@ -122,7 +122,7 @@ var (
 	// HostMainApi is the host for company's main API.
 	HostMainApi url.URL = url.URL{
 		Scheme: SchemeHTTPS,
-		Host:   "api." + domain.DomainKemaDotInternal.String(),
+		Host:   "api." + BaseHostPublicInternetFacingApp.Host,
 	}
 
 	// ServiceNamePathPattern is the path pattern for service name, to be replaced by the service name in path matching.
@@ -138,9 +138,9 @@ var (
 			PathPattern: "/" + serviceName + "/" + serviceVersion + "/",
 		}
 	}
-	// URLSecurityGuidelines is the URL for company's security guidelines & responsible disclosure procedure
-	URLSecurityGuidelines URL = URL{
-		BaseHost:    HostForum,
-		PathPattern: "/c/security",
-	}
+	// // URLSecurityGuidelines is the URL for company's security guidelines & responsible disclosure procedure
+	// URLSecurityGuidelines URL = URL{
+	// 	BaseHost:    HostForum,
+	// 	PathPattern: "/c/security",
+	// }
 )
