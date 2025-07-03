@@ -1,4 +1,4 @@
-name: github.com-kemadev-iac-components-deploy-github-30-repo
+name: github-com-kemadev-infrastructure-components-deploy-github-30-repo
 description: Pulumi stack template for infrastructure as code components
 runtime: go
 config:
@@ -8,4 +8,4 @@ config:
       - '*'
   pulumi:tags:
     value:
-      pulumi:template: /home/kema/dev/git/github.com/kemadev/iac-components/pkg/pulumi/stack-template
+      pulumi:template: /home/kema/dev/git/github.com/kemadev/infrastructure-components/pkg/pulumi/stack-template

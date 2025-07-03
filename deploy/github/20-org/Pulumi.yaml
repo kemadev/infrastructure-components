@@ -1,4 +1,4 @@
-name: github.com-kemadev-kemadev-iac-components-deploy-github-20-org
+name: github-com-kemadev-infrastructure-components-deploy-github-20-org
 description: ""
 runtime: go
 config:

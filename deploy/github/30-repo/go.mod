@@ -1,4 +1,4 @@
-module github.com/kemadev/iac-components/pkg/pulumi/stack-template
+module github.com/kemadev/infrastructure-components/pkg/pulumi/stack-template
 
 go 1.24.2
 

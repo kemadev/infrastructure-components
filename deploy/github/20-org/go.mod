@@ -1,4 +1,4 @@
-module github.com/kemadev/kemadev/iac-components/deploy/github/20-org
+module github.com/kemadev/kemadev/infrastructure-components/deploy/github/20-org
 
 go 1.24.2
 

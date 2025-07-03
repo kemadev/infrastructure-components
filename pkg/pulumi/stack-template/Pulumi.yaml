@@ -1,4 +1,4 @@
-name: github-com-kemadev-iac-components-pkg-pulumi-stack-template
+name: github-com-kemadev-infrastructure-components-pkg-pulumi-stack-template
 description: Pulumi stack template for infrastructure as code components
 runtime: go
 config:
