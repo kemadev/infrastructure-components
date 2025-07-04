@@ -16,6 +16,8 @@ type WrapperArgs struct {
 	Actions ActionsArgs
 	// Members contains the members to add to the organization.
 	Members MembersArgs
+	// GitHubPlan is the GitHub plan subscribed for the organization. It is used to determine whether to create resources for paid features. Default to "free".
+	GitHubPlan string
 }
 
 func setDefaultArgs(args *WrapperArgs) {
@@ -26,6 +28,10 @@ func setDefaultArgs(args *WrapperArgs) {
 
 // Wrapper creates a GitHub organization with the provided settings, members, teams, and actions.
 func Wrapper(ctx *pulumi.Context, args WrapperArgs) error {
+	if args.GitHubPlan == "" {
+		args.GitHubPlan = "free"
+	}
+	enablePaidFeatures := args.GitHubPlan != "free"
 	setDefaultArgs(&args)
 	provider, err := p.NewProvider(ctx, args.Provider)
 	if err != nil {
@@ -43,7 +49,7 @@ func Wrapper(ctx *pulumi.Context, args WrapperArgs) error {
 	if err != nil {
 		return err
 	}
-	err = createActions(ctx, provider, args.Actions)
+	err = createActions(ctx, provider, args.Actions, enablePaidFeatures)
 	if err != nil {
 		return err
 	}

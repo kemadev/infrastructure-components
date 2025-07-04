@@ -81,5 +81,4 @@ func main() {
 		}
 		return nil
 	})
-	return
 }
