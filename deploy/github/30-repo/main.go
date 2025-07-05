@@ -28,15 +28,9 @@ var repositories = []repo.WrapperArgs{
 	},
 	{
 		Repository: repo.RepositoryArgs{
-			Name:        "server-bootstrap",
-			Description: "Server boostrapping, from PXE to Ignition",
-			Topics:      []string{"server", "bootstrap", "pxe", "ignition", "bare-metal"},
-		},
-	},
-	{
-		Repository: repo.RepositoryArgs{
 			Name:        "repo-template",
 			Description: "Repository template",
+			Visibility:  "public",
 			Topics:      []string{"repository", "template", "github", "pulumi", "go", "copier"},
 		},
 	},
@@ -44,6 +38,7 @@ var repositories = []repo.WrapperArgs{
 		Repository: repo.RepositoryArgs{
 			Name:        "go-framework",
 			Description: "Go framework, ensuring best practices and security",
+			Visibility:  "public",
 			Topics:      []string{"go", "framework", "best-practices", "security"},
 		},
 	},
@@ -52,6 +47,7 @@ var repositories = []repo.WrapperArgs{
 		Repository: repo.RepositoryArgs{
 			Name:        "infrastructure-components",
 			Description: "Infrastructure components, ensuring homegenous and performant standards",
+			Visibility:  "public",
 			Topics: []string{
 				"go",
 				"pulumi",
@@ -60,6 +56,14 @@ var repositories = []repo.WrapperArgs{
 				"kubernetes",
 				"security",
 			},
+		},
+	},
+	{
+		Repository: repo.RepositoryArgs{
+			Name:        "server-bootstrap",
+			Description: "Server boostrapping, from PXE to Ignition",
+			Visibility:  "private",
+			Topics:      []string{"server", "bootstrap", "pxe", "ignition", "bare-metal"},
 		},
 	},
 }
