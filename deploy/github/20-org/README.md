@@ -57,7 +57,7 @@ Some parts of the GitHub organization are not managed by IaC, as GitHub does not
   - Allow GitHub Actions to create and approve pull requests > `Enable`
 - Discussions > Set up using (IaC-created in `30-repo`) ad-hoc repository
 - Packages
-  - Package creation > `Private only`
+  - Package creation > Enable all
   - Default package settings > `Inherit access from source repository`
 - Authentication security
   - Require two-factor authentication for everyone in the kemadev organization > `Enable`
