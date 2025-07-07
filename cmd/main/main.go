@@ -29,6 +29,7 @@ func main() {
 		os.Exit(1)
 	}
 
+
 	// Define routes to handle
 	routes := http.HTTPRoutesToRegister{
 		http.HTTPRoute{

@@ -5,8 +5,6 @@ dist: dist/goreleaser
 builds:
   - id: default
     main: ./cmd/main
-    flags:
-      - -buildvcs=true
     ldflags:
       - -s -w
     # asmflags:
@@ -17,16 +15,15 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
-      # - darwin
     goarch:
       - amd64
-      # - arm64
+      - arm64
     goamd64:
       # See https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels
-      - v4
-    # goarm64:
-    #   # Neoverse N1 / E1 - Cortex A76 (e.g. Raspberry Pi 5)
-    #   - v8.2
+      - v3
+    goarm64:
+      # Neoverse N1 / E1 - Cortex A76 (e.g. Raspberry Pi 5)
+      - v8.2
     #   # Apple M1 - Neoverse V1
     #   - v8.4
     #   # Apple M2 / M3
@@ -38,17 +35,109 @@ builds:
     mod_timestamp: '{{ .CommitTimestamp }}'
 
 gomod:
-  proxy: false
-  # env:
-  #   - GOPROXY=proxy.golang.org,direct
-  #   - GOSUMDB=sum.golang.org
-  #   - GOPRIVATE=vcs.tld/foo/bar
+  env:
+    - GOPRIVATE=github.com/kemadev/server-bootstrap
   mod: mod
 
 snapshot:
   version_template: '{{ .Version }}-devel-{{ .ShortCommit }}'
 
 report_sizes: true
+
+dockers:
+  - image_templates:
+      - 'ghcr.io/kemadev/{{ .ProjectName }}:v{{ .Version }}-amd64'
+    use: buildx
+    goos: linux
+    goarch: amd64
+    goamd64: v3
+    ids:
+      - default
+    dockerfile: build/Dockerfile
+    extra_files:
+      - ./
+    build_flag_templates:
+      - '--pull'
+      - '--secret=id=gitcreds,src=/tmp/gitcreds'
+      - '--platform=linux/amd64'
+      - '--label=org.opencontainers.image.created={{ .Date }}'
+      - '--label=org.opencontainers.image.title={{ .ProjectName }}'
+      - '--label=org.opencontainers.image.revision={{ .FullCommit }}'
+      - '--label=org.opencontainers.image.version={{ .Version }}'
+  - image_templates:
+      - 'ghcr.io/kemadev/{{ .ProjectName }}:v{{ .Version }}-arm64'
+    use: buildx
+    goos: linux
+    goarch: arm64
+    ids:
+      - default
+    dockerfile: build/Dockerfile
+    extra_files:
+      - ./
+    build_flag_templates:
+      - '--pull'
+      - '--secret=id=gitcreds,src=/tmp/gitcreds'
+      - '--platform=linux/arm64'
+      - '--label=org.opencontainers.image.created={{ .Date }}'
+      - '--label=org.opencontainers.image.title={{ .ProjectName }}'
+      - '--label=org.opencontainers.image.revision={{ .FullCommit }}'
+      - '--label=org.opencontainers.image.version={{ .Version }}'
+  - image_templates:
+      - 'ghcr.io/kemadev/{{ .ProjectName }}-dev:v{{ .Version }}-amd64'
+    use: buildx
+    goos: linux
+    goarch: amd64
+    goamd64: v3
+    ids:
+      - default
+    dockerfile: build/Dockerfile
+    extra_files:
+      - ./
+    build_flag_templates:
+      - '--pull'
+      - '--secret=id=gitcreds,src=/tmp/gitcreds'
+      - '--platform=linux/amd64'
+      - '--target=dev'
+      - '--label=org.opencontainers.image.created={{ .Date }}'
+      - '--label=org.opencontainers.image.title={{ .ProjectName }}'
+      - '--label=org.opencontainers.image.revision={{ .FullCommit }}'
+      - '--label=org.opencontainers.image.version={{ .Version }}'
+  - image_templates:
+      - 'ghcr.io/kemadev/{{ .ProjectName }}-dev:v{{ .Version }}-arm64'
+    use: buildx
+    goos: linux
+    goarch: arm64
+    ids:
+      - default
+    dockerfile: build/Dockerfile
+    extra_files:
+      - ./
+    build_flag_templates:
+      - '--pull'
+      - '--secret=id=gitcreds,src=/tmp/gitcreds'
+      - '--platform=linux/arm64'
+      - '--target=dev'
+      - '--label=org.opencontainers.image.created={{ .Date }}'
+      - '--label=org.opencontainers.image.title={{ .ProjectName }}'
+      - '--label=org.opencontainers.image.revision={{ .FullCommit }}'
+      - '--label=org.opencontainers.image.version={{ .Version }}'
+docker_manifests:
+  - name_template: 'ghcr.io/kemadev/{{ .ProjectName }}:v{{ .Version }}'
+    image_templates:
+      - 'ghcr.io/kemadev/{{ .ProjectName }}:v{{ .Version }}-amd64'
+      - 'ghcr.io/kemadev/{{ .ProjectName }}:v{{ .Version }}-arm64'
+  - name_template: 'ghcr.io/kemadev/{{ .ProjectName }}:latest'
+    image_templates:
+      - 'ghcr.io/kemadev/{{ .ProjectName }}:v{{ .Version }}-amd64'
+      - 'ghcr.io/kemadev/{{ .ProjectName }}:v{{ .Version }}-arm64'
+  - name_template: 'ghcr.io/kemadev/{{ .ProjectName }}-dev:v{{ .Version }}'
+    image_templates:
+      - 'ghcr.io/kemadev/{{ .ProjectName }}-dev:v{{ .Version }}-amd64'
+      - 'ghcr.io/kemadev/{{ .ProjectName }}-dev:v{{ .Version }}-arm64'
+  - name_template: 'ghcr.io/kemadev/{{ .ProjectName }}-dev:latest'
+    image_templates:
+      - 'ghcr.io/kemadev/{{ .ProjectName }}-dev:v{{ .Version }}-amd64'
+      - 'ghcr.io/kemadev/{{ .ProjectName }}-dev:v{{ .Version }}-arm64'
 
 archives:
   - id: default
@@ -65,9 +154,11 @@ checksum:
 sboms:
   - id: default
     artifacts: binary
+    documents:
+      - '{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}-{{ if .Arm64 }}{{ .Arm64 }}{{ end }}{{ if .Amd64 }}{{ .Amd64 }}{{ end }}.spdx.json'
 
 changelog:
-  format: '{{.SHA}}: {{.Message}} (@{{.AuthorName}})'
+  format: '{{ .SHA }}: {{ .Message }}'
   abbrev: 8
   groups:
     - title: Breaking Changes 💥
@@ -85,7 +176,7 @@ changelog:
     - title: Bug Fixes 🐛
       regexp: '^.*?bug(\([[:word:]]+\))??!?:.+$'
       order: 400
-    - title: Dependency Updates 📦
+    - title: Dependencies Updates 📦
       regexp: '^.*?chore(\(deps\))??!?:.+$'
       order: 500
     - title: Other Changes 🔄

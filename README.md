@@ -49,27 +49,35 @@
 
 #### Prerequisites
 
-- [Docker](https://github.com/docker/cli) and [Docker Compose](https://github.com/docker/compose) to run applications in containers. You should configure your credentials store and credential helpers for Docker to work with your container registry
+- [Docker](https://github.com/docker/cli) to run applications in containers. You should configure your credentials store and credential helpers for Docker to work with your container registry
 - [Go](https://github.com/golang/go) to install applications dependencies as needed
 - [Pulumi](https://github.com/pulumi/pulumi) to manage Cloud resources
 - [kind](https://github.com/kubernetes-sigs/kind) to run Kubernetes clusters locally
 - [Kubectl](https://github.com/kubernetes/kubectl) to manage Kubernetes resources (not strictly required but quite handy)
-- Very few other CLI tools such as [git](https://github.com/git/git), that are most likely already installed on your system
+- Very few other CLI tools such as [git](https://github.com/git/git), [bash](https://www.gnu.org/software/bash/), ... that are most likely already installed on your system
 
 #### Running the project
 
-- Common tasks such as running, testing, creating new IaC components, updating Cloud resources, ... are done by mimicking the CI pipelines, using the same container images and the same commands
+- Common tasks such as running, testing, creating new IaC components, updating Cloud resources, ... are done by using [kemutil](https://github.com/kemadev/ci-cd/tree/main/tool/kemutil). You are encouraged to install and use it!
 
 #### CI / CD
 
 ##### Locally
 
-- CI pipelines can be mimicked locally using `kema-runner` image, mounting project's directory as a volume in `/src`, and running the same commands as in the CI pipeline
+- CI pipelines can be mimicked locally using `ci-cd` image, mounting project's directory as a volume in `/src`, and running the same commands as in the CI pipeline
 - That is, you can run the following command to run the whole CI pipeline locally:
 
   ```bash
-  docker run [--rm] -i -t -v .:/src github.com/kemadev/kema-runner ci [--fix]
+  kemutil ci [--fix] [--hot] ci
   ```
+
+- When using `--hot`, your need to export `GIT_TOKEN` environment variable to propagate your git credentials to the container, so that it can fetch private dependencies. This is typically done by running:
+
+  ```bash
+  export GIT_TOKEN=$(gh auth token)
+  ```
+
+- Other commands are available, feel free to run `kemutil help` to see the list of available commands and their usage
 
 ##### False positives
 
@@ -81,4 +89,4 @@
   - `shellcheck`: Add a `shellcheck disable=<rule>` comment. See [this doc](https://github.com/koalaman/shellcheck/wiki/Ignore)
   - `hadolint`: Add a `hadolint ignore=<rule>` comment. See [this doc](https://github.com/hadolint/hadolint/blob/master/README.md#ignoring-rules)
   - `actionlint`: In case of a `shellcheck` error, refer to the `shellcheck` section. Otherwise, you can pass arguments to the linting action to ignore specific rules. See [this doc](https://github.com/rhysd/actionlint/blob/main/docs/usage.md#ignore-some-errors)
-  - `grype`: Add an ignore in [.grype.yaml](config/grype/.grype.yaml). See [this doc](https://github.com/anchore/grype#specifying-matches-to-ignore). Please note that **any vulnerability should be remediated as soon as possible**, only add true false positives to the ignore list. Prefer deploying with a non-exploitable vulnerability reported rather than ignoring it.
+  - `grype`: Add an ignore in upstream [repo-template .grype.yaml](https://github.com/kemadev/repo-template/blob/main/config/grype/.grype.yaml). See [this doc](https://github.com/anchore/grype#specifying-matches-to-ignore). Please note that **any vulnerability should be remediated as soon as possible**, only add true false positives to the ignore list. Prefer deploying with a non-exploitable vulnerability reported rather than ignoring it.

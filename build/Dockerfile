@@ -22,18 +22,11 @@ RUN mkdir -p /root/go
 # TODO Add renovate tracking
 FROM --platform=${BUILDPLATFORM} docker.io/alpine:3.21.3 AS clean-deps
 
-# Docker buildx ARGs
-ARG TARGETOS
-ARG TARGETARCH
-# Disable C compatability, pass build arg ENABLE_CGO=1 to enable
-ARG ENABLE_CGO=0
-
 WORKDIR /deps
 
 COPY --link --from=go-deps /usr/local/go /usr/local/go
 COPY --link --from=go-deps /root/go /root/go
 
-ENV CGO_ENABLED=${ENABLE_CGO} GOOS=${TARGETOS} GOARCH=${TARGETARCH}
 ENV PATH="/root/go/bin:/usr/local/go/bin:${PATH}"
 
 # TODO Add renovate tracking
@@ -42,10 +35,12 @@ FROM --platform=${BUILDPLATFORM} docker.io/alpine:3.21.3 AS dev
 # Docker buildx ARGs
 ARG TARGETOS
 ARG TARGETARCH
-# Disable C compatability, pass build arg ENABLE_CGO=1 to enable
-ARG ENABLE_CGO=0
 
-ENV CGO_ENABLED=${ENABLE_CGO} GOOS=${TARGETOS} GOARCH=${TARGETARCH}
+ARG CGO_ENABLED=0
+ARG GOAMD64=v3
+ARG GOARM64=v8.2
+
+ENV CGO_ENABLED=${CGO_ENABLED} GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM64=${GOARM64} GOAMD64=${GOAMD64}
 
 # Use manually mounted volume for dev, providing hot-reload possibility
 WORKDIR /app
@@ -65,22 +60,39 @@ ENTRYPOINT ["air", "-c", "config/air/.air.toml"]
 
 FROM --platform=${BUILDPLATFORM} clean-deps AS base
 
-RUN --mount=type=cache,target=/root/go/pkg \
+# Docker buildx ARGs
+ARG TARGETOS
+ARG TARGETARCH
+
+ARG CGO_ENABLED=0
+ARG GOAMD64=v3
+ARG GOARM64=v8.2
+
+ENV CGO_ENABLED=${CGO_ENABLED} GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM64=${GOARM64} GOAMD64=${GOAMD64}
+
+RUN --mount=type=secret,id=gitcreds \
+	--mount=type=cache,target=/root/go/pkg \
 	--mount=type=bind,source=go.mod,target=go.mod \
 	--mount=type=bind,source=go.sum,target=go.sum \
+	cp /run/secrets/gitcreds /root/.netrc && \
 	go mod download -x
 
-FROM base AS build
-
-WORKDIR /app
+FROM --platform=${BUILDPLATFORM} base AS build
 
 RUN --mount=type=cache,target=/root/go/pkg \
 	--mount=type=cache,target=/root/.cache \
-	--mount=type=bind,target=. \
+	--mount=type=bind,source=.,target=. \
 	go build -ldflags='-s -w' -o /usr/local/bin/app ./cmd/main
 
 # hadolint ignore=DL3007
 FROM gcr.io/distroless/static-debian12:nonroot AS main
+
+LABEL org.opencontainers.image.authors="kemadev"
+LABEL org.opencontainers.image.url="ghcr.io/kemadev/infrastructure-components"
+LABEL org.opencontainers.image.documentation="https://github.com/kemadev/infrastructure-components"
+LABEL org.opencontainers.image.source="https://github.com/kemadev/infrastructure-components"
+LABEL org.opencontainers.image.vendor="kemadev"
+LABEL org.opencontainers.image.licenses="MPL-2.0"
 
 COPY --link --from=build /usr/local/bin/app /app
 
