@@ -1,9 +1,11 @@
-module github.com/kemadev/infrastructure-components/deploy/00-dev-cluster
+module github.com/kemadev/infrastructure-components/pkg/pulumi/stack-template
 
 go 1.24.2
 
+toolchain go1.24.3
+
 require (
-	github.com/kemadev/infrastructure-components v0.0.0-20250703131629-8ba6f0fa045c
+	github.com/kemadev/infrastructure-components v0.0.0-20250703072511-56c738217a01
 	github.com/pulumi/pulumi/sdk/v3 v3.181.0
 )
 
@@ -61,8 +63,7 @@ require (
 	github.com/pkg/term v1.1.0 // indirect
 	github.com/pulumi/appdash v0.0.0-20231130102222-75f619a67231 // indirect
 	github.com/pulumi/esc v0.14.3 // indirect
-	github.com/pulumi/pulumi-command/sdk v1.1.0 // indirect
-	github.com/pulumi/pulumi-kubernetes/sdk/v4 v4.23.0 // indirect
+	github.com/pulumi/pulumi-github/sdk/v6 v6.7.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06 // indirect
@@ -91,7 +92,7 @@ require (
 	google.golang.org/grpc v1.73.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/frand v1.5.1 // indirect
+	pgregory.net/rapid v0.6.1 // indirect
 )
