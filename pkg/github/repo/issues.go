@@ -368,6 +368,7 @@ func createIssues(
 			pulumi.String(IssuesDefaultArgs["size/XS"].Name),
 			pulumi.String(IssuesDefaultArgs["complexity/low"].Name),
 		},
+		// TODO add a dependsOn to the labels creation (otherwise issue creates labels and labels creation return 422 already exists)
 	}, pulumi.Provider(provider))
 	if err != nil {
 		return err

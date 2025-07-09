@@ -60,6 +60,14 @@ var repositories = []repo.WrapperArgs{
 	},
 	{
 		Repository: repo.RepositoryArgs{
+			Name:        "kemutil",
+			Description: "CLI utility for everyday tasks",
+			Visibility:  "public",
+			Topics:      []string{"go", "framework", "cli", "utility", "everyday-tasks"},
+		},
+	},
+	{
+		Repository: repo.RepositoryArgs{
 			Name:        "server-bootstrap",
 			Description: "Server boostrapping, from PXE to Ignition",
 			Visibility:  "private",
