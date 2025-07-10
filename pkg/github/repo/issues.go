@@ -358,8 +358,9 @@ func createIssues(
 		Title:           pulumi.String("Repository initialization tasks :pencil:"),
 		Body: pulumi.String(`## Welcome to the repository! :wave:
 
-- [ ] Pull repository template, using ` + "`copier copy https://github.com/kemadev/repo-template .`" + ` :spiral_notepad:
+- [ ] Pull repository template, using ` + "`kemutil repotpl init`" + ` :spiral_notepad:
 - [ ] Modify the project's README. A basic template is provided, feel the blanks! :handshake:
+- [ ] Add the project's documentation. A readme is provided in the ` + "`doc/`" + ` directory, add other ` + "`*.md`" + ` files and link them in the readme as needed :book:
 - [ ] Add a social image preview for the repository. It's what people see when previewing links, make it catchy! :link:
 `),
 		Labels: pulumi.StringArray{
