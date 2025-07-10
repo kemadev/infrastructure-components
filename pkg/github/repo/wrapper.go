@@ -68,10 +68,6 @@ func Wrapper(ctx *pulumi.Context, args WrapperArgs) error {
 			return err
 		}
 	}
-	err = createDependabot(ctx, provider, repo, prefix)
-	if err != nil {
-		return err
-	}
 	err = createIssues(ctx, provider, repo, prefix)
 	if err != nil {
 		return err

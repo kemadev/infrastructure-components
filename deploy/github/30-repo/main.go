@@ -42,6 +42,14 @@ var repositories = []repo.WrapperArgs{
 			Topics:      []string{"go", "framework", "best-practices", "security"},
 		},
 	},
+	{
+		Repository: repo.RepositoryArgs{
+			Name:        "ci-cd",
+			Description: "CI/CD tooling for repositories",
+			Visibility:  "public",
+			Topics:      []string{"go", "ci-cd", "github", "pulumi", "docker", "runner"},
+		},
+	},
 	// NOTE This one has been initially imported using `pulumi import 'github:index/repository:Repository' '<resource id>' <repo name> --provider '<provider urn>'`
 	{
 		Repository: repo.RepositoryArgs{

@@ -130,7 +130,6 @@ func createRepo(
 					},
 				}
 			}
-			// Advanced Security is required for private repositories
 			return nil
 		}(),
 	}, pulumi.Provider(provider), pulumi.IgnoreChanges([]string{"template"}))

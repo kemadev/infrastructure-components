@@ -77,6 +77,8 @@ Some parts of the GitHub organization are not managed by IaC, as GitHub does not
               - `Repository admin role`
       - Code scanning
         - Runner type > `Standard`
+      - Dependency scanning
+        - Security updates > `Disable` (we use another tool)
   - Global settings
     - GitHub presets
       - Dismiss low-impact alerts for development-scoped dependencies > `Disable`
