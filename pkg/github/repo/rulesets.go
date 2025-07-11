@@ -16,9 +16,10 @@ type RulesetsArgs struct {
 var RulesetsDefaultArgs = RulesetsArgs{
 	RequiredReviewersMain: 1,
 	RequiredStatusChecks: []string{
-		"Global - CI / Scan code",
-		"Global - CI / Scan secrets",
-		"Check PR title / Check PR title",
+		"Global - CI / Secrets scan",
+		"Global - CI / Dependencies scan",
+		"Global - CI / Static Application Security Testing",
+		"PR - Title Check / PR title check",
 	},
 }
 
