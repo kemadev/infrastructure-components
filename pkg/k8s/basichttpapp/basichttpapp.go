@@ -10,7 +10,7 @@ import (
 
 	"dario.cat/mergo"
 	"github.com/blang/semver"
-	"github.com/caarlos0/svu/pkg/svu"
+	"github.com/caarlos0/svu/v3/pkg/svu"
 	"github.com/kemadev/ci-cd/pkg/git"
 	"github.com/kemadev/go-framework/pkg/config"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/gateway"
