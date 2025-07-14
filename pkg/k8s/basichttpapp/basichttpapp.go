@@ -39,8 +39,7 @@ type AppParms struct {
 	// is automatically set to AppVersion.
 	ImageTag semver.Version
 	// RuntimeEnv is the runtime environment, i.e. Pulumi stack name. It is used as a suffix to the application name
-	// in application instance name, ensuring uniqueness across environments. Please note that [github.com/kemadev/go-framework/pkg/config.Env_dev]
-	// is a special case, tweaking the application deployment to ease local development.
+	// in application instance name, ensuring uniqueness across environments.
 	RuntimeEnv string
 	// OTelEndpointUrl is the OpenTelemetry collector endpoint URL.
 	OTelEndpointUrl url.URL
@@ -106,7 +105,7 @@ type AppParms struct {
 	MaxReplicas int
 	// ProgressDeadlineSeconds is the maximum time in seconds for the deployment to be ready.
 	ProgressDeadlineSeconds int
-	// DevImagePullPolicy is the image pull policy to use.
+	// ImagePullPolicy is the image pull policy to use.
 	ImagePullPolicy string
 	// PodAffinity is the pod affinity to use for the pod. Should be set when know pods communicate alot with the application.
 	PodAffinity corev1.AffinityPtrInput
@@ -122,12 +121,6 @@ type AppParms struct {
 	HorizontalPodAutoscalerBehavior autoscalingv2.HorizontalPodAutoscalerBehaviorPtrInput
 	// HorizontalPodAutoscalerBehaviorMetricSpec is the metric spec for the HPA behavior.
 	HorizontalPodAutoscalerBehaviorMetricSpec autoscalingv2.MetricSpecArray
-	// DevDnsAdditionalNameservers is the list of additional nameservers use in pods (dev stack only).
-	DevDnsAdditionalNameservers []string
-	// DevGoPrivateString is the GOPRIVATE string to set (dev stack only).
-	DevGoPrivateString string
-	// DevVolumeMountPath is the path where the organization code is mounted on node (dev stack only).
-	DevVolumeMountPath string
 }
 
 var (
@@ -137,10 +130,6 @@ var (
 	ErrMultipleRemoteURLs = fmt.Errorf("found more than 1 remote URL")
 	// ErrInvalidUrl is a sentinel error indicating that the remote URL is invalid.
 	ErrInvalidUrl = fmt.Errorf("repository remote URL is invlid")
-	// ErrGitTokenNotFound is a sentinel error indicating that the git token was not found in the pulumi config.
-	ErrGitTokenNotFound = fmt.Errorf(
-		"git-token not found in pulumi config, please set it using `pulumi config set --secret git-token`, with a personal access token (with read access to organization's repositories) as value",
-	)
 )
 
 // getGitInfos returns the application name and the remote URL of the git repository, based on the git remote "origin", and
@@ -180,7 +169,7 @@ func getGitInfos() (string, url.URL, error) {
 // getVersionFromGit returns the application version from the git repository, based on the current tag, and an error if any.
 func getVersionFromGit() (semver.Version, error) {
 	versionString, err := svu.Current(
-		svu.StripPrefix(),
+		svu.WithPrefix(""),
 	)
 	if err != nil {
 		return semver.Version{}, fmt.Errorf("error getting app version from git: %w", err)
@@ -323,15 +312,6 @@ func validateParams(params *AppParms) error {
 	if params.HorizontalPodAutoscalerBehaviorMetricSpec == nil {
 		return fmt.Errorf("HorizontalPodAutoscalerBehaviorMetricSpec cannot be nil")
 	}
-	// if len(params.DevDnsAdditionalNameservers) == 0 {
-	// 	return fmt.Errorf("DevDnsAdditionalNameservers cannot be empty")
-	// }
-	// if params.DevGoPrivateString == "" {
-	// 	return fmt.Errorf("DevGoPrivateString cannot be empty")
-	// }
-	if params.DevVolumeMountPath == "" {
-		return fmt.Errorf("DevVolumeMountPath cannot be empty")
-	}
 	return nil
 }
 
@@ -350,7 +330,7 @@ func mergeParams(
 	defPort := 8080
 	pathPrefix := strings.Replace(
 		strings.Replace(
-			host.URLMainApi(appName, appVersion.String()).String(),
+			host.URLMainApi(appName, appVersion).String(),
 			host.ServiceNamePathPattern,
 			appName,
 			-1,
@@ -608,11 +588,6 @@ func mergeParams(
 				},
 			},
 		},
-		DevDnsAdditionalNameservers: []string{
-			"1.1.1.1",
-		},
-		DevVolumeMountPath: "/app",
-		DevGoPrivateString: "github.com/kemadev",
 	}
 	err = mergo.Merge(params, defParams)
 	if err != nil {
@@ -677,9 +652,6 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 	// Namespace to deploy to
 	namespace := appInstance
 
-	// Where to mount organization's code, must match kind mount
-	orgCodeVolume := "/git-vcs-org"
-
 	// Application namespace
 	_, err = corev1.NewNamespace(ctx, "namespace", &corev1.NamespaceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
@@ -687,10 +659,6 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 			Namespace: pulumi.String(namespace),
 			Labels: func() pulumi.StringMap {
 				enforce := "restricted"
-				if ctx.Stack() == config.Env_dev {
-					// Allow using HostPath volume in dev, as well as other side-effects, but should be mitigated by SecurityContext
-					enforce = "privileged"
-				}
 				labels := pulumi.StringMap{
 					// See https://kubernetes.io/docs/concepts/security/pod-security-admission/#pod-security-admission-labels-for-namespaces
 					"pod-security.kubernetes.io/enforce":         pulumi.String(enforce),
@@ -774,34 +742,6 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 		}(),
 	})
 
-	netRcFileName := ".netrc"
-	var gitSecret *corev1.Secret
-	if ctx.Stack() == config.Env_dev {
-		gitTokenConfigKey := "git-token"
-		gitToken, present := ctx.GetConfig(
-			ctx.Project() + ":" + gitTokenConfigKey,
-		)
-		if !present || gitToken == "" {
-			return ErrGitTokenNotFound
-		}
-		gitSecret, err = corev1.NewSecret(ctx, "gitSecret", &corev1.SecretArgs{
-			Type: pulumi.String("Opaque"),
-			Metadata: &metav1.ObjectMetaArgs{
-				Name:      pulumi.String(appInstance + "-git-secret"),
-				Namespace: pulumi.String(namespace),
-				Labels:    sharedLabels,
-			},
-			StringData: pulumi.StringMap{
-				netRcFileName: pulumi.String("machine " + params.ProjectUrl.Host + `
-login git
-password ` + gitToken),
-			},
-		})
-		if err != nil {
-			return err
-		}
-	}
-
 	// Application deployment
 	deployment, err := appsv1.NewDeployment(ctx, "deployment", &appsv1.DeploymentArgs{
 		Metadata: &metav1.ObjectMetaArgs{
@@ -835,67 +775,19 @@ password ` + gitToken),
 									},
 								},
 							},
-							Env: func() corev1.EnvVarArray {
-								if ctx.Stack() == config.Env_dev {
-									if params.DevGoPrivateString == "" {
-										return nil
-									}
-									// Set GOPRIVATE for dev environment
-									return corev1.EnvVarArray{
-										corev1.EnvVarArgs{
-											Name:  pulumi.String("GOPRIVATE"),
-											Value: pulumi.String(params.DevGoPrivateString),
-										},
-									}
-								}
-								return nil
-							}(),
-							WorkingDir: func() pulumi.StringPtrInput {
-								if ctx.Stack() == config.Env_dev {
-									// Use mounted volume's project dir as working dir in dev
-									return pulumi.String(
-										params.DevVolumeMountPath + "/" + params.AppName,
-									)
-								}
-								return nil
-							}(),
-							LivenessProbe: func() corev1.ProbePtrInput {
-								if ctx.Stack() == config.Env_dev {
-									return nil
-								}
-								return corev1.ProbeArgs{
-									InitialDelaySeconds: pulumi.Int(10),
-									HttpGet: corev1.HTTPGetActionArgs{
-										Path: pulumi.String(config.HTTPLivenessCheckPath),
-										Port: pulumi.Int(params.Port),
-									},
-								}
-							}(),
-							ReadinessProbe: func() corev1.ProbePtrInput {
-								if ctx.Stack() == config.Env_dev {
-									return nil
-								}
-								return corev1.ProbeArgs{
-									HttpGet: corev1.HTTPGetActionArgs{
-										Path: pulumi.String(config.HTTPReadinessCheckPath),
-										Port: pulumi.Int(params.Port),
-									},
-								}
-							}(),
-							// HACK Enable colorful output for air, remove once https://github.com/air-verse/air/pull/768 is merged
-							Stdin: func() pulumi.Bool {
-								if ctx.Stack() == config.Env_dev {
-									return pulumi.Bool(true)
-								}
-								return pulumi.Bool(false)
-							}(),
-							// HACK Enable colorful output for air, remove once https://github.com/air-verse/air/pull/768 is merged
-							Tty: func() pulumi.Bool {
-								if ctx.Stack() == config.Env_dev {
-									return pulumi.Bool(true)
-								}
-								return pulumi.Bool(false)
-							}(),
+							LivenessProbe: corev1.ProbeArgs{
+								InitialDelaySeconds: pulumi.Int(10),
+								HttpGet: corev1.HTTPGetActionArgs{
+									Path: pulumi.String(config.HTTPLivenessCheckPath),
+									Port: pulumi.Int(params.Port),
+								},
+							},
+							ReadinessProbe: corev1.ProbeArgs{
+								HttpGet: corev1.HTTPGetActionArgs{
+									Path: pulumi.String(config.HTTPReadinessCheckPath),
+									Port: pulumi.Int(params.Port),
+								},
+							},
 							Image: pulumi.String(
 								params.ImageRef.Host + params.ImageRef.Path + ":" + params.ImageTag.String(),
 							),
@@ -906,33 +798,6 @@ password ` + gitToken),
 									Protocol:      pulumi.String("TCP"),
 								},
 							},
-							VolumeMounts: func() corev1.VolumeMountArrayInput {
-								if ctx.Stack() == config.Env_dev {
-									return corev1.VolumeMountArray{
-										// Mount organization code volume in dev
-										&corev1.VolumeMountArgs{
-											Name:      pulumi.String(appInstance),
-											MountPath: pulumi.String(params.DevVolumeMountPath),
-										},
-										// Mountnetrc file volume in dev
-										&corev1.VolumeMountArgs{
-											Name: gitSecret.Metadata.Name().Elem(),
-											MountPath: func() pulumi.String {
-												if params.RunAsRoot {
-													return pulumi.String(
-														"/root/" + netRcFileName,
-													)
-												}
-												return pulumi.String(
-													"/home/nonroot/" + netRcFileName,
-												)
-											}(),
-											SubPath: pulumi.String(netRcFileName),
-										},
-									}
-								}
-								return nil
-							}(),
 							SecurityContext: corev1.SecurityContextArgs{
 								AllowPrivilegeEscalation: pulumi.Bool(false),
 								RunAsNonRoot:             pulumi.Bool(!params.RunAsRoot),
@@ -968,61 +833,6 @@ password ` + gitToken),
 							},
 						},
 					},
-					DnsConfig: func() corev1.PodDNSConfigPtrInput {
-						if ctx.Stack() == config.Env_dev {
-							// Add resolver for public DNS in dev
-							return corev1.PodDNSConfigArgs{
-								Nameservers: func() pulumi.StringArrayInput {
-									if len(params.DevDnsAdditionalNameservers) == 0 {
-										return nil
-									}
-									nameservers := make(
-										pulumi.StringArray,
-										len(params.DevDnsAdditionalNameservers),
-									)
-									for i, ns := range params.DevDnsAdditionalNameservers {
-										nameservers[i] = pulumi.String(ns)
-									}
-									return nameservers
-								}(),
-							}
-						}
-						return nil
-					}(),
-					Volumes: func() corev1.VolumeArrayInput {
-						if ctx.Stack() == config.Env_dev {
-							return corev1.VolumeArray{
-								// Create organization code volume in dev
-								corev1.VolumeArgs{
-									Name: pulumi.String(appInstance),
-									HostPath: corev1.HostPathVolumeSourceArgs{
-										Path: pulumi.String(orgCodeVolume),
-										Type: pulumi.String("Directory"),
-									},
-								},
-								// Create netrc file volume in dev
-								corev1.VolumeArgs{
-									Name: gitSecret.Metadata.Name().Elem(),
-									Projected: corev1.ProjectedVolumeSourceArgs{
-										Sources: corev1.VolumeProjectionArray{
-											corev1.VolumeProjectionArgs{
-												Secret: corev1.SecretProjectionArgs{
-													Name: gitSecret.Metadata.Name(),
-													Items: corev1.KeyToPathArray{
-														corev1.KeyToPathArgs{
-															Key:  pulumi.String(netRcFileName),
-															Path: pulumi.String(netRcFileName),
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							}
-						}
-						return nil
-					}(),
 				},
 			},
 		},

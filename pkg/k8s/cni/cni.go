@@ -67,36 +67,12 @@ func DeployCNI(
 		).ApplyT(func(cidr interface{}) pulumi.Map {
 			nativeRoutingSubnet := cidr.(string)
 			return pulumi.Map{
-				"debug": func() pulumi.MapInput {
-					if ctx.Stack() != "dev" {
-						return pulumi.Map{
-							"enabled": pulumi.Bool(true),
-							"verbose": pulumi.String("flow kvstore envoy datapath policy"),
-						}
-					}
-					return nil
-				}(),
 				// Add labels to all resources
 				"commonLabels": sharedLabels,
 				"image": pulumi.Map{
 					// Don't pull if image already present
 					"pullPolicy": pulumi.String("IfNotPresent"),
 				},
-				// kind specific, permit initial operator deployment, use a nillable value to avoid including the Helm value when it is nil
-				"k8sServiceHost": func() pulumi.StringInput {
-					if ctx.Stack() != "dev" {
-						return nil
-					}
-					return pulumi.String(clusterName + "-control-plane")
-				}(),
-				// kind specific, permit initial operator deployment, use a nillable value to avoid including the Helm value when it is nil
-				"k8sServicePort": *func() *pulumi.Int {
-					if ctx.Stack() != "dev" {
-						return nil
-					}
-					res := pulumi.Int(6443)
-					return &res
-				}(),
 				// Replace kube-proxy
 				"kubeProxyReplacement": pulumi.Bool(true),
 				// Enable L7 Gateway API capabilities

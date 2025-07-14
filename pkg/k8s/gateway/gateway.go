@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/kemadev/go-framework/pkg/config"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/label"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/pulumilabel"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
@@ -131,27 +130,7 @@ func DeployGatewayResources(
 					}(),
 					"gatewayClassName": pulumi.String("cilium"),
 					"listeners": func() pulumi.ArrayInput {
-						var listeners pulumi.Array = nil
-						if ctx.Stack() == config.Env_dev {
-							// Let HTTP traffic through for dev
-							listeners = append(listeners, pulumi.Map{
-								"name":     pulumi.String("http-dev"),
-								"port":     pulumi.Int(80),
-								"protocol": pulumi.String("HTTP"),
-								"allowedRoutes": pulumi.Map{
-									"namespaces": pulumi.Map{
-										"from": pulumi.String("Selector"),
-										"selector": pulumi.Map{
-											"matchLabels": pulumi.Map{
-												label.SharedGatewayAccessLabelKey: pulumi.String(
-													label.SharedGatewayAccessLabelValue,
-												),
-											},
-										},
-									},
-								},
-							})
-						}
+						var listeners pulumi.Array = make(pulumi.Array, 0, len(domains))
 						for _, domain := range domains {
 							l := pulumi.Map{
 								"name":     pulumi.String(domain + "-wildcard"),

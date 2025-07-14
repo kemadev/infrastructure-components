@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/blang/semver"
 	"github.com/kemadev/infrastructure-components/pkg/private/domain"
 )
 
@@ -138,10 +139,10 @@ var (
 	// URLMainApi is the URL for conventional [net/http.ServeMux] matching pattern every application / service should use,
 	// providing a common structure for all applications / services.
 	// All applications / services should use this pattern.
-	URLMainApi = func(serviceName, serviceVersion string) URL {
+	URLMainApi = func(serviceName string, serviceVersion semver.Version) URL {
 		return URL{
 			BaseHost:    HostMainApi,
-			PathPattern: "/" + serviceName + "/" + serviceVersion + "/",
+			PathPattern: "/" + serviceName + "/" + serviceVersion.String() + "/",
 		}
 	}
 	// // URLSecurityGuidelines is the URL for company's security guidelines & responsible disclosure procedure
