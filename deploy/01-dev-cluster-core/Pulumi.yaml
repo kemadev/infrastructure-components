@@ -1,6 +1,0 @@
-name: github-com-kemadev-infrastructure-components-deploy-01-dev-cluster-core
-description: Dev cluster creation for infrastructure-components
-runtime: go
-config: {}
-backend:
-  url: file://./pulumi-backend

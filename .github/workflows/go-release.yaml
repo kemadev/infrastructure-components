@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kemadev/ci-cd:latest
+      # GitHub Actions workaround, see https://docs.github.com/en/actions/reference/dockerfile-support-for-github-actions#user
+      options: --user root:root
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.github_token }}
@@ -27,7 +29,6 @@ jobs:
       - name: Start buildkitd
         run: |
           nohup buildkitd > /tmp/buildkitd.log 2>&1 &
-          sleep 5
       - name: Checkout
         id: checkout
         uses: actions/checkout@v4
@@ -44,9 +45,10 @@ jobs:
       - name: Create git secrets
         shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GORELEASER_PAT }}
         run: |
-          echo -e "machine $(git remote get-url origin | sed -E 's|(https?://)?([^/@:]+).*|\2|')\nlogin git\npassword ${GITHUB_TOKEN}\n" > "/tmp/gitcreds"
+          echo -e "machine $(git remote get-url origin | sed -E 's|(https?://)?([^/@:]+).*|\2|')\nlogin git\npassword ${GITHUB_TOKEN}\n" > "/tmp/netrc"
+          cp /tmp/netrc "${HOME}/.netrc"
       - name: Go release
         id: go-release
         env:
@@ -54,8 +56,8 @@ jobs:
         run: |
           kema-runner release
       - name: Clean up
-        when: always
+        if: always()
         shell: bash
         run: |
-          rm -f /tmp/gitcreds
-          docker logout ghcr.io
+          rm -f /tmp/netrc || { echo "Git credentials file removal failed" && exit 1; }
+          docker logout ghcr.io || { echo "Docker logout failed" && exit 1; }

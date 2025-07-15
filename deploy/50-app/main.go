@@ -27,7 +27,13 @@ func main() {
 			},
 		})
 		if err != nil {
+<<<<<<< before updating
 			return fmt.Errorf("error deploying basic HTTP app: %w", err)
+||||||| last update
+			return err
+=======
+			return fmt.Errorf("failed to deploy basic HTTP app: %w", err)
+>>>>>>> after updating
 		}
 		return nil
 	})

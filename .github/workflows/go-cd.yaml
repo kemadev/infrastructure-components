@@ -1,27 +1,21 @@
-name: Markdown - CI
+name: Go - CD
 
 on:
-  schedule:
-    # Each day at 3:00 AM
-    - cron: 0 3 * * *
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-      - unlocked
-    paths:
-      - '**.md'
+  push:
+    branches:
+      - main
+      - next
   workflow_dispatch: {}
 
 permissions:
   contents: read
 
 jobs:
-  markdown-lint:
-    name: Markdown lint
+  go-cd:
+    name: Go CD
     permissions:
-      contents: read
+      contents: write
+      packages: write
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kemadev/ci-cd:latest
@@ -30,10 +24,16 @@ jobs:
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.github_token }}
+    concurrency:
+      group: go-cd-${{ github.ref_name }}
     steps:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v4
-      - name: Markdown lint
-        id: markdown-lint
-        run: kema-runner markdown
+      - name: Go CD
+        id: go-cd
+        env:
+          BRANCH: ${{ github.ref_name }}
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+        run: |
+          kema-runner cd

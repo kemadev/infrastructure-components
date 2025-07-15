@@ -54,12 +54,11 @@ dockers:
     ids:
       - default
     dockerfile: build/Dockerfile
-    extra_files:
-      - ./
     build_flag_templates:
       - '--pull'
-      - '--secret=id=gitcreds,src=/tmp/gitcreds'
+      - '--secret=id=netrc,src=/tmp/netrc'
       - '--platform=linux/amd64'
+      - '--target=goreleaser'
       - '--label=org.opencontainers.image.created={{ .Date }}'
       - '--label=org.opencontainers.image.title={{ .ProjectName }}'
       - '--label=org.opencontainers.image.revision={{ .FullCommit }}'
@@ -72,51 +71,11 @@ dockers:
     ids:
       - default
     dockerfile: build/Dockerfile
-    extra_files:
-      - ./
     build_flag_templates:
       - '--pull'
-      - '--secret=id=gitcreds,src=/tmp/gitcreds'
+      - '--secret=id=netrc,src=/tmp/netrc'
       - '--platform=linux/arm64'
-      - '--label=org.opencontainers.image.created={{ .Date }}'
-      - '--label=org.opencontainers.image.title={{ .ProjectName }}'
-      - '--label=org.opencontainers.image.revision={{ .FullCommit }}'
-      - '--label=org.opencontainers.image.version={{ .Version }}'
-  - image_templates:
-      - 'ghcr.io/kemadev/{{ .ProjectName }}-dev:v{{ .Version }}-amd64'
-    use: buildx
-    goos: linux
-    goarch: amd64
-    goamd64: v3
-    ids:
-      - default
-    dockerfile: build/Dockerfile
-    extra_files:
-      - ./
-    build_flag_templates:
-      - '--pull'
-      - '--secret=id=gitcreds,src=/tmp/gitcreds'
-      - '--platform=linux/amd64'
-      - '--target=dev'
-      - '--label=org.opencontainers.image.created={{ .Date }}'
-      - '--label=org.opencontainers.image.title={{ .ProjectName }}'
-      - '--label=org.opencontainers.image.revision={{ .FullCommit }}'
-      - '--label=org.opencontainers.image.version={{ .Version }}'
-  - image_templates:
-      - 'ghcr.io/kemadev/{{ .ProjectName }}-dev:v{{ .Version }}-arm64'
-    use: buildx
-    goos: linux
-    goarch: arm64
-    ids:
-      - default
-    dockerfile: build/Dockerfile
-    extra_files:
-      - ./
-    build_flag_templates:
-      - '--pull'
-      - '--secret=id=gitcreds,src=/tmp/gitcreds'
-      - '--platform=linux/arm64'
-      - '--target=dev'
+      - '--target=goreleaser'
       - '--label=org.opencontainers.image.created={{ .Date }}'
       - '--label=org.opencontainers.image.title={{ .ProjectName }}'
       - '--label=org.opencontainers.image.revision={{ .FullCommit }}'
@@ -130,15 +89,6 @@ docker_manifests:
     image_templates:
       - 'ghcr.io/kemadev/{{ .ProjectName }}:v{{ .Version }}-amd64'
       - 'ghcr.io/kemadev/{{ .ProjectName }}:v{{ .Version }}-arm64'
-  - name_template: 'ghcr.io/kemadev/{{ .ProjectName }}-dev:v{{ .Version }}'
-    image_templates:
-      - 'ghcr.io/kemadev/{{ .ProjectName }}-dev:v{{ .Version }}-amd64'
-      - 'ghcr.io/kemadev/{{ .ProjectName }}-dev:v{{ .Version }}-arm64'
-  - name_template: 'ghcr.io/kemadev/{{ .ProjectName }}-dev:latest'
-    image_templates:
-      - 'ghcr.io/kemadev/{{ .ProjectName }}-dev:v{{ .Version }}-amd64'
-      - 'ghcr.io/kemadev/{{ .ProjectName }}-dev:v{{ .Version }}-arm64'
-
 archives:
   - id: default
     files:
@@ -164,20 +114,38 @@ changelog:
     - title: Breaking Changes 💥
       regexp: '^.*?[[:word:]](\([[:word:]]+\))??!:.+$'
       order: 0
-    - title: Security Updates 🔒
-      regexp: '^.*?security(\([[:word:]]+\))??!?:.+$'
+    - title: Reverts ⏪
+      regexp: '^.*?revert(\([[:word:]]+\))??!?:.+$'
       order: 100
     - title: New Features 🚀
       regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
       order: 200
+    - title: Bug Fixes 🐛
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 300
     - title: Performance Improvements ⚡
       regexp: '^.*?perf(\([[:word:]]+\))??!?:.+$'
-      order: 300
-    - title: Bug Fixes 🐛
-      regexp: '^.*?bug(\([[:word:]]+\))??!?:.+$'
       order: 400
-    - title: Dependencies Updates 📦
-      regexp: '^.*?chore(\(deps\))??!?:.+$'
+    - title: Refactoring 🛠️
+      regexp: '^.*?refactor(\([[:word:]]+\))??!?:.+$'
       order: 500
+    - title: Tests ✅
+      regexp: '^.*?test(\([[:word:]]+\))??!?:.+$'
+      order: 600
+    - title: Code Style 🎨
+      regexp: '^.*?style(\([[:word:]]+\))??!?:.+$'
+      order: 700
+    - title: Build System 🏗️
+      regexp: '^.*?build(\([[:word:]]+\))??!?:.+$'
+      order: 800
+    - title: Continuous Integration 🤖
+      regexp: '^.*?ci(\([[:word:]]+\))??!?:.+$'
+      order: 900
+    - title: Documentation 📚
+      regexp: '^.*?docs(\([[:word:]]+\))??!?:.+$'
+      order: 950
+    - title: Chores 🧹
+      regexp: '^.*?chore(\([[:word:]]+\))??!?:.+$'
+      order: 970
     - title: Other Changes 🔄
       order: 999

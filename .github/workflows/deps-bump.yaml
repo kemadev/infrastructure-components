@@ -1,25 +1,17 @@
-name: Markdown - CI
+name: Dependencies -  Bump versions
 
 on:
   schedule:
     # Each day at 3:00 AM
     - cron: 0 3 * * *
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-      - unlocked
-    paths:
-      - '**.md'
   workflow_dispatch: {}
 
 permissions:
   contents: read
 
 jobs:
-  markdown-lint:
-    name: Markdown lint
+  deps-bump:
+    name: Dependencies bump
     permissions:
       contents: read
     runs-on: ubuntu-latest
@@ -34,6 +26,12 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v4
-      - name: Markdown lint
-        id: markdown-lint
-        run: kema-runner markdown
+      - name: Dependencies bump
+        id: deps-bump
+        env:
+          RENOVATE_TOKEN: ${{ secrets.RENOVATE_PAT }}
+          RENOVATE_ENDPOINT: https://api.github.com
+          RENOVATE_PLATFORM: github
+          RENOVATE_REPOSITORIES: "['kemadev/infrastructure-components']"
+          RENOVATE_PR_HOURLY_LIMIT: 10
+        run: kema-runner deps-bump
