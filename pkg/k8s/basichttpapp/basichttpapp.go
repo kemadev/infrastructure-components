@@ -716,7 +716,9 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 				config.EnvVarKeyHTTPWriteTimeout: pulumi.String(
 					strconv.Itoa(params.HTTPWriteTimeout),
 				),
-				config.EnvVarKeyMetricsExportInterval: pulumi.String(params.MetricsExportInterval),
+				config.EnvVarKeyMetricsExportInterval: pulumi.String(
+					strconv.Itoa(params.MetricsExportInterval),
+				),
 				config.EnvVarKeyTracesSampleRatio: pulumi.String(
 					strconv.FormatFloat(params.TracesSampleRatio, 'f', -1, 64),
 				),
