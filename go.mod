@@ -8,7 +8,6 @@ require (
 	github.com/caarlos0/svu/v3 v3.2.3
 	github.com/kemadev/ci-cd v0.5.0
 	github.com/kemadev/go-framework v0.0.0-20250703121255-f9d7063b499c
-	github.com/pulumi/pulumi-command/sdk v1.1.0
 	github.com/pulumi/pulumi-github/sdk/v6 v6.7.2
 	github.com/pulumi/pulumi-kubernetes/sdk/v4 v4.23.0
 	github.com/pulumi/pulumi-random/sdk/v4 v4.18.2
@@ -19,7 +18,6 @@ require (
 	go.opentelemetry.io/otel/metric v1.37.0
 	go.opentelemetry.io/otel/trace v1.37.0
 	golang.org/x/text v0.26.0
-	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
