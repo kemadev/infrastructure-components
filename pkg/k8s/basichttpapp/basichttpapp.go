@@ -271,6 +271,12 @@ func validateParams(params *AppParms) error {
 	if params.HTTPWriteTimeout == 0 {
 		return fmt.Errorf("HTTPWriteTimeout cannot be zero")
 	}
+	if params.MetricsExportInterval == 0 {
+		return fmt.Errorf("MetricsExportInterval cannot be zero")
+	}
+	if params.TracesSampleRatio <= 0 || params.TracesSampleRatio > 1 {
+		return fmt.Errorf("TracesSampleRatio must be between 0 and 1")
+	}
 	if params.CPURequestMiliCPU == 0 {
 		return fmt.Errorf("CPURequest cannot be zero")
 	}
@@ -402,6 +408,8 @@ func mergeParams(
 		},
 		HTTPReadTimeout:         5,
 		HTTPWriteTimeout:        10,
+		MetricsExportInterval:   15,
+		TracesSampleRatio:       1,
 		CPURequestMiliCPU:       500,
 		MemoryRequestMiB:        500,
 		MinReplicas:             1,
