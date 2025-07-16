@@ -32,6 +32,8 @@ ENV PATH="/root/go/bin:/usr/local/go/bin:${PATH}"
 
 FROM --platform=${BUILDPLATFORM} clean-deps AS base
 
+WORKDIR /src
+
 # Docker buildx ARGs
 ARG TARGETOS
 ARG TARGETARCH
@@ -56,6 +58,13 @@ RUN --mount=type=cache,target=/root/go/pkg \
 	--mount=type=bind,source=.,target=. \
 	go build -ldflags='-s -w' -o /usr/local/bin/app ./cmd/main
 
+FROM --platform=${BUILDPLATFORM} base AS debug-build
+
+RUN --mount=type=cache,target=/root/go/pkg \
+		--mount=type=cache,target=/root/.cache \
+		--mount=type=bind,source=.,target=. \
+		go build -gcflags="all=-N -l" -o /usr/local/bin/app ./cmd/main
+
 FROM gcr.io/distroless/static-debian12:nonroot AS goreleaser
 
 LABEL org.opencontainers.image.authors="kemadev"
@@ -79,15 +88,18 @@ RUN apk add --no-cache git sudo && \
 	echo "nonroot ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/nonroot && \
 	chmod 0440 /etc/sudoers.d/nonroot
 
+COPY --link --from=go-deps /usr/local/go /usr/local/go
+COPY --link --chown=nonroot:nonroot --from=go-deps /root/go /home/nonroot/go
+
 ENV PATH="/home/nonroot/go/bin:/usr/local/go/bin:${PATH}"
 
 USER 1000:1000
 
-RUN git config --global --add safe.directory /src
+RUN go install github.com/go-delve/delve/cmd/dlv@latest && \
+	git config --global --add safe.directory /src
 
-COPY . .
-
-COPY --link --from=build /usr/local/bin/app /app
+COPY --link --from=debug-build /usr/local/bin/app /app
+COPY --link ./tool/dev/docker-entrypoint-dev.sh /src/tool/dev/docker-entrypoint-dev.sh
 
 ENTRYPOINT ["/src/tool/dev/docker-entrypoint-dev.sh"]
 

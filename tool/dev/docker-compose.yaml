@@ -1,7 +1,7 @@
 name: kemadev-infrastructure-components
 
 networks:
-  app-main:
+  app:
     driver: bridge
 
 secrets:
@@ -14,8 +14,6 @@ services:
   app-template:
     profiles:
       - never
-    # Enable colorized output for air
-    tty: true
     build:
       context: ../../
       dockerfile: build/Dockerfile
@@ -23,7 +21,7 @@ services:
       secrets:
         - netrc
     networks:
-      - app-main
+      - app
     secrets:
       - netrc
     environment:
@@ -33,9 +31,15 @@ services:
       APP_NAME: infrastructure-components
       APP_VERSION: dev
       APP_NAMESPACE: whatever
-      OTEL_ENDPOINT_URL: http://localhost:4317
+      OTEL_ENDPOINT_URL: http://kemadev-infrastructure-components-jaeger-1:4317
       OTEL_EXPORTER_COMPRESSION: gzip
-
+      HTTP_SERVE_PORT: 8080
+      HTTP_READ_TIMEOUT: 5
+      HTTP_WRITE_TIMEOUT: 10
+      METRICS_EXPORT_INTERVAL: 15
+      TRACES_SAMPLE_RATIO: 1
+    ports:
+      - 8080:8080
     restart: always
     develop:
       watch:
@@ -50,3 +54,138 @@ services:
       service: app-template
     profiles:
       - dev
+
+  app-debug:
+    extends:
+      service: app-template
+    profiles:
+      - debug
+    entrypoint:
+      - dlv
+      - dap
+      - --listen
+      - :50000
+    ports:
+      - 50000:50000
+    security_opt:
+      - apparmor=unconfined
+    cap_add:
+      - SYS_PTRACE
+
+---
+services:
+  jaeger:
+    image: bitnami/jaeger:2
+    profiles:
+      - dev
+    environment:
+      JAEGER_USERNAME: dev
+      JAEGER_PASSWORD: dev
+      COLLECTOR_OTLP_ENABLED: 'true'
+    ports:
+      - 6831:6831
+      - 6832:6832
+      - 5778:5778
+      - 16686:16686
+      - 4317:4317
+      - 4318:4318
+      - 14250:14250
+      - 14268:14268
+      - 14269:14269
+      - 9411:9411
+    networks:
+      - app
+    restart: always
+
+---
+volumes:
+  postgresql:
+    driver: local
+services:
+  postgresql:
+    image: bitnami/postgresql:17
+    profiles:
+      - never
+    environment:
+      POSTGRESQL_DATABASE: dev
+      POSTGRESQL_POSTGRES_PASSWORD: postgres
+      POSTGRESQL_USERNAME: dev
+      POSTGRESQL_PASSWORD: dev
+    volumes:
+      - postgres:/bitnami/postgresql
+    ports:
+      - 5432:5432
+    networks:
+      - app
+    restart: always
+
+
+---
+volumes:
+  valkey:
+    driver: local
+
+services:
+  valkey:
+    image: bitnami/valkey:8.1
+    profiles:
+      - never
+    environment:
+      VALKEY_DATABASE: dev
+      VALKEY_PASSWORD: dev
+      VALKEY_PRIMARY_PASSWORD: dev
+    volumes:
+      - valkey:/bitnami/valkey/data
+    ports:
+      - 6379:6379
+    networks:
+      - app
+    restart: always
+
+---
+networks:
+  opensearch:
+    driver: bridge
+
+volumes:
+  opensearch:
+    driver: local
+
+services:
+  opensearch:
+    profiles:
+      - never
+    image: opensearchproject/opensearch:3
+    environment:
+      cluster.name: dev
+      node.name: kemadev-infrastructure-components-opensearch-1
+      discovery.seed_hosts: kemadev-infrastructure-components-opensearch-1
+      cluster.initial_cluster_manager_nodes: kemadev-infrastructure-components-opensearch-1
+      bootstrap.memory_lock: true
+      OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: OpenSearchDev_1
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch:/usr/share/opensearch/data
+    ports:
+      - 9200:9200
+      - 9600:9600
+    networks:
+      - opensearch
+      - app
+  opensearch-dashboards:
+    profiles:
+      - never
+    image: opensearchproject/opensearch-dashboards:3
+    ports:
+      - 5601:5601
+    environment:
+      OPENSEARCH_HOSTS: '["https://kemadev-infrastructure-components-opensearch-1:9200"]'
+    networks:
+      - opensearch
