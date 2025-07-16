@@ -89,6 +89,10 @@ type AppParms struct {
 	HTTPReadTimeout int
 	// HTTPWriteTimeout is the HTTP write timeout, in seconds.
 	HTTPWriteTimeout int
+	// MetricsExportInterval is the interval in seconds to export metrics.
+	MetricsExportInterval int
+	// TracesSampleRatio is the ratio of traces to sample, e.g. 0.1 for 10% of traces.
+	TracesSampleRatio float64
 	// CPURequestMiliCPU is the CPU request for the pod, in mili vCPU (will be set as `strconv.Itoa(CPURequestMiliCPU) + "m"`)
 	CPURequestMiliCPU int
 	// CPULimitMiliCPU is the CPU limit for the pod, in mili vCPU (will be set as `strconv.Itoa(CPULimitMiliCPU) + "m"`). It will also be used to
@@ -712,16 +716,20 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 				config.EnvVarKeyHTTPWriteTimeout: pulumi.String(
 					strconv.Itoa(params.HTTPWriteTimeout),
 				),
-				config.EnvVarKeyBusinessUnitId:      pulumi.String(params.BusinessUnitId),
-				config.EnvVarKeyCustomerId:          pulumi.String(params.CustomerId),
+				config.EnvVarKeyMetricsExportInterval: pulumi.String(params.MetricsExportInterval),
+				config.EnvVarKeyTracesSampleRatio: pulumi.String(
+					strconv.FormatFloat(params.TracesSampleRatio, 'f', -1, 64),
+				),
+				config.EnvVarKeyBusinessUnitID:      pulumi.String(params.BusinessUnitId),
+				config.EnvVarKeyCustomerID:          pulumi.String(params.CustomerId),
 				config.EnvVarKeyCostCenter:          pulumi.String(params.CostCenter),
 				config.EnvVarKeyCostAllocationOwner: pulumi.String(params.CostAllocationOwner),
 				config.EnvVarKeyOperationsOwner:     pulumi.String(params.OperationsOwner),
 				config.EnvVarKeyRpo:                 pulumi.String(params.Rpo.String()),
 				config.EnvVarKeyDataClassification:  pulumi.String(params.DataClassification),
 				config.EnvVarKeyComplianceFramework: pulumi.String(params.ComplianceFramework),
-				config.EnvVarKeyProjectUrl:          pulumi.String(params.ProjectUrl.String()),
-				config.EnvVarKeyMonitoringUrl: pulumi.String(
+				config.EnvVarKeyProjectURL:          pulumi.String(params.ProjectUrl.String()),
+				config.EnvVarKeyMonitoringURL: pulumi.String(
 					params.MonitoringUrl.String(),
 				),
 			}
