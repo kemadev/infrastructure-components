@@ -2,7 +2,7 @@ module github.com/kemadev/kemadev/infrastructure-components/deploy/github/20-org
 
 go 1.24.2
 
-toolchain go1.24.3
+toolchain go1.24.5
 
 require (
 	github.com/kemadev/infrastructure-components v0.0.0-20250703072511-56c738217a01
