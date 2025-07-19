@@ -6,7 +6,7 @@ toolchain go1.24.3
 
 require (
 	github.com/kemadev/infrastructure-components v0.0.0-20250703072511-56c738217a01
-	github.com/pulumi/pulumi/sdk/v3 v3.181.0
+	github.com/pulumi/pulumi/sdk/v3 v3.184.0
 )
 
 require (
