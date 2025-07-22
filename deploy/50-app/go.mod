@@ -4,7 +4,7 @@ go 1.24.3
 
 require (
 	github.com/kemadev/infrastructure-components v0.0.0-20250703131629-8ba6f0fa045c
-	github.com/pulumi/pulumi/sdk/v3 v3.181.0
+	github.com/pulumi/pulumi/sdk/v3 v3.185.0
 )
 
 require (
