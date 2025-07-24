@@ -7,7 +7,7 @@ require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/caarlos0/svu/v3 v3.2.3
 	github.com/kemadev/ci-cd v0.22.0
-	github.com/kemadev/go-framework v0.0.0-20250724121722-4d6433155f9f
+	github.com/kemadev/go-framework v0.0.0-20250724192803-a752ce82e678
 	github.com/pulumi/pulumi-github/sdk/v6 v6.7.2
 	github.com/pulumi/pulumi-kubernetes/sdk/v4 v4.23.0
 	github.com/pulumi/pulumi-random/sdk/v4 v4.18.2

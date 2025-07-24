@@ -13,6 +13,7 @@ import (
 	"github.com/caarlos0/svu/v3/pkg/svu"
 	"github.com/kemadev/ci-cd/pkg/git"
 	"github.com/kemadev/go-framework/pkg/config"
+	"github.com/kemadev/go-framework/pkg/route"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/gateway"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/label"
 	"github.com/kemadev/infrastructure-components/pkg/k8s/priorityclass"
@@ -89,6 +90,8 @@ type AppParms struct {
 	HTTPReadTimeout int
 	// HTTPWriteTimeout is the HTTP write timeout, in seconds.
 	HTTPWriteTimeout int
+	// HTTPIdleTimeout is the HTTP idle timeout, in seconds.
+	HTTPIdleTimeout int
 	// MetricsExportInterval is the interval in seconds to export metrics.
 	MetricsExportInterval int
 	// TracesSampleRatio is the ratio of traces to sample, e.g. 0.1 for 10% of traces.
@@ -799,13 +802,13 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 							LivenessProbe: corev1.ProbeArgs{
 								InitialDelaySeconds: pulumi.Int(10),
 								HttpGet: corev1.HTTPGetActionArgs{
-									Path: pulumi.String(config.HTTPLivenessCheckPath),
+									Path: pulumi.String(route.HTTPLivenessCheckPath),
 									Port: pulumi.Int(params.Port),
 								},
 							},
 							ReadinessProbe: corev1.ProbeArgs{
 								HttpGet: corev1.HTTPGetActionArgs{
-									Path: pulumi.String(config.HTTPReadinessCheckPath),
+									Path: pulumi.String(route.HTTPReadinessCheckPath),
 									Port: pulumi.Int(params.Port),
 								},
 							},
