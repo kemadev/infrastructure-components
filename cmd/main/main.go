@@ -29,21 +29,23 @@ func main() {
 		os.Exit(1)
 	}
 
-
-	// Define routes to handle
-	routes := http.RoutesToRegister{
-		http.Route{
+	// Create regular routes
+	regularRoutes := route.RoutesToRegister{
+		route.Route{
 			Pattern:     "/rolldice/",
 			HandlerFunc: rolldice,
 		},
-		http.Route{
+		route.Route{
 			Pattern:     "/rolldice/{player}",
 			HandlerFunc: rolldice,
 		},
 	}
 
+	// Create routes with dependency injection
+	dependencyRoutes := route.RoutesWithDependencies{}
+
 	// Run HTTP server
-	err = http.Run(routes, conf)
+	err = serve.Run(regularRoutes, dependencyRoutes, conf)
 	if err != nil {
 		fallbackLogger.Error(
 			"run",
@@ -54,3 +56,4 @@ func main() {
 		os.Exit(1)
 	}
 }
+
