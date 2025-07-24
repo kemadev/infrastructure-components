@@ -411,6 +411,7 @@ func mergeParams(
 		},
 		HTTPReadTimeout:         5,
 		HTTPWriteTimeout:        10,
+		HTTPIdleTimeout:         60,
 		MetricsExportInterval:   15,
 		TracesSampleRatio:       1,
 		CPURequestMiliCPU:       500,
