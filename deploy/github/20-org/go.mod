@@ -3,7 +3,7 @@ module github.com/kemadev/kemadev/infrastructure-components/deploy/github/20-org
 go 1.24.5
 
 require (
-	github.com/kemadev/infrastructure-components v0.0.0-20250724124547-f80ab525c763
+	github.com/kemadev/infrastructure-components v0.0.0-20250725143950-0d2442184cca
 	github.com/pulumi/pulumi/sdk/v3 v3.185.0
 )
 
