@@ -99,7 +99,7 @@ type AppParms struct {
 	// CPURequestMiliCPU is the CPU request for the pod, in mili vCPU (will be set as `strconv.Itoa(CPURequestMiliCPU) + "m"`)
 	CPURequestMiliCPU int
 	// CPULimitMiliCPU is the CPU limit for the pod, in mili vCPU (will be set as `strconv.Itoa(CPULimitMiliCPU) + "m"`). It will also be used to
-	// set GOMAXPROCS to 1/1000th of this value, floored (you should only specify multiples of 1000)
+	// set GOMAXPROCS to 1/1000th of this value, floored
 	CPULimitMiliCPU int
 	// MemoryRequestMiB is the memory request for the pod, in MiB (will be set as `strconv.Itoa(MemoryRequestMiB) + "MiB"`)
 	MemoryRequestMiB int
@@ -755,7 +755,11 @@ func DeployBasicHTTPApp(ctx *pulumi.Context, params AppParms) error {
 			}
 			if params.CPULimitMiliCPU != 0 {
 				// Match allocated CPUs, floored
-				envMap["GOMAXPROCS"] = pulumi.String(strconv.Itoa(params.CPULimitMiliCPU / 1000))
+				envMap["GOMAXPROCS"] = pulumi.String(
+					strconv.Itoa(
+						max(1, params.CPULimitMiliCPU/1000, (2 * params.CPURequestMiliCPU / 1000)),
+					),
+				)
 			}
 			if params.MemoryLimitMiB != 0 {
 				envMap["GOMEMLIMIT"] = pulumi.String(
