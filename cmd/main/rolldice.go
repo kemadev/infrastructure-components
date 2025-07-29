@@ -33,7 +33,7 @@ var (
 	meter = otel.Meter(name)
 	// Logging instrument
 	logger = otelslog.NewLogger(
-		"default",
+		"rolldice",
 		otelslog.WithSource(true),
 	)
 	// Count of rolls

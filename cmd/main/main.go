@@ -11,6 +11,8 @@ import (
 	"github.com/kemadev/go-framework/pkg/config"
 	"github.com/kemadev/go-framework/pkg/http"
 	"github.com/kemadev/go-framework/pkg/log"
+	"github.com/kemadev/go-framework/pkg/route"
+	"github.com/kemadev/go-framework/pkg/serve"
 )
 
 func main() {
@@ -32,11 +34,11 @@ func main() {
 	// Create regular routes
 	regularRoutes := route.RoutesToRegister{
 		route.Route{
-			Pattern:     "/rolldice/",
+			Pattern:     "GET /rolldice/",
 			HandlerFunc: rolldice,
 		},
 		route.Route{
-			Pattern:     "/rolldice/{player}",
+			Pattern:     "GET /rolldice/{player}",
 			HandlerFunc: rolldice,
 		},
 	}
