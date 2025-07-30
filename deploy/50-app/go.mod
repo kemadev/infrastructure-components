@@ -3,7 +3,7 @@ module github.com/kemadev/infrastructure-components/deploy/50-app
 go 1.24.5
 
 require (
-	github.com/kemadev/infrastructure-components v0.0.0-20250724124547-f80ab525c763
+	github.com/kemadev/infrastructure-components v0.0.0-20250729214747-c73a0cfb7208
 	github.com/pulumi/pulumi/sdk/v3 v3.185.0
 )
 
@@ -50,7 +50,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kemadev/ci-cd v0.22.0 // indirect
-	github.com/kemadev/go-framework v0.0.0-20250724121722-4d6433155f9f // indirect
+	github.com/kemadev/go-framework v0.0.0-20250724192803-a752ce82e678 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
