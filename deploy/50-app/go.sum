@@ -115,10 +115,10 @@ github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOl
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
 github.com/kemadev/ci-cd v0.22.0 h1:wsIuXFhnGxtuQsJDDBJbWxXvyrfi0meo4xwkBSLCsfA=
 github.com/kemadev/ci-cd v0.22.0/go.mod h1:PwmQTSp3FO0K0aK22f+N2CnVbWTyYmF1u2cQ1EVMU80=
-github.com/kemadev/go-framework v0.0.0-20250724121722-4d6433155f9f h1:05e578uQdiDL6yfqw28P6XNRw9ldeWqTLIpIS9+W3gQ=
-github.com/kemadev/go-framework v0.0.0-20250724121722-4d6433155f9f/go.mod h1:0DOtgf4UNU0DmhmrCS7p9D5ZQBP2AScdt3Ke7VYTdJI=
-github.com/kemadev/infrastructure-components v0.0.0-20250724124547-f80ab525c763 h1:01nun+ifV0brnjYhYJH636arNZmWzpkzUBhGGE/IK1M=
-github.com/kemadev/infrastructure-components v0.0.0-20250724124547-f80ab525c763/go.mod h1:JM13e0hO9ahICmitJrIRfydlLmYJAyt4K8svQyh7z4M=
+github.com/kemadev/go-framework v0.0.0-20250724192803-a752ce82e678 h1:FbrcTa7IBovcZHsIcNGGQG69PsVofx/38mJZw9OXkic=
+github.com/kemadev/go-framework v0.0.0-20250724192803-a752ce82e678/go.mod h1:0DOtgf4UNU0DmhmrCS7p9D5ZQBP2AScdt3Ke7VYTdJI=
+github.com/kemadev/infrastructure-components v0.0.0-20250729214747-c73a0cfb7208 h1:piQ+p9jqbNHyyYeXYeIWTDTcTNazLNSHdgb5yuAL9Rs=
+github.com/kemadev/infrastructure-components v0.0.0-20250729214747-c73a0cfb7208/go.mod h1:7hIkHKeImm7GSLnn8QfVMffi2EIDZDkxhbfFg+XNZQQ=
 github.com/kevinburke/ssh_config v1.2.0 h1:x584FjTGwHzMwvHx18PXxbBVzfnxogHaAReU4gf13a4=
 github.com/kevinburke/ssh_config v1.2.0/go.mod h1:CT57kijsi8u/K/BOFA39wgDQJ9CxiF4nAY/ojJ6r6mM=
 github.com/kisielk/errcheck v1.2.0/go.mod h1:/BMXB+zMLi60iA8Vv6Ksmxu/1UDYcXs4uQLJ+jE2L00=
